@@ -11,6 +11,9 @@ ext/.DS_Store
 *cmake_install.cmake
 *salmon
 
+# Don't change stuff
+ext/project_path.hpp
+
 # Prerequisites
 *.d
 
