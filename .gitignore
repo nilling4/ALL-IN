@@ -1,5 +1,18 @@
 # Mac stuff:
-.DS_Store
+*.DS_Store
+.DS_Store 
+data/.DS_Store
+ext/.DS_Store
+
+# Compiled stuff
+*CMakeCache.txt
+*CMakeFiles/
+*Makefile
+*cmake_install.cmake
+*salmon
+
+# Don't change stuff
+ext/project_path.hpp
 
 # Prerequisites
 *.d
