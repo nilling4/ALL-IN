@@ -49,4 +49,5 @@ ext/project_path.hpp.in
 
 # Ignore files in the out and .vs directories
 out/
+build/
 /.vs/
