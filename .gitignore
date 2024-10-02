@@ -22,7 +22,6 @@ ext/project_path.hpp.in
 *.slo
 *.lo
 *.o
-*.obj
 
 # Precompiled Headers
 *.gch
