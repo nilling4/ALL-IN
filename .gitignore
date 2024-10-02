@@ -12,6 +12,7 @@ ext/.DS_Store
 *salmon
 
 # Don't change stuff
+ext/project_path.hpp
 ext/project_path.hpp.in
 
 # Prerequisites
