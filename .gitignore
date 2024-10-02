@@ -46,3 +46,7 @@ ext/project_path.hpp
 *.exe
 *.out
 *.app
+
+# Ignore files in the out and .vs directories
+out/
+/.vs/
