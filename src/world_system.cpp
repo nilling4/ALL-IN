@@ -308,6 +308,8 @@ void WorldSystem::on_key(int key, int, int action, int mod) {
 	}
 
 	Motion& motion = registry.motions.get(player_protagonist);
+	auto& p_render = registry.renderRequests.get(player_protagonist);
+
 	motion.velocity.x = 0.0f;
 	motion.velocity.y = 0.0f;
 	static bool want_go_left = false;
@@ -336,16 +338,34 @@ void WorldSystem::on_key(int key, int, int action, int mod) {
 			want_go_right = false;
 		}
 	}
-	if (want_go_left && !want_go_right) {
-		motion.velocity.x = -100.f;  
-	} else if (want_go_right && !want_go_left) {
-		motion.velocity.x = 100.f;   
-	} 
 	if (want_go_up && !want_go_down) {
 		motion.velocity.y = -100.f;  
+		p_render = { TEXTURE_ASSET_ID::PROTAGONIST_BACK, 
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE };
 	} else if (want_go_down && !want_go_up) {
 		motion.velocity.y = 100.f;  
+		p_render = { TEXTURE_ASSET_ID::PROTAGONIST_FORWARD, 
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE };
 	}
+	if (want_go_left && !want_go_right) {
+		motion.velocity.x = -100.f;  
+		p_render = { TEXTURE_ASSET_ID::PROTAGONIST_LEFT, 
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE };
+		if (motion.scale.x < 0) {
+			motion.scale.x *= -1;
+		}
+	} else if (want_go_right && !want_go_left) {
+		motion.velocity.x = 100.f;   
+		p_render = { TEXTURE_ASSET_ID::PROTAGONIST_LEFT, 
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE };
+		if (motion.scale.x > 0) {
+			motion.scale.x *= -1;
+		}
+	} 
 
 	// Control the current speed with `<` `>`
 	if (action == GLFW_RELEASE && (mod & GLFW_MOD_SHIFT) && key == GLFW_KEY_COMMA) {
