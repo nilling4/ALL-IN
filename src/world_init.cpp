@@ -95,7 +95,7 @@ Entity createKingClubs(RenderSystem* renderer, vec2 position)
 	// Initialize the motion
 	auto& motion = registry.motions.emplace(entity);
 	motion.angle = 0.f;
-	motion.velocity = { 0, 100.f };
+	motion.velocity = { 0, 0 };
 	motion.position = position;
 
 	motion.scale = vec2({ FISH_BB_WIDTH, FISH_BB_HEIGHT });

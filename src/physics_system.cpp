@@ -31,13 +31,22 @@ void PhysicsSystem::step(float elapsed_ms)
 	// Move fish based on how much time has passed, this is to (partially) avoid
 	// having entities move at different speed based on the machine.
 	auto& motion_registry = registry.motions;
-	for(uint i = 0; i< motion_registry.size(); i++)
-	{
-		// !!! TODO A1: update motion.position based on step_seconds and motion.velocity
-		//Motion& motion = motion_registry.components[i];
-		//Entity entity = motion_registry.entities[i];
-		//float step_seconds = elapsed_ms / 1000.f;
-		(void)elapsed_ms; // placeholder to silence unused warning until implemented
+	float step_seconds = elapsed_ms / 1000.f;
+
+	for(uint i = 0; i< motion_registry.size(); i++) {
+		for (Entity entity : registry.deadlys.entities) {
+			Motion& motion = motion_registry.get(entity);
+			motion.velocity.x += ((uniform_dist(rng) * 2.f) - 1.f)*step_seconds*100;
+			motion.velocity.y += ((uniform_dist(rng) * 2.f) - 1.f)*step_seconds*100;
+			if (motion.velocity.x < -50.f || motion.velocity.x > 50.f) {
+				motion.velocity.x *= 0.9;
+			}
+			if (motion.velocity.y < -50.f || motion.velocity.y > 50.f) {
+				motion.velocity.y *= 0.9;
+			}
+		}
+		Motion& motion = motion_registry.components[i];
+		motion.position += motion.velocity * step_seconds;
 	}
 
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
