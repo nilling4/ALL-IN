@@ -116,7 +116,8 @@ struct Mesh
  */
 
 enum class TEXTURE_ASSET_ID {
-	FISH = 0,
+	ROULETTE_BALL = 0,
+	FISH = ROULETTE_BALL + 1,
 	EEL = FISH + 1,
 	// PROTAGONIST = EEL + 1,
 	PROTAGONIST_LEFT = EEL + 1,

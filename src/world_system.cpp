@@ -7,17 +7,21 @@
 #include <sstream>
 
 #include "physics_system.hpp"
+#include <iostream>
+
 
 // Game configuration
 const size_t MAX_NUM_MELEE = 15;
 const size_t MAX_NUM_FISH = 5;
 const size_t KING_CLUBS_SPAWN_DELAY = 2000 * 3;
 const size_t FISH_SPAWN_DELAY_MS = 5000 * 3;
+const size_t ROULETTE_BALL_SPAWN_DELAY = 1000;
 
 // create the underwater world
 WorldSystem::WorldSystem()
 	: points(0)
-	, next_king_clubs_spawn(0.f)
+	, next_king_clubs_spawn(10.f)
+	, next_roulette_ball_spawn(0.f)
 	, next_fish_spawn(0.f) {
 	// Seeding rng with random device
 	rng = std::default_random_engine(std::random_device()());
@@ -138,6 +142,7 @@ bool WorldSystem::step(float elapsed_ms_since_last_update) {
 
 	// Removing out of screen entities
 	auto& motions_registry = registry.motions;
+	Motion& p_motion = registry.motions.get(player_protagonist);
 
 	// Remove entities that leave the screen on the left side
 	// Iterate backwards to be able to remove without unterfering with the next object to visit
@@ -158,6 +163,23 @@ bool WorldSystem::step(float elapsed_ms_since_last_update) {
 
 		// TODO Make sure King Clubs spawns in "room", not randomly on screen. 
         createKingClubs(renderer, vec2(50.f + uniform_dist(rng) * (window_width_px - 100.f), 50.f + uniform_dist(rng) * (window_height_px - 100.f)));
+	}
+
+	// spawn roulette balls
+	next_roulette_ball_spawn -= elapsed_ms_since_last_update * current_speed;
+	if (next_roulette_ball_spawn < 0.f) {
+		next_roulette_ball_spawn = ROULETTE_BALL_SPAWN_DELAY;
+
+		float dx = mouse_x - p_motion.position.x;
+		float dy = mouse_y - p_motion.position.y;
+		float angle = std::atan2(dy, dx);
+
+		float speed = 300.f;
+
+		float velocity_x = speed * std::cos(angle);
+		float velocity_y = speed * std::sin(angle);
+
+		createRouletteBall(renderer, vec2(p_motion.position.x, p_motion.position.y), vec2(velocity_x, velocity_y));
 	}
 
 	// spawn fish
@@ -270,6 +292,14 @@ void WorldSystem::handle_collisions() {
 
 					// !!! TODO A1: create a new struct called LightUp in components.hpp and add an instance to the salmon entity by modifying the ECS registry
 				}
+			}
+		}
+		if (registry.killsEnemys.has(entity)) {
+			if (registry.deadlys.has(entity_other)) {
+				registry.remove_all_components_of(entity);
+				registry.remove_all_components_of(entity_other);
+				Mix_PlayChannel(-1, salmon_eat_sound, 0);
+				++points;
 			}
 		}
 	}
@@ -386,5 +416,7 @@ void WorldSystem::on_mouse_move(vec2 mouse_position) {
 	// default facing direction is (1, 0)
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-	(vec2)mouse_position; // dummy to avoid compiler warning
+	// (vec2)mouse_position; // dummy to avoid compiler warning
+	mouse_x = mouse_position.x;
+	mouse_y = mouse_position.y;
 }

@@ -55,8 +55,12 @@ private:
 	RenderSystem* renderer;
 	float current_speed;
 	float next_king_clubs_spawn;
+	float next_roulette_ball_spawn;
 	float next_fish_spawn;
 	Entity player_protagonist;
+
+	float mouse_x;
+	float mouse_y;
 
 	// music references
 	Mix_Music* background_music;
