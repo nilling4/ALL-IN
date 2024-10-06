@@ -54,9 +54,9 @@ private:
 	// Game state
 	RenderSystem* renderer;
 	float current_speed;
-	float next_eel_spawn;
+	float next_king_clubs_spawn;
 	float next_fish_spawn;
-	Entity player_salmon;
+	Entity player_protagonist;
 
 	// music references
 	Mix_Music* background_music;

@@ -9,15 +9,15 @@
 #include "physics_system.hpp"
 
 // Game configuration
-const size_t MAX_NUM_EELS = 15;
+const size_t MAX_NUM_MELEE = 15;
 const size_t MAX_NUM_FISH = 5;
-const size_t EEL_SPAWN_DELAY_MS = 2000 * 3;
+const size_t KING_CLUBS_SPAWN_DELAY = 2000 * 3;
 const size_t FISH_SPAWN_DELAY_MS = 5000 * 3;
 
 // create the underwater world
 WorldSystem::WorldSystem()
 	: points(0)
-	, next_eel_spawn(0.f)
+	, next_king_clubs_spawn(0.f)
 	, next_fish_spawn(0.f) {
 	// Seeding rng with random device
 	rng = std::default_random_engine(std::random_device()());
@@ -150,14 +150,14 @@ bool WorldSystem::step(float elapsed_ms_since_last_update) {
 		}
 	}
 
-	// spawn new eels
-	next_eel_spawn -= elapsed_ms_since_last_update * current_speed;
-	if (registry.deadlys.components.size() <= MAX_NUM_EELS && next_eel_spawn < 0.f) {
+	// spawn new king clubs
+	next_king_clubs_spawn -= elapsed_ms_since_last_update * current_speed;
+	if (registry.deadlys.components.size() <= MAX_NUM_MELEE && next_king_clubs_spawn < 0.f) {
 		// reset timer
-		next_eel_spawn = (EEL_SPAWN_DELAY_MS / 2) + uniform_dist(rng) * (EEL_SPAWN_DELAY_MS / 2);
+		next_king_clubs_spawn = (KING_CLUBS_SPAWN_DELAY / 2) + uniform_dist(rng) * (KING_CLUBS_SPAWN_DELAY / 2);
 
-		// create Eel with random initial position
-        createEel(renderer, vec2(50.f + uniform_dist(rng) * (window_width_px - 100.f), 100.f));
+		// TODO Make sure King Clubs spawns in "room", not randomly on screen. 
+        createKingClubs(renderer, vec2(50.f + uniform_dist(rng) * (window_width_px - 100.f), 50.f + uniform_dist(rng) * (window_height_px - 100.f)));
 	}
 
 	// spawn fish
@@ -217,9 +217,9 @@ void WorldSystem::restart_game() {
 	// Debugging for memory/component leaks
 	registry.list_all_components();
 
-	// create a new Salmon
-	player_salmon = createSalmon(renderer, { window_width_px/2, window_height_px - 200 });
-	registry.colors.insert(player_salmon, {1, 0.8f, 0.8f});
+	// create a new Protagonist
+	player_protagonist = createProtagonist(renderer, { window_width_px/2, window_height_px/2 });
+	registry.colors.insert(player_protagonist, {1, 0.8f, 0.8f});
 
 	// !! TODO A2: Enable static eggs on the ground, for reference
 	// Create eggs on the floor, use this for reference
