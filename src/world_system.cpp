@@ -294,6 +294,14 @@ void WorldSystem::handle_collisions() {
 				}
 			}
 		}
+		if (registry.killsEnemys.has(entity)) {
+			if (registry.deadlys.has(entity_other)) {
+				registry.remove_all_components_of(entity);
+				registry.remove_all_components_of(entity_other);
+				Mix_PlayChannel(-1, salmon_eat_sound, 0);
+				++points;
+			}
+		}
 	}
 
 	// Remove all collisions from this simulation step
