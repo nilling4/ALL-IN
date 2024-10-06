@@ -26,12 +26,17 @@ bool collides(const Motion& motion1, const Motion& motion2)
 	return false;
 }
 
+
 void PhysicsSystem::step(float elapsed_ms)
 {
 	// Move fish based on how much time has passed, this is to (partially) avoid
 	// having entities move at different speed based on the machine.
 	auto& motion_registry = registry.motions;
 	float step_seconds = elapsed_ms / 1000.f;
+	Motion* player_motion;
+	for (Entity entity : registry.players.entities) {
+		player_motion = &motion_registry.get(entity);	
+	}
 
 	for(uint i = 0; i< motion_registry.size(); i++) {
 		for (Entity entity : registry.deadlys.entities) {
@@ -43,6 +48,12 @@ void PhysicsSystem::step(float elapsed_ms)
 			}
 			if (motion.velocity.y < -50.f || motion.velocity.y > 50.f) {
 				motion.velocity.y *= 0.9;
+			}
+
+			// makes enemies face player horizontally
+			if ((motion.position.x > player_motion->position.x && motion.scale.y < 0) || 
+				(motion.position.x < player_motion->position.x && motion.scale.y > 0)) {
+				motion.scale.y *= -1;
 			}
 		}
 		Motion& motion = motion_registry.components[i];

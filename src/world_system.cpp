@@ -218,8 +218,8 @@ void WorldSystem::restart_game() {
 	registry.list_all_components();
 
 	// create a new Protagonist
-	player_salmon = createProtagonist(renderer, { window_width_px/2, window_height_px/2 });
-	registry.colors.insert(player_salmon, {1, 0.8f, 0.8f});
+	player_protagonist = createProtagonist(renderer, { window_width_px/2, window_height_px/2 });
+	registry.colors.insert(player_protagonist, {1, 0.8f, 0.8f});
 
 	// !! TODO A2: Enable static eggs on the ground, for reference
 	// Create eggs on the floor, use this for reference
