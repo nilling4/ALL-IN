@@ -7,17 +7,21 @@
 #include <sstream>
 
 #include "physics_system.hpp"
+#include <iostream>
+
 
 // Game configuration
 const size_t MAX_NUM_MELEE = 15;
 const size_t MAX_NUM_FISH = 5;
 const size_t KING_CLUBS_SPAWN_DELAY = 2000 * 3;
 const size_t FISH_SPAWN_DELAY_MS = 5000 * 3;
+const size_t ROULETTE_BALL_SPAWN_DELAY = 1000;
 
 // create the underwater world
 WorldSystem::WorldSystem()
 	: points(0)
 	, next_king_clubs_spawn(0.f)
+	, next_roulette_ball_spawn(0.f)
 	, next_fish_spawn(0.f) {
 	// Seeding rng with random device
 	rng = std::default_random_engine(std::random_device()());
@@ -138,6 +142,7 @@ bool WorldSystem::step(float elapsed_ms_since_last_update) {
 
 	// Removing out of screen entities
 	auto& motions_registry = registry.motions;
+	Motion& p_motion = registry.motions.get(player_protagonist);
 
 	// Remove entities that leave the screen on the left side
 	// Iterate backwards to be able to remove without unterfering with the next object to visit
@@ -158,6 +163,19 @@ bool WorldSystem::step(float elapsed_ms_since_last_update) {
 
 		// TODO Make sure King Clubs spawns in "room", not randomly on screen. 
         createKingClubs(renderer, vec2(50.f + uniform_dist(rng) * (window_width_px - 100.f), 50.f + uniform_dist(rng) * (window_height_px - 100.f)));
+	}
+
+	// spawn roulette balls
+	next_roulette_ball_spawn -= elapsed_ms_since_last_update * current_speed;
+	if (next_roulette_ball_spawn < 0.f) {
+		next_roulette_ball_spawn = ROULETTE_BALL_SPAWN_DELAY;
+
+		float dx = mouse_x - p_motion.position.x;
+		float dy = mouse_y - p_motion.position.y;
+		float angle = std::atan2(dy, dx);
+		std::cout << angle << std::endl;
+
+		createRouletteBall(renderer, vec2(p_motion.position.x, p_motion.position.y), vec2(-20.f, -20.f));
 	}
 
 	// spawn fish
@@ -386,5 +404,7 @@ void WorldSystem::on_mouse_move(vec2 mouse_position) {
 	// default facing direction is (1, 0)
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-	(vec2)mouse_position; // dummy to avoid compiler warning
+	// (vec2)mouse_position; // dummy to avoid compiler warning
+	mouse_x = mouse_position.x;
+	mouse_y = mouse_position.y;
 }

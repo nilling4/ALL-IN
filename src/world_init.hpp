@@ -6,6 +6,9 @@
 
 // These are hardcoded to the dimensions of the entity texture
 // BB = bounding box
+const float ROULETTE_BALL_BB_WIDTH = 0.6f * 20.f;
+const float ROULETTE_BALL_BB_HEIGHT = 0.6f * 20.f;
+
 const float FISH_BB_WIDTH  = 0.6f * 165.f;
 const float FISH_BB_HEIGHT = 0.6f * 165.f;
 const float EEL_BB_WIDTH   = 0.6f * 300.f;	// 1001
@@ -24,6 +27,8 @@ Entity createFish(RenderSystem* renderer, vec2 position);
 Entity createEel(RenderSystem* renderer, vec2 position);
 
 Entity createKingClubs(RenderSystem* renderer, vec2 position);
+
+Entity createRouletteBall(RenderSystem* renderer, vec2 position, vec2 velocity);
 
 // a red line for debugging purposes
 Entity createLine(vec2 position, vec2 size);

@@ -113,6 +113,36 @@ Entity createKingClubs(RenderSystem* renderer, vec2 position)
 	return entity;
 }
 
+Entity createRouletteBall(RenderSystem* renderer, vec2 position, vec2 velocity)
+{
+	auto entity = Entity();
+
+	// Store a reference to the potentially re-used mesh object (the value is stored in the resource cache)
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	// Initialize the motion
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 0.f;
+	motion.velocity = velocity;
+	motion.position = position;
+
+	// Setting initial values, scale is negative to make it face the opposite way
+	motion.scale = vec2({ ROULETTE_BALL_BB_WIDTH, ROULETTE_BALL_BB_HEIGHT });
+
+	// create an empty Eel component to be able to refer to all eels
+	registry.killsEnemys.emplace(entity);
+	registry.renderRequests.insert(
+		entity,
+		{
+			TEXTURE_ASSET_ID::ROULETTE_BALL,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE
+		});
+
+	return entity;
+}
+
 Entity createEel(RenderSystem* renderer, vec2 position)
 {
 	auto entity = Entity();
