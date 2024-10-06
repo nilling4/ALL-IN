@@ -20,7 +20,7 @@ const size_t ROULETTE_BALL_SPAWN_DELAY = 1000;
 // create the underwater world
 WorldSystem::WorldSystem()
 	: points(0)
-	, next_king_clubs_spawn(0.f)
+	, next_king_clubs_spawn(10.f)
 	, next_roulette_ball_spawn(0.f)
 	, next_fish_spawn(0.f) {
 	// Seeding rng with random device
@@ -173,9 +173,13 @@ bool WorldSystem::step(float elapsed_ms_since_last_update) {
 		float dx = mouse_x - p_motion.position.x;
 		float dy = mouse_y - p_motion.position.y;
 		float angle = std::atan2(dy, dx);
-		std::cout << angle << std::endl;
 
-		createRouletteBall(renderer, vec2(p_motion.position.x, p_motion.position.y), vec2(-20.f, -20.f));
+		float speed = 300.f;
+
+		float velocity_x = speed * std::cos(angle);
+		float velocity_y = speed * std::sin(angle);
+
+		createRouletteBall(renderer, vec2(p_motion.position.x, p_motion.position.y), vec2(velocity_x, velocity_y));
 	}
 
 	// spawn fish
