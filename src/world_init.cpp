@@ -38,12 +38,12 @@ Entity createProtagonist(RenderSystem* renderer, vec2 pos) {
 	motion.position = pos;
 	motion.angle = 0.f;
 	motion.velocity = { 0.f, 0.f };
-	motion.scale = vec2({ -FISH_BB_WIDTH, FISH_BB_HEIGHT });
+	motion.scale = vec2({ FISH_BB_WIDTH, FISH_BB_HEIGHT });
 
 	registry.players.emplace(entity);
 	registry.renderRequests.insert(
 		entity,
-		{ TEXTURE_ASSET_ID::PROTAGONIST, 
+		{ TEXTURE_ASSET_ID::PROTAGONIST_FORWARD, 
 			EFFECT_ASSET_ID::TEXTURED,
 			GEOMETRY_BUFFER_ID::SPRITE });
 

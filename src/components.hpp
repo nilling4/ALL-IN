@@ -118,8 +118,11 @@ struct Mesh
 enum class TEXTURE_ASSET_ID {
 	FISH = 0,
 	EEL = FISH + 1,
-	PROTAGONIST = EEL + 1,
-	KING_CLUBS = PROTAGONIST + 1, // To add to this, make sure to also add in render_system.hpp
+	// PROTAGONIST = EEL + 1,
+	PROTAGONIST_LEFT = EEL + 1,
+	PROTAGONIST_FORWARD = PROTAGONIST_LEFT + 1,
+	PROTAGONIST_BACK = PROTAGONIST_FORWARD + 1,
+	KING_CLUBS = PROTAGONIST_BACK + 1, // To add to this, make sure to also add in render_system.hpp
 	TEXTURE_COUNT = KING_CLUBS + 1
 };
 const int texture_count = (int)TEXTURE_ASSET_ID::TEXTURE_COUNT;
