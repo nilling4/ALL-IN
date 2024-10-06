@@ -28,6 +28,31 @@ Entity createSalmon(RenderSystem* renderer, vec2 pos)
 	return entity;
 }
 
+Entity createProtagonist(RenderSystem* renderer, vec2 pos) {
+	auto entity = Entity();
+
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	Motion& motion = registry.motions.emplace(entity);
+	motion.position = pos;
+	motion.angle = 0.f;
+	motion.velocity = { 0.f, 0.f };
+	motion.scale = vec2({ -FISH_BB_WIDTH, FISH_BB_HEIGHT });
+
+	registry.players.emplace(entity);
+	registry.renderRequests.insert(
+		entity,
+		{ TEXTURE_ASSET_ID::PROTAGONIST, 
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE });
+
+	return entity;
+
+}
+
+
+
 Entity createFish(RenderSystem* renderer, vec2 position)
 {
 	// Reserve en entity
@@ -52,6 +77,35 @@ Entity createFish(RenderSystem* renderer, vec2 position)
 		entity,
 		{
 			TEXTURE_ASSET_ID::FISH,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE
+		});
+
+	return entity;
+}
+
+Entity createKingClubs(RenderSystem* renderer, vec2 position)
+{
+	auto entity = Entity();
+
+	// Store a reference to the potentially re-used mesh object (the value is stored in the resource cache)
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	// Initialize the motion
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 0.f;
+	motion.velocity = { 0, 100.f };
+	motion.position = position;
+
+	motion.scale = vec2({ FISH_BB_WIDTH, FISH_BB_HEIGHT });
+
+	// create an empty Eel component to be able to refer to all eels
+	registry.deadlys.emplace(entity);
+	registry.renderRequests.insert(
+		entity,
+		{
+			TEXTURE_ASSET_ID::KING_CLUBS,
 			EFFECT_ASSET_ID::TEXTURED,
 			GEOMETRY_BUFFER_ID::SPRITE
 		});

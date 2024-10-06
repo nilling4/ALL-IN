@@ -16,6 +16,11 @@ struct Deadly
 
 };
 
+// anything that is deadly to the enemies (like projecties player shoots)
+struct KillsEnemy {
+
+};
+
 // anything the player can eat
 struct Eatable
 {
@@ -113,7 +118,9 @@ struct Mesh
 enum class TEXTURE_ASSET_ID {
 	FISH = 0,
 	EEL = FISH + 1,
-	TEXTURE_COUNT = EEL + 1
+	PROTAGONIST = EEL + 1,
+	KING_CLUBS = PROTAGONIST + 1, // To add to this, make sure to also add in render_system.hpp
+	TEXTURE_COUNT = KING_CLUBS + 1
 };
 const int texture_count = (int)TEXTURE_ASSET_ID::TEXTURE_COUNT;
 

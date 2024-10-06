@@ -10,6 +10,7 @@ ext/.DS_Store
 *Makefile
 *cmake_install.cmake
 *salmon
+*all_in
 
 # Don't change stuff
 ext/project_path.hpp

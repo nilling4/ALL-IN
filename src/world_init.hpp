@@ -14,11 +14,16 @@ const float EEL_BB_HEIGHT  = 0.6f * 202.f;	// 870
 // the player
 Entity createSalmon(RenderSystem* renderer, vec2 pos);
 
+// the new player
+Entity createProtagonist(RenderSystem* renderer, vec2 pos);
+
 // the prey
 Entity createFish(RenderSystem* renderer, vec2 position);
 
 // the enemy
 Entity createEel(RenderSystem* renderer, vec2 position);
+
+Entity createKingClubs(RenderSystem* renderer, vec2 position);
 
 // a red line for debugging purposes
 Entity createLine(vec2 position, vec2 size);
