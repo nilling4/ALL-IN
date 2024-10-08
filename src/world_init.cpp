@@ -182,6 +182,39 @@ Entity createCardProjectile(RenderSystem* renderer, vec2 position, vec2 velocity
 	return entity;
 }
 
+Entity createDartProjectile(RenderSystem* renderer, vec2 position, vec2 velocity, float angle)
+{
+	auto entity = Entity();
+
+	// Store a reference to the potentially re-used mesh object (the value is stored in the resource cache)
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	// Initialize the motion
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = angle + 0.5 * M_PI;
+	motion.velocity = velocity;
+	motion.position = position;
+
+	// Setting initial values, scale is negative to make it face the opposite way
+	motion.scale = vec2({ DART_PROJECTILE_BB_WIDTH, DART_PROJECTILE_BB_HEIGHT });
+
+	// create an empty Eel component to be able to refer to all eels
+	auto& kills = registry.killsEnemys.emplace(entity);
+	kills.damage = 50.f;
+	kills.health = 2.f;
+	kills.dmg_taken_multiplier = 2;
+	registry.renderRequests.insert(
+		entity,
+		{
+			TEXTURE_ASSET_ID::DART_PROJECTILE,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE
+		});
+
+	return entity;
+}
+
 Entity createEel(RenderSystem* renderer, vec2 position)
 {
 	auto entity = Entity();

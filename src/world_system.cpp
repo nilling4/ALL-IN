@@ -15,6 +15,7 @@ const size_t MAX_NUM_MELEE = 25;
 const size_t KING_CLUBS_SPAWN_DELAY = 400 * 3;
 const size_t ROULETTE_BALL_SPAWN_DELAY = 400 * 3;
 const size_t CARDS_SPAWN_DELAY = 1000 * 3;
+const size_t DARTS_SPAWN_DELAY = 1677 * 3;
 
 
 // create the underwater world
@@ -22,7 +23,8 @@ WorldSystem::WorldSystem()
 	: points(0)
 	, next_king_clubs_spawn(10.f)
 	, next_roulette_ball_spawn(0.f)
-	, next_card_spawn(0.f) {
+	, next_card_spawn(0.f)
+	, next_dart_spawn(0.f) {
 	// Seeding rng with random device
 	rng = std::default_random_engine(std::random_device()());
 }
@@ -165,14 +167,14 @@ bool WorldSystem::step(float elapsed_ms_since_last_update) {
         createKingClubs(renderer, vec2(50.f + uniform_dist(rng) * (window_width_px - 100.f), 50.f + uniform_dist(rng) * (window_height_px - 100.f)));
 	}
 
+	float dx = mouse_x - p_motion.position.x;
+	float dy = mouse_y - p_motion.position.y;
+	float angle = std::atan2(dy, dx);
+
 	// spawn roulette balls
 	next_roulette_ball_spawn -= elapsed_ms_since_last_update * current_speed;
 	if (next_roulette_ball_spawn < 0.f) {
 		next_roulette_ball_spawn = ROULETTE_BALL_SPAWN_DELAY;
-
-		float dx = mouse_x - p_motion.position.x;
-		float dy = mouse_y - p_motion.position.y;
-		float angle = std::atan2(dy, dx);
 
 		float speed = 300.f;
 
@@ -187,16 +189,24 @@ bool WorldSystem::step(float elapsed_ms_since_last_update) {
 	if (next_card_spawn < 0.f) {
 		next_card_spawn = CARDS_SPAWN_DELAY;
 
-		float dx = mouse_x - p_motion.position.x;
-		float dy = mouse_y - p_motion.position.y;
-		float angle = std::atan2(dy, dx);
-
 		float speed = 400.f;
 
 		float velocity_x = speed * std::cos(angle);
 		float velocity_y = speed * std::sin(angle);
 
 		createCardProjectile(renderer, vec2(p_motion.position.x, p_motion.position.y), vec2(velocity_x, velocity_y));
+	}
+
+	next_dart_spawn -= elapsed_ms_since_last_update * current_speed;
+	if (next_dart_spawn < 0.f) {
+		next_dart_spawn = DARTS_SPAWN_DELAY;
+
+		float speed = 380.f;
+
+		float velocity_x = speed * std::cos(angle);
+		float velocity_y = speed * std::sin(angle);
+
+		createDartProjectile(renderer, vec2(p_motion.position.x, p_motion.position.y), vec2(velocity_x, velocity_y), angle);
 	}
 
 

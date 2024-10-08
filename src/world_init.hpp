@@ -12,6 +12,9 @@ const float ROULETTE_BALL_BB_HEIGHT = 0.6f * 15.f;
 const float CARD_PROJECTILE_BB_WIDTH = 0.55f * 15.f;
 const float CARD_PROJECTILE_BB_HEIGHT = 0.75f * 15.f;
 
+const float DART_PROJECTILE_BB_WIDTH = 0.25f * 15.f;
+const float DART_PROJECTILE_BB_HEIGHT = 0.8f * 15.f;
+
 const float FISH_BB_WIDTH  = 0.6f * 80.f;
 const float FISH_BB_HEIGHT = 0.6f * 100.f;
 const float EEL_BB_WIDTH   = 0.6f * 150.f;	// 1001
@@ -35,6 +38,7 @@ Entity createRouletteBall(RenderSystem* renderer, vec2 position, vec2 velocity);
 
 Entity createCardProjectile(RenderSystem* renderer, vec2 position, vec2 velocity);
 
+Entity createDartProjectile(RenderSystem* renderer, vec2 position, vec2 velocity, float angle);
 
 // a red line for debugging purposes
 Entity createLine(vec2 position, vec2 size);

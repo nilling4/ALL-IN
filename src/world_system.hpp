@@ -57,6 +57,7 @@ private:
 	float next_king_clubs_spawn;
 	float next_roulette_ball_spawn;
 	float next_card_spawn;
+	float next_dart_spawn;
 	Entity player_protagonist;
 
 	float mouse_x;
