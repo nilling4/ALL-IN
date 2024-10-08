@@ -1,8 +1,3 @@
-# Team08
-Student name: <TODO>
+# Team08 - ALL-IN
 
-Comments to TA about your implementation (optional):
-- Examples: known bugs or incomplete implementation
-
-## Note:
-Make sure to delete your .vs and out folders before submitting your assignment.
+![keep your eyes on us](all-in-banner.png)
