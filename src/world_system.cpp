@@ -315,9 +315,9 @@ void WorldSystem::handle_collisions() {
 					}
 					if (deadly.health < 0.f) {
 						registry.remove_all_components_of(entity_other);
+						++points;
 					}
 					Mix_PlayChannel(-1, roulette_hit_sound, 0);
-					++points;
 				}
 			}
 		}
