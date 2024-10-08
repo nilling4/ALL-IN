@@ -13,12 +13,17 @@ struct Player
 // anything that is deadly to the player
 struct Deadly
 {
-
+	float health = 0;
+	float armour = 0;
+	float dmg_to_projectiles = 0;
+	// float melee damage
 };
 
 // anything that is deadly to the enemies (like projecties player shoots)
 struct KillsEnemy {
-
+	float damage = 0;
+	float health = 0;
+	float dmg_taken_multiplier = 1.f;		// multiplier to deadly's dmg_to_projectiles
 };
 
 // anything the player can eat
@@ -117,7 +122,8 @@ struct Mesh
 
 enum class TEXTURE_ASSET_ID {
 	ROULETTE_BALL = 0,
-	FISH = ROULETTE_BALL + 1,
+	CARD_PROJECTILE_ACE = ROULETTE_BALL + 1,
+	FISH = CARD_PROJECTILE_ACE + 1,
 	EEL = FISH + 1,
 	// PROTAGONIST = EEL + 1,
 	PROTAGONIST_LEFT = EEL + 1,

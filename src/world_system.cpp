@@ -12,17 +12,17 @@
 
 // Game configuration
 const size_t MAX_NUM_MELEE = 15;
-const size_t MAX_NUM_FISH = 5;
-const size_t KING_CLUBS_SPAWN_DELAY = 2000 * 3;
-const size_t FISH_SPAWN_DELAY_MS = 5000 * 3;
-const size_t ROULETTE_BALL_SPAWN_DELAY = 1000;
+const size_t KING_CLUBS_SPAWN_DELAY = 400 * 3;
+const size_t ROULETTE_BALL_SPAWN_DELAY = 400 * 3;
+const size_t CARDS_SPAWN_DELAY = 1000 * 3;
+
 
 // create the underwater world
 WorldSystem::WorldSystem()
 	: points(0)
 	, next_king_clubs_spawn(10.f)
 	, next_roulette_ball_spawn(0.f)
-	, next_fish_spawn(0.f) {
+	, next_card_spawn(0.f) {
 	// Seeding rng with random device
 	rng = std::default_random_engine(std::random_device()());
 }
@@ -34,8 +34,8 @@ WorldSystem::~WorldSystem() {
 		Mix_FreeMusic(background_music);
 	if (salmon_dead_sound != nullptr)
 		Mix_FreeChunk(salmon_dead_sound);
-	if (salmon_eat_sound != nullptr)
-		Mix_FreeChunk(salmon_eat_sound);
+	if (roulette_hit_sound != nullptr)
+		Mix_FreeChunk(roulette_hit_sound);
 
 	Mix_CloseAudio();
 
@@ -104,15 +104,15 @@ GLFWwindow* WorldSystem::create_window() {
 		return nullptr;
 	}
 
-	background_music = Mix_LoadMUS(audio_path("music.wav").c_str());
+	background_music = Mix_LoadMUS(audio_path("music_careful.mp3").c_str());
 	salmon_dead_sound = Mix_LoadWAV(audio_path("death_sound.wav").c_str());
-	salmon_eat_sound = Mix_LoadWAV(audio_path("eat_sound.wav").c_str());
+	roulette_hit_sound = Mix_LoadWAV(audio_path("roulette_hit.mp3").c_str());
 
-	if (background_music == nullptr || salmon_dead_sound == nullptr || salmon_eat_sound == nullptr) {
+	if (background_music == nullptr || salmon_dead_sound == nullptr || roulette_hit_sound == nullptr) {
 		fprintf(stderr, "Failed to load sounds\n %s\n %s\n %s\n make sure the data directory is present",
-			audio_path("music.wav").c_str(),
+			audio_path("music_careful.mp3").c_str(),
 			audio_path("death_sound.wav").c_str(),
-			audio_path("eat_sound.wav").c_str());
+			audio_path("roulette_hit.mp3").c_str());
 		return nullptr;
 	}
 
@@ -182,16 +182,24 @@ bool WorldSystem::step(float elapsed_ms_since_last_update) {
 		createRouletteBall(renderer, vec2(p_motion.position.x, p_motion.position.y), vec2(velocity_x, velocity_y));
 	}
 
-	// spawn fish
-	next_fish_spawn -= elapsed_ms_since_last_update * current_speed;
-	if (registry.eatables.components.size() <= MAX_NUM_FISH && next_fish_spawn < 0.f) {
-		// !!!  TODO A1: create new fish with createFish({0,0}), see eels above
+		// spawn cards
+	next_card_spawn -= elapsed_ms_since_last_update * current_speed;
+	if (next_card_spawn < 0.f) {
+		next_card_spawn = CARDS_SPAWN_DELAY;
+
+		float dx = mouse_x - p_motion.position.x;
+		float dy = mouse_y - p_motion.position.y;
+		float angle = std::atan2(dy, dx);
+
+		float speed = 400.f;
+
+		float velocity_x = speed * std::cos(angle);
+		float velocity_y = speed * std::sin(angle);
+
+		createCardProjectile(renderer, vec2(p_motion.position.x, p_motion.position.y), vec2(velocity_x, velocity_y));
 	}
 
-	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	// TODO A2: HANDLE EGG SPAWN HERE
-	// DON'T WORRY ABOUT THIS UNTIL ASSIGNMENT 2
-	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 
 	// Processing the salmon state
 	assert(registry.screenStates.components.size() <= 1);
@@ -287,7 +295,7 @@ void WorldSystem::handle_collisions() {
 				if (!registry.deathTimers.has(entity)) {
 					// chew, count points, and set the LightUp timer
 					registry.remove_all_components_of(entity_other);
-					Mix_PlayChannel(-1, salmon_eat_sound, 0);
+					Mix_PlayChannel(-1, roulette_hit_sound, 0);
 					++points;
 
 					// !!! TODO A1: create a new struct called LightUp in components.hpp and add an instance to the salmon entity by modifying the ECS registry
@@ -296,9 +304,18 @@ void WorldSystem::handle_collisions() {
 		}
 		if (registry.killsEnemys.has(entity)) {
 			if (registry.deadlys.has(entity_other)) {
-				registry.remove_all_components_of(entity);
-				registry.remove_all_components_of(entity_other);
-				Mix_PlayChannel(-1, salmon_eat_sound, 0);
+				KillsEnemy& kills = registry.killsEnemys.get(entity);
+				Deadly& deadly = registry.deadlys.get(entity_other);
+
+				deadly.health -= (kills.damage - deadly.armour);
+				kills.health -= (kills.dmg_taken_multiplier * deadly.dmg_to_projectiles);
+				if (kills.health < 0.f) {
+					registry.remove_all_components_of(entity);
+				}
+				if (deadly.health < 0.f) {
+					registry.remove_all_components_of(entity_other);
+				}
+				Mix_PlayChannel(-1, roulette_hit_sound, 0);
 				++points;
 			}
 		}

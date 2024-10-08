@@ -101,7 +101,10 @@ Entity createKingClubs(RenderSystem* renderer, vec2 position)
 	motion.scale = vec2({ FISH_BB_WIDTH, FISH_BB_HEIGHT });
 
 	// create an empty Eel component to be able to refer to all eels
-	registry.deadlys.emplace(entity);
+	auto& deadly = registry.deadlys.emplace(entity);
+	deadly.health = 25.f;
+	deadly.armour = 1.f;
+	deadly.dmg_to_projectiles = 25.f;
 	registry.renderRequests.insert(
 		entity,
 		{
@@ -131,11 +134,46 @@ Entity createRouletteBall(RenderSystem* renderer, vec2 position, vec2 velocity)
 	motion.scale = vec2({ ROULETTE_BALL_BB_WIDTH, ROULETTE_BALL_BB_HEIGHT });
 
 	// create an empty Eel component to be able to refer to all eels
-	registry.killsEnemys.emplace(entity);
+	auto& kills = registry.killsEnemys.emplace(entity);
+	kills.damage = 10.f;
+	kills.health = 5.f;
 	registry.renderRequests.insert(
 		entity,
 		{
 			TEXTURE_ASSET_ID::ROULETTE_BALL,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE
+		});
+
+	return entity;
+}
+
+Entity createCardProjectile(RenderSystem* renderer, vec2 position, vec2 velocity)
+{
+	auto entity = Entity();
+
+	// Store a reference to the potentially re-used mesh object (the value is stored in the resource cache)
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	// Initialize the motion
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 0.f;
+	motion.velocity = velocity;
+	motion.position = position;
+
+	// Setting initial values, scale is negative to make it face the opposite way
+	motion.scale = vec2({ CARD_PROJECTILE_BB_WIDTH, CARD_PROJECTILE_BB_HEIGHT });
+
+	// create an empty Eel component to be able to refer to all eels
+	auto& kills = registry.killsEnemys.emplace(entity);
+	kills.damage = 5.f;
+	kills.health = 10.f;
+	kills.dmg_taken_multiplier = 0.05;
+	registry.renderRequests.insert(
+		entity,
+		{
+			TEXTURE_ASSET_ID::CARD_PROJECTILE_ACE,
 			EFFECT_ASSET_ID::TEXTURED,
 			GEOMETRY_BUFFER_ID::SPRITE
 		});
