@@ -11,7 +11,7 @@
 
 
 // Game configuration
-const size_t MAX_NUM_MELEE = 15;
+const size_t MAX_NUM_MELEE = 25;
 const size_t KING_CLUBS_SPAWN_DELAY = 400 * 3;
 const size_t ROULETTE_BALL_SPAWN_DELAY = 400 * 3;
 const size_t CARDS_SPAWN_DELAY = 1000 * 3;
