@@ -6,13 +6,19 @@
 
 // These are hardcoded to the dimensions of the entity texture
 // BB = bounding box
-const float ROULETTE_BALL_BB_WIDTH = 0.6f * 20.f;
-const float ROULETTE_BALL_BB_HEIGHT = 0.6f * 20.f;
+const float ROULETTE_BALL_BB_WIDTH = 0.6f * 15.f;
+const float ROULETTE_BALL_BB_HEIGHT = 0.6f * 15.f;
 
-const float FISH_BB_WIDTH  = 0.6f * 165.f;
-const float FISH_BB_HEIGHT = 0.6f * 165.f;
-const float EEL_BB_WIDTH   = 0.6f * 300.f;	// 1001
-const float EEL_BB_HEIGHT  = 0.6f * 202.f;	// 870
+const float CARD_PROJECTILE_BB_WIDTH = 0.55f * 15.f;
+const float CARD_PROJECTILE_BB_HEIGHT = 0.75f * 15.f;
+
+const float DART_PROJECTILE_BB_WIDTH = 0.25f * 15.f;
+const float DART_PROJECTILE_BB_HEIGHT = 0.8f * 15.f;
+
+const float FISH_BB_WIDTH  = 0.6f * 80.f;
+const float FISH_BB_HEIGHT = 0.6f * 100.f;
+const float EEL_BB_WIDTH   = 0.6f * 150.f;	// 1001
+const float EEL_BB_HEIGHT  = 0.6f * 100.f;	// 870
 
 // the player
 Entity createSalmon(RenderSystem* renderer, vec2 pos);
@@ -29,6 +35,10 @@ Entity createEel(RenderSystem* renderer, vec2 position);
 Entity createKingClubs(RenderSystem* renderer, vec2 position);
 
 Entity createRouletteBall(RenderSystem* renderer, vec2 position, vec2 velocity);
+
+Entity createCardProjectile(RenderSystem* renderer, vec2 position, vec2 velocity);
+
+Entity createDartProjectile(RenderSystem* renderer, vec2 position, vec2 velocity, float angle);
 
 // a red line for debugging purposes
 Entity createLine(vec2 position, vec2 size);

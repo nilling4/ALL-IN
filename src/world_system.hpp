@@ -56,7 +56,8 @@ private:
 	float current_speed;
 	float next_king_clubs_spawn;
 	float next_roulette_ball_spawn;
-	float next_fish_spawn;
+	float next_card_spawn;
+	float next_dart_spawn;
 	Entity player_protagonist;
 
 	float mouse_x;
@@ -65,7 +66,7 @@ private:
 	// music references
 	Mix_Music* background_music;
 	Mix_Chunk* salmon_dead_sound;
-	Mix_Chunk* salmon_eat_sound;
+	Mix_Chunk* roulette_hit_sound;
 
 	// C++ random number generator
 	std::default_random_engine rng;
