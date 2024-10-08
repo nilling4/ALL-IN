@@ -24,6 +24,7 @@ struct KillsEnemy {
 	float damage = 0;
 	float health = 0;
 	float dmg_taken_multiplier = 1.f;		// multiplier to deadly's dmg_to_projectiles
+	void* last_touched = nullptr;
 };
 
 // anything the player can eat

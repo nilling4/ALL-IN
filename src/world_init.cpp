@@ -137,6 +137,7 @@ Entity createRouletteBall(RenderSystem* renderer, vec2 position, vec2 velocity)
 	auto& kills = registry.killsEnemys.emplace(entity);
 	kills.damage = 10.f;
 	kills.health = 5.f;
+	kills.dmg_taken_multiplier = 2.f;
 	registry.renderRequests.insert(
 		entity,
 		{
@@ -169,7 +170,7 @@ Entity createCardProjectile(RenderSystem* renderer, vec2 position, vec2 velocity
 	auto& kills = registry.killsEnemys.emplace(entity);
 	kills.damage = 5.f;
 	kills.health = 10.f;
-	kills.dmg_taken_multiplier = 0.05;
+	kills.dmg_taken_multiplier = 0.2;
 	registry.renderRequests.insert(
 		entity,
 		{

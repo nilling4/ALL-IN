@@ -306,17 +306,19 @@ void WorldSystem::handle_collisions() {
 			if (registry.deadlys.has(entity_other)) {
 				KillsEnemy& kills = registry.killsEnemys.get(entity);
 				Deadly& deadly = registry.deadlys.get(entity_other);
-
-				deadly.health -= (kills.damage - deadly.armour);
-				kills.health -= (kills.dmg_taken_multiplier * deadly.dmg_to_projectiles);
-				if (kills.health < 0.f) {
-					registry.remove_all_components_of(entity);
+				if (kills.last_touched != &deadly) {
+					deadly.health -= (kills.damage - deadly.armour);
+					kills.health -= (kills.dmg_taken_multiplier * deadly.dmg_to_projectiles);
+					kills.last_touched = &deadly;
+					if (kills.health < 0.f) {
+						registry.remove_all_components_of(entity);
+					}
+					if (deadly.health < 0.f) {
+						registry.remove_all_components_of(entity_other);
+					}
+					Mix_PlayChannel(-1, roulette_hit_sound, 0);
+					++points;
 				}
-				if (deadly.health < 0.f) {
-					registry.remove_all_components_of(entity_other);
-				}
-				Mix_PlayChannel(-1, roulette_hit_sound, 0);
-				++points;
 			}
 		}
 	}
