@@ -1,23 +1,12 @@
-## Summary
-*Provide a brief description of the changes introduced in this pull request.*
+Closes <enter url of issue or delete if doesn't close any issue>
 
-## Changes Made
-*List the key changes made in the PR.*
-- *Change 1*
-- *Change 2*
-- *Change 3*
+Changes Made
+
+- _list change_
 
 ## QA
-*Indicate the quality assurance steps taken, including testing, and who performed the QA.*
 
-**QA Performed By:**
-- @username
+- [ ] QA performed by @you
+- [ ]
 
-**QA Steps:**
-- [ ] *Step 1*
-- [ ] *Step 2*
-- [ ] *Step 3*
-
-## Additional Notes
-*Add any extra information or context that reviewers may need to know.*
-
+<Optional: Attach photo/video showing what it should look like>
