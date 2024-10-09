@@ -22,9 +22,9 @@ const size_t DARTS_SPAWN_DELAY = 1677 * 3;
 WorldSystem::WorldSystem()
 	: points(0)
 	, next_king_clubs_spawn(10.f)
-	, next_roulette_ball_spawn(0.f)
-	, next_card_spawn(0.f)
-	, next_dart_spawn(0.f) {
+	, next_roulette_ball_spawn(ROULETTE_BALL_SPAWN_DELAY)
+	, next_card_spawn(CARDS_SPAWN_DELAY)
+	, next_dart_spawn(DARTS_SPAWN_DELAY) {
 	// Seeding rng with random device
 	rng = std::default_random_engine(std::random_device()());
 }
@@ -106,15 +106,15 @@ GLFWwindow* WorldSystem::create_window() {
 		return nullptr;
 	}
 
-	background_music = Mix_LoadMUS(audio_path("music_careful.mp3").c_str());
+	background_music = Mix_LoadMUS(audio_path("music_careful.wav").c_str());
 	salmon_dead_sound = Mix_LoadWAV(audio_path("death_sound.wav").c_str());
-	roulette_hit_sound = Mix_LoadWAV(audio_path("roulette_hit.mp3").c_str());
+	roulette_hit_sound = Mix_LoadWAV(audio_path("roulette_hit.wav").c_str());
 
 	if (background_music == nullptr || salmon_dead_sound == nullptr || roulette_hit_sound == nullptr) {
 		fprintf(stderr, "Failed to load sounds\n %s\n %s\n %s\n make sure the data directory is present",
-			audio_path("music_careful.mp3").c_str(),
+			audio_path("music_careful.wav").c_str(),
 			audio_path("death_sound.wav").c_str(),
-			audio_path("roulette_hit.mp3").c_str());
+			audio_path("roulette_hit.wav").c_str());
 		return nullptr;
 	}
 
@@ -149,13 +149,14 @@ bool WorldSystem::step(float elapsed_ms_since_last_update) {
 	// Remove entities that leave the screen on the left side
 	// Iterate backwards to be able to remove without unterfering with the next object to visit
 	// (the containers exchange the last element with the current)
-	for (int i = (int)motions_registry.components.size()-1; i>=0; --i) {
-	    Motion& motion = motions_registry.components[i];
-		if (motion.position.x + abs(motion.scale.x) < 0.f) {
-			if(!registry.players.has(motions_registry.entities[i])) // don't remove the player
-				registry.remove_all_components_of(motions_registry.entities[i]);
-		}
-	}
+	for (int i = (int)motions_registry.components.size()-1; i >= 0; --i) {
+    Motion& motion = motions_registry.components[i];
+    float distance = sqrt(pow(motion.position.x - p_motion.position.x, 2) + pow(motion.position.y - p_motion.position.y, 2));
+    if (distance > 2000.f) {
+        if (!registry.players.has(motions_registry.entities[i])) // don't remove the player
+            registry.remove_all_components_of(motions_registry.entities[i]);
+    }
+}
 
 	// spawn new king clubs
 	next_king_clubs_spawn -= elapsed_ms_since_last_update * current_speed;
@@ -163,13 +164,45 @@ bool WorldSystem::step(float elapsed_ms_since_last_update) {
 		next_king_clubs_spawn = (KING_CLUBS_SPAWN_DELAY / 2) + uniform_dist(rng) * (KING_CLUBS_SPAWN_DELAY / 2);
 
 		// TODO Make sure King Clubs spawns in "room", not randomly on screen. 
-        createKingClubs(renderer, vec2(50.f + uniform_dist(rng) * (window_width_px - 100.f), 50.f + uniform_dist(rng) * (window_height_px - 100.f)));
+        float angle = uniform_dist(rng) * 2 * M_PI; 
+		float radius = 300.f + uniform_dist(rng) * 400.f; 
+
+		float offsetX = radius * cos(angle);
+		float offsetY = radius * sin(angle);
+
+		createKingClubs(renderer, vec2(p_motion.position.x + offsetX, p_motion.position.y + offsetY));
 	}
 
-	float dx = mouse_x - p_motion.position.x;
-	float dy = mouse_y - p_motion.position.y;
+	float dx = mouse_x - window_width_px / 2.0f;
+	float dy = mouse_y - window_height_px / 2.0f;
 	float angle = std::atan2(dy, dx);
 
+	auto& p_render = registry.renderRequests.get(player_protagonist);
+	auto& motion = registry.motions.get(player_protagonist);
+	if (angle>-M_PI/4 && angle<M_PI/4) {
+		p_render = { TEXTURE_ASSET_ID::PROTAGONIST_LEFT, 
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE };
+		if (motion.scale.x > 0) {
+			motion.scale.x *= -1;
+		}
+	} else if (angle>M_PI/4 && angle<3*M_PI/4) {
+		p_render = { TEXTURE_ASSET_ID::PROTAGONIST_FORWARD, 
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE };
+	} else if (angle>3*M_PI/4 && angle<5*M_PI/4) {
+		p_render = { TEXTURE_ASSET_ID::PROTAGONIST_LEFT, 
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE };
+		if (motion.scale.x < 0) {
+			motion.scale.x *= -1;
+		}
+	} else {
+		p_render = { TEXTURE_ASSET_ID::PROTAGONIST_BACK, 
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE };
+	}
+	// spawn roulette balls
 	next_roulette_ball_spawn -= elapsed_ms_since_last_update * current_speed;
 	if (next_roulette_ball_spawn < 0.f) {
 		next_roulette_ball_spawn = ROULETTE_BALL_SPAWN_DELAY;
@@ -232,8 +265,6 @@ bool WorldSystem::step(float elapsed_ms_since_last_update) {
 	// reduce window brightness if the salmon is dying
 	screen.darken_screen_factor = 1 - min_counter_ms / 3000;
 
-	// !!! TODO A1: update LightUp timers and remove if time drops below zero, similar to the death counter
-
 	return true;
 }
 
@@ -257,20 +288,6 @@ void WorldSystem::restart_game() {
 	// create a new Protagonist
 	player_protagonist = createProtagonist(renderer, { window_width_px/2, window_height_px/2 });
 	registry.colors.insert(player_protagonist, {1, 0.8f, 0.8f});
-
-	// !! TODO A2: Enable static eggs on the ground, for reference
-	// Create eggs on the floor, use this for reference
-	/*
-	for (uint i = 0; i < 20; i++) {
-		int w, h;
-		glfwGetWindowSize(window, &w, &h);
-		float radius = 30 * (uniform_dist(rng) + 0.3f); // range 0.3 .. 1.3
-		Entity egg = createEgg({ uniform_dist(rng) * w, h - uniform_dist(rng) * 20 },
-			         { radius, radius });
-		float brightness = uniform_dist(rng) * 0.5 + 0.5;
-		registry.colors.insert(egg, { brightness, brightness, brightness});
-	}
-	*/
 }
 
 // Compute collisions between entities
@@ -293,8 +310,6 @@ void WorldSystem::handle_collisions() {
 					// Scream, reset timer, and make the salmon sink
 					registry.deathTimers.emplace(entity);
 					Mix_PlayChannel(-1, salmon_dead_sound, 0);
-
-					// !!! TODO A1: change the salmon's orientation and color on death
 				}
 			}
 			// Checking Player - Eatable collisions
@@ -304,8 +319,6 @@ void WorldSystem::handle_collisions() {
 					registry.remove_all_components_of(entity_other);
 					Mix_PlayChannel(-1, roulette_hit_sound, 0);
 					++points;
-
-					// !!! TODO A1: create a new struct called LightUp in components.hpp and add an instance to the salmon entity by modifying the ECS registry
 				}
 			}
 		}
@@ -341,12 +354,6 @@ bool WorldSystem::is_over() const {
 
 // On key callback
 void WorldSystem::on_key(int key, int, int action, int mod) {
-	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	// TODO A1: HANDLE SALMON MOVEMENT HERE
-	// key is of 'type' GLFW_KEY_
-	// action can be GLFW_PRESS GLFW_RELEASE GLFW_REPEAT
-	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 	// Resetting game
 	if (action == GLFW_RELEASE && key == GLFW_KEY_R) {
 		int w, h;
@@ -364,7 +371,7 @@ void WorldSystem::on_key(int key, int, int action, int mod) {
 	}
 
 	Motion& motion = registry.motions.get(player_protagonist);
-	auto& p_render = registry.renderRequests.get(player_protagonist);
+	
 
 	motion.velocity.x = 0.0f;
 	motion.velocity.y = 0.0f;
@@ -396,31 +403,17 @@ void WorldSystem::on_key(int key, int, int action, int mod) {
 	}
 	if (want_go_up && !want_go_down) {
 		motion.velocity.y = -100.f;  
-		p_render = { TEXTURE_ASSET_ID::PROTAGONIST_BACK, 
-			EFFECT_ASSET_ID::TEXTURED,
-			GEOMETRY_BUFFER_ID::SPRITE };
+
 	} else if (want_go_down && !want_go_up) {
 		motion.velocity.y = 100.f;  
-		p_render = { TEXTURE_ASSET_ID::PROTAGONIST_FORWARD, 
-			EFFECT_ASSET_ID::TEXTURED,
-			GEOMETRY_BUFFER_ID::SPRITE };
+
 	}
 	if (want_go_left && !want_go_right) {
 		motion.velocity.x = -100.f;  
-		p_render = { TEXTURE_ASSET_ID::PROTAGONIST_LEFT, 
-			EFFECT_ASSET_ID::TEXTURED,
-			GEOMETRY_BUFFER_ID::SPRITE };
-		if (motion.scale.x < 0) {
-			motion.scale.x *= -1;
-		}
+
 	} else if (want_go_right && !want_go_left) {
 		motion.velocity.x = 100.f;   
-		p_render = { TEXTURE_ASSET_ID::PROTAGONIST_LEFT, 
-			EFFECT_ASSET_ID::TEXTURED,
-			GEOMETRY_BUFFER_ID::SPRITE };
-		if (motion.scale.x > 0) {
-			motion.scale.x *= -1;
-		}
+
 	} 
 
 	// Control the current speed with `<` `>`
@@ -436,13 +429,6 @@ void WorldSystem::on_key(int key, int, int action, int mod) {
 }
 
 void WorldSystem::on_mouse_move(vec2 mouse_position) {
-	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	// TODO A1: HANDLE SALMON ROTATION HERE
-	// xpos and ypos are relative to the top-left of the window, the salmon's
-	// default facing direction is (1, 0)
-	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-	// (vec2)mouse_position; // dummy to avoid compiler warning
 	mouse_x = mouse_position.x;
 	mouse_y = mouse_position.y;
 }

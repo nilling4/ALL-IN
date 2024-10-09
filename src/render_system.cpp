@@ -237,9 +237,16 @@ mat3 RenderSystem::createProjectionMatrix()
 	float right = (float) window_width_px;
 	float bottom = (float) window_height_px;
 
+	Motion* player_motion;
+	for (Entity entity : registry.players.entities) {
+		player_motion = &registry.motions.get(entity);	
+	}
+	float offsetX = player_motion->position.x - window_width_px / 2.0f;
+    float offsetY = player_motion->position.y - window_height_px / 2.0f;
+
 	float sx = 2.f / (right - left);
 	float sy = 2.f / (top - bottom);
-	float tx = -(right + left) / (right - left);
-	float ty = -(top + bottom) / (top - bottom);
+	float tx = -(right + left) / (right - left) - offsetX * sx;
+	float ty = -(top + bottom) / (top - bottom) - offsetY * sy;
 	return {{sx, 0.f, 0.f}, {0.f, sy, 0.f}, {tx, ty, 1.f}};
 }
