@@ -161,7 +161,6 @@ bool WorldSystem::step(float elapsed_ms_since_last_update) {
 	// spawn new king clubs
 	next_king_clubs_spawn -= elapsed_ms_since_last_update * current_speed;
 	if (registry.deadlys.components.size() <= MAX_NUM_MELEE && next_king_clubs_spawn < 0.f) {
-		// reset timer
 		next_king_clubs_spawn = (KING_CLUBS_SPAWN_DELAY / 2) + uniform_dist(rng) * (KING_CLUBS_SPAWN_DELAY / 2);
 
 		// TODO Make sure King Clubs spawns in "room", not randomly on screen. 
@@ -177,6 +176,7 @@ bool WorldSystem::step(float elapsed_ms_since_last_update) {
 	float dx = mouse_x - window_width_px / 2.0f;
 	float dy = mouse_y - window_height_px / 2.0f;
 	float angle = std::atan2(dy, dx);
+
 	auto& p_render = registry.renderRequests.get(player_protagonist);
 	auto& motion = registry.motions.get(player_protagonist);
 	if (angle>-M_PI/4 && angle<M_PI/4) {
@@ -215,7 +215,6 @@ bool WorldSystem::step(float elapsed_ms_since_last_update) {
 		createRouletteBall(renderer, vec2(p_motion.position.x, p_motion.position.y), vec2(velocity_x, velocity_y));
 	}
 
-		// spawn cards
 	next_card_spawn -= elapsed_ms_since_last_update * current_speed;
 	if (next_card_spawn < 0.f) {
 		next_card_spawn = CARDS_SPAWN_DELAY;
