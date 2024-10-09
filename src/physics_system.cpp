@@ -41,6 +41,14 @@ void PhysicsSystem::step(float elapsed_ms)
 	for(uint i = 0; i< motion_registry.size(); i++) {
 		for (Entity entity : registry.deadlys.entities) {
 			Motion& motion = motion_registry.get(entity);
+			// motion.velocity.x += ((uniform_dist(rng) * 2.f) - 1.f)*step_seconds*100;
+            // motion.velocity.y += ((uniform_dist(rng) * 2.f) - 1.f)*step_seconds*100;
+            // if (motion.velocity.x < -50.f || motion.velocity.x > 50.f) {
+            //     motion.velocity.x *= 0.9;
+            // }
+            // if (motion.velocity.y < -50.f || motion.velocity.y > 50.f) {
+            //     motion.velocity.y *= 0.9;
+            // }
 			float angle = atan2(player_motion->position.x - motion.position.x,player_motion->position.y - motion.position.y);
 			motion.velocity.x = sin(angle)*50;
 			motion.velocity.y = cos(angle)*50;
