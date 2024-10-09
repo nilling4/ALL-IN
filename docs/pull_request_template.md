@@ -14,9 +14,9 @@
 - @username
 
 **QA Steps:**
-- [] *Step 1*
-- [] *Step 2*
-- [] *Step 3*
+- [ ] *Step 1*
+- [ ] *Step 2*
+- [ ] *Step 3*
 
 ## Additional Notes
 *Add any extra information or context that reviewers may need to know.*
