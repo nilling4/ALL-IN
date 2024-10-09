@@ -165,8 +165,8 @@ bool WorldSystem::step(float elapsed_ms_since_last_update) {
 		next_king_clubs_spawn = (KING_CLUBS_SPAWN_DELAY / 2) + uniform_dist(rng) * (KING_CLUBS_SPAWN_DELAY / 2);
 
 		// TODO Make sure King Clubs spawns in "room", not randomly on screen. 
-        float angle = uniform_dist(rng) * 2 * M_PI; // Random angle between 0 and 2π
-		float radius = 200.f + uniform_dist(rng) * 400.f; 
+        float angle = uniform_dist(rng) * 2 * M_PI; 
+		float radius = 300.f + uniform_dist(rng) * 400.f; 
 
 		float offsetX = radius * cos(angle);
 		float offsetY = radius * sin(angle);
@@ -289,20 +289,6 @@ void WorldSystem::restart_game() {
 	// create a new Protagonist
 	player_protagonist = createProtagonist(renderer, { window_width_px/2, window_height_px/2 });
 	registry.colors.insert(player_protagonist, {1, 0.8f, 0.8f});
-
-	// !! TODO A2: Enable static eggs on the ground, for reference
-	// Create eggs on the floor, use this for reference
-	/*
-	for (uint i = 0; i < 20; i++) {
-		int w, h;
-		glfwGetWindowSize(window, &w, &h);
-		float radius = 30 * (uniform_dist(rng) + 0.3f); // range 0.3 .. 1.3
-		Entity egg = createEgg({ uniform_dist(rng) * w, h - uniform_dist(rng) * 20 },
-			         { radius, radius });
-		float brightness = uniform_dist(rng) * 0.5 + 0.5;
-		registry.colors.insert(egg, { brightness, brightness, brightness});
-	}
-	*/
 }
 
 // Compute collisions between entities
