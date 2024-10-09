@@ -33,8 +33,6 @@ class RenderSystem {
 			textures_path("roulette_ball.png"),
 			textures_path("card_projectile.png"),
 			textures_path("dart_projectile.png"),
-			textures_path("green_fish.png"),
-			textures_path("eel.png"),
 			textures_path("protagonist_left.png"),
 			textures_path("protagonist_front.png"),
 			textures_path("protagonist_back.png"),
