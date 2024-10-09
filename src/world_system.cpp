@@ -167,8 +167,8 @@ bool WorldSystem::step(float elapsed_ms_since_last_update) {
         createKingClubs(renderer, vec2(50.f + uniform_dist(rng) * (window_width_px - 100.f), 50.f + uniform_dist(rng) * (window_height_px - 100.f)));
 	}
 
-	float dx = mouse_x - p_motion.position.x;
-	float dy = mouse_y - p_motion.position.y;
+	float dx = mouse_x - window_width_px / 2.0f;
+	float dy = mouse_y - window_height_px / 2.0f;
 	float angle = std::atan2(dy, dx);
 
 	// spawn roulette balls
