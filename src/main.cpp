@@ -10,6 +10,9 @@
 #include "render_system.hpp"
 #include "world_system.hpp"
 #include "ai_system.hpp"
+
+#include "iostream"
+
 using Clock = std::chrono::high_resolution_clock;
 
 // Entry point
@@ -35,6 +38,8 @@ int main()
 
 	// variable timestep loop
 	auto t = Clock::now();
+	int frames = 0;
+	float time = 0;
 	while (!world.is_over()) {
 		// Processes system messages, if this wasn't present the window would become unresponsive
 		glfwPollEvents();
@@ -43,13 +48,22 @@ int main()
 		auto now = Clock::now();
 		float elapsed_ms =
 			(float)(std::chrono::duration_cast<std::chrono::microseconds>(now - t)).count() / 1000;
+		
 		t = now;
 		world.step(elapsed_ms);
 		ai.step(elapsed_ms);
 		physics.step(elapsed_ms);
 		world.handle_collisions();
-
 		renderer.draw();
+		time += elapsed_ms;
+		frames++;
+		if (time >= 5000) {
+			float time_in_seconds = time / 1000;
+			int fps = static_cast<int>(frames / time_in_seconds);
+			std::cout<<"FPS: "<< fps <<std::endl;
+			time = 0;
+			frames = 0;
+		}
 	}
 
 	return EXIT_SUCCESS;
