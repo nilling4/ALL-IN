@@ -16,9 +16,12 @@ const size_t KING_CLUBS_SPAWN_DELAY = 400 * 3;
 const size_t ROULETTE_BALL_SPAWN_DELAY = 400 * 3;
 const size_t CARDS_SPAWN_DELAY = 1000 * 3;
 const size_t DARTS_SPAWN_DELAY = 1677 * 3;
+// Room configuration
+const int num_blocks = 40;
+const int wallWidth = num_blocks * WALL_BLOCK_BB_WIDTH * 2;
+const int wallHeight = num_blocks * WALL_BLOCK_BB_HEIGHT;
 
-
-// create the underwater world
+// create the casino
 WorldSystem::WorldSystem()
 	: points(0)
 	, next_king_clubs_spawn(10.f)
@@ -111,10 +114,15 @@ GLFWwindow* WorldSystem::create_window() {
 	roulette_hit_sound = Mix_LoadWAV(audio_path("roulette_hit.wav").c_str());
 
 	if (background_music == nullptr || salmon_dead_sound == nullptr || roulette_hit_sound == nullptr) {
-		fprintf(stderr, "Failed to load sounds\n %s\n %s\n %s\n make sure the data directory is present",
-			audio_path("music_careful.wav").c_str(),
-			audio_path("death_sound.wav").c_str(),
-			audio_path("roulette_hit.wav").c_str());
+		if (!roulette_hit_sound) {
+			printf("Failed to load roulette_hit.wav: %s\n", Mix_GetError());
+		}
+		if (!background_music) {
+			printf("Failed to load music_careful.wav: %s\n", Mix_GetError());
+		}
+		if (!salmon_dead_sound) {
+			printf("Failed to load death_sound.wav: %s\n", Mix_GetError());
+		}
 		return nullptr;
 	}
 
@@ -163,14 +171,15 @@ bool WorldSystem::step(float elapsed_ms_since_last_update) {
 	if (registry.deadlys.components.size() <= MAX_NUM_MELEE && next_king_clubs_spawn < 0.f) {
 		next_king_clubs_spawn = (KING_CLUBS_SPAWN_DELAY / 2) + uniform_dist(rng) * (KING_CLUBS_SPAWN_DELAY / 2);
 
-		// TODO Make sure King Clubs spawns in "room", not randomly on screen. 
-        float angle = uniform_dist(rng) * 2 * M_PI; 
-		float radius = 300.f + uniform_dist(rng) * 400.f; 
+		float roomLeft = window_width_px / 2 - wallWidth / 2 + WALL_BLOCK_BB_WIDTH;   
+		float roomRight = window_width_px / 2 + wallWidth / 2 - WALL_BLOCK_BB_WIDTH; 
+		float roomTop = window_height_px / 2 - wallHeight / 2 + WALL_BLOCK_BB_HEIGHT; 
+		float roomBottom = window_height_px / 2 + wallHeight / 2 - WALL_BLOCK_BB_HEIGHT;
 
-		float offsetX = radius * cos(angle);
-		float offsetY = radius * sin(angle);
+		float spawnX = uniform_dist(rng) * (roomRight - roomLeft) + roomLeft;   
+		float spawnY = uniform_dist(rng) * (roomBottom - roomTop) + roomTop;
 
-		createKingClubs(renderer, vec2(p_motion.position.x + offsetX, p_motion.position.y + offsetY));
+		createKingClubs(renderer, vec2(spawnX, spawnY));
 	}
 
 	float dx = mouse_x - window_width_px / 2.0f;
@@ -288,6 +297,38 @@ void WorldSystem::restart_game() {
 	// create a new Protagonist
 	player_protagonist = createProtagonist(renderer, { window_width_px/2, window_height_px/2 });
 	registry.colors.insert(player_protagonist, {1, 0.8f, 0.8f});
+
+	// Top Wall
+	for (int i = 0; i < num_blocks * 2; i++) {
+		createWallBlock(renderer, {
+			window_width_px / 2 - wallWidth / 2 + i * WALL_BLOCK_BB_WIDTH,
+			window_height_px / 2 - wallHeight / 2
+			});
+	}
+
+	// Right Wall
+	for (int i = 0; i < num_blocks; i++) {
+		createWallBlock(renderer, {
+			window_width_px / 2 + wallWidth / 2, 
+			window_height_px / 2 - wallHeight / 2 + i * WALL_BLOCK_BB_HEIGHT 
+			});
+	}
+
+	// Bottom Wall
+	for (int i = 0; i < num_blocks * 2; i++) {
+		createWallBlock(renderer, {
+			window_width_px / 2 + wallWidth / 2 - i * WALL_BLOCK_BB_WIDTH,
+			window_height_px / 2 + wallHeight / 2 
+			});
+	}
+
+	// Left Wall
+	for (int i = 0; i < num_blocks; i++) {
+		createWallBlock(renderer, {
+			window_width_px / 2 - wallWidth / 2, 
+			window_height_px / 2 - wallHeight / 2 + (num_blocks - i) * WALL_BLOCK_BB_HEIGHT
+			});
+	}
 }
 
 // Compute collisions between entities
@@ -299,7 +340,7 @@ void WorldSystem::handle_collisions() {
 		Entity entity = collisionsRegistry.entities[i];
 		Entity entity_other = collisionsRegistry.components[i].other;
 
-		// for now, we are only interested in collisions that involve the salmon
+		// for now, we are only interested in collisions that involve the player
 		if (registry.players.has(entity)) {
 			//Player& player = registry.players.get(entity);
 
@@ -320,6 +361,25 @@ void WorldSystem::handle_collisions() {
 					Mix_PlayChannel(-1, roulette_hit_sound, 0);
 					++points;
 				}
+			}
+			else if (registry.solids.has(entity_other)) {
+				// Player - Wall collision
+				Motion& motion = registry.motions.get(entity);
+				Motion& motion_other = registry.motions.get(entity_other);
+				vec2 normal = { 0, 0 };
+				if (motion.position.x < motion_other.position.x) {
+					normal.x = -1;
+				}
+				else if (motion.position.x > motion_other.position.x) {
+					normal.x = 1;
+				}
+				if (motion.position.y < motion_other.position.y) {
+					normal.y = -1;
+				}
+				else if (motion.position.y > motion_other.position.y) {
+					normal.y = 1;
+				}
+				motion.position += normal;
 			}
 		}
 		if (registry.killsEnemys.has(entity)) {
@@ -368,6 +428,11 @@ void WorldSystem::on_key(int key, int, int action, int mod) {
 			debugging.in_debug_mode = false;
 		else
 			debugging.in_debug_mode = true;
+	}
+
+	// Close game
+	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
+		glfwSetWindowShouldClose(window, GL_TRUE);
 	}
 
 	Motion& motion = registry.motions.get(player_protagonist);

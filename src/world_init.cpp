@@ -51,6 +51,29 @@ Entity createProtagonist(RenderSystem* renderer, vec2 pos) {
 
 }
 
+Entity createWallBlock(RenderSystem* renderer, vec2 pos) {
+	auto entity = Entity();
+
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	Motion& motion = registry.motions.emplace(entity);
+	motion.position = pos;
+	motion.angle = 0.f;
+	motion.velocity = { 0.f, 0.f };
+	motion.scale = vec2({ WALL_BLOCK_BB_WIDTH, WALL_BLOCK_BB_HEIGHT });
+
+	registry.solids.emplace(entity);
+	registry.renderRequests.insert(
+		entity,
+		{ TEXTURE_ASSET_ID::WALL_BLOCK,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE });
+
+	return entity;
+
+}
+
 
 Entity createKingClubs(RenderSystem* renderer, vec2 position)
 {

@@ -20,6 +20,8 @@ const float FISH_BB_HEIGHT = 0.6f * 100.f;
 const float EEL_BB_WIDTH   = 0.6f * 150.f;	// 1001
 const float EEL_BB_HEIGHT  = 0.6f * 100.f;	// 870
 
+const float WALL_BLOCK_BB_WIDTH = 24.0f;
+const float WALL_BLOCK_BB_HEIGHT = 24.0f;
 // the player
 Entity createSalmon(RenderSystem* renderer, vec2 pos);
 
@@ -39,6 +41,8 @@ Entity createRouletteBall(RenderSystem* renderer, vec2 position, vec2 velocity);
 Entity createCardProjectile(RenderSystem* renderer, vec2 position, vec2 velocity);
 
 Entity createDartProjectile(RenderSystem* renderer, vec2 position, vec2 velocity, float angle);
+
+Entity createWallBlock(RenderSystem* renderer, vec2 position);
 
 // a red line for debugging purposes
 Entity createLine(vec2 position, vec2 size);
