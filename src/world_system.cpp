@@ -12,7 +12,7 @@
 
 // Game configuration
 const size_t MAX_NUM_MELEE = 25;
-const size_t KING_CLUBS_SPAWN_DELAY = 400 * 3;
+const size_t KING_CLUBS_SPAWN_DELAY = 400*3;
 const size_t ROULETTE_BALL_SPAWN_DELAY = 400 * 3;
 const size_t CARDS_SPAWN_DELAY = 1000 * 3;
 const size_t DARTS_SPAWN_DELAY = 1677 * 3;
@@ -157,10 +157,15 @@ bool WorldSystem::step(float elapsed_ms_since_last_update) {
 	// Remove entities that leave the screen on the left side
 	// Iterate backwards to be able to remove without unterfering with the next object to visit
 	// (the containers exchange the last element with the current)
-	for (int i = (int)motions_registry.components.size()-1; i >= 0; --i) {
+	float left_bound = window_width_px / 2 - wallWidth / 2;
+	float right_bound = window_width_px / 2 + wallWidth / 2;
+	float top_bound = window_height_px / 2 - wallHeight / 2;
+	float bottom_bound = window_height_px / 2 + wallHeight / 2;
+
+for (int i = (int)motions_registry.components.size() - 1; i >= 0; --i) {
     Motion& motion = motions_registry.components[i];
-    float distance = sqrt(pow(motion.position.x - p_motion.position.x, 2) + pow(motion.position.y - p_motion.position.y, 2));
-    if (distance > 2000.f) {
+    if (motion.position.x < left_bound || motion.position.x > right_bound ||
+        motion.position.y < top_bound || motion.position.y > bottom_bound) {
         if (!registry.players.has(motions_registry.entities[i])) // don't remove the player
             registry.remove_all_components_of(motions_registry.entities[i]);
     }
@@ -168,19 +173,25 @@ bool WorldSystem::step(float elapsed_ms_since_last_update) {
 
 	// spawn new king clubs
 	next_king_clubs_spawn -= elapsed_ms_since_last_update * current_speed;
-	if (registry.deadlys.components.size() <= MAX_NUM_MELEE && next_king_clubs_spawn < 0.f) {
-		next_king_clubs_spawn = (KING_CLUBS_SPAWN_DELAY / 2) + uniform_dist(rng) * (KING_CLUBS_SPAWN_DELAY / 2);
+if (registry.deadlys.components.size() <= MAX_NUM_MELEE && next_king_clubs_spawn < 0.f) {
+    next_king_clubs_spawn = (KING_CLUBS_SPAWN_DELAY / 2) + uniform_dist(rng) * (KING_CLUBS_SPAWN_DELAY / 2);
 
-		float roomLeft = window_width_px / 2 - wallWidth / 2 + WALL_BLOCK_BB_WIDTH;   
-		float roomRight = window_width_px / 2 + wallWidth / 2 - WALL_BLOCK_BB_WIDTH; 
-		float roomTop = window_height_px / 2 - wallHeight / 2 + WALL_BLOCK_BB_HEIGHT; 
-		float roomBottom = window_height_px / 2 + wallHeight / 2 - WALL_BLOCK_BB_HEIGHT;
+    float roomLeft = window_width_px / 2 - wallWidth / 2 + WALL_BLOCK_BB_WIDTH;   
+    float roomRight = window_width_px / 2 + wallWidth / 2 - WALL_BLOCK_BB_WIDTH; 
+    float roomTop = window_height_px / 2 - wallHeight / 2 + WALL_BLOCK_BB_HEIGHT; 
+    float roomBottom = window_height_px / 2 + wallHeight / 2 - WALL_BLOCK_BB_HEIGHT;
 
-		float spawnX = uniform_dist(rng) * (roomRight - roomLeft) + roomLeft;   
-		float spawnY = uniform_dist(rng) * (roomBottom - roomTop) + roomTop;
+    vec2 player_position = p_motion.position;
+    float min_distance_from_player = 300.0f; 
 
-		createKingClubs(renderer, vec2(spawnX, spawnY));
-	}
+    float spawnX, spawnY;
+    do {
+        spawnX = uniform_dist(rng) * (roomRight - roomLeft) + roomLeft;   
+        spawnY = uniform_dist(rng) * (roomBottom - roomTop) + roomTop;
+    } while (sqrt(pow(spawnX - player_position.x, 2) + pow(spawnY - player_position.y, 2)) < min_distance_from_player);
+
+    createKingClubs(renderer, vec2(spawnX, spawnY));
+}
 
 	float dx = mouse_x - window_width_px / 2.0f;
 	float dy = mouse_y - window_height_px / 2.0f;
