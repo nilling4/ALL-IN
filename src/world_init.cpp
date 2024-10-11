@@ -206,9 +206,6 @@ Entity createLerpProjectile(RenderSystem* renderer, vec2 position,vec2 startpos,
 	motion.scale = vec2({ CARD_PROJECTILE_BB_WIDTH, CARD_PROJECTILE_BB_HEIGHT }); 
 
 	auto& kills = registry.killsEnemyLerpyDerps.emplace(entity);
-	kills.damage = 0.f;
-	kills.health = 0.f;
-	kills.dmg_taken_multiplier = 69420;
 	kills.end_pos = end_pos;
 	kills.start_pos = startpos;
 	kills.total_time = 0;

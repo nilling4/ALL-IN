@@ -28,13 +28,9 @@ struct KillsEnemy {
 };
 
 struct KillsEnemyLerpyDerp { 				
-	float damage = 0;
-	float health = 0;
 	vec2 start_pos = { 0, 0 };
 	vec2 end_pos = { 0, 0 };
 	float total_time = 0;
-	float dmg_taken_multiplier = 1.f;		// multiplier to deadly's dmg_to_projectiles
-	void* last_touched = nullptr;
 };
 
 // anything the player can eat

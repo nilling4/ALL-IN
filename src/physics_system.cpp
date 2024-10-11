@@ -46,11 +46,11 @@ void PhysicsSystem::step(float elapsed_ms)
 	for (Entity entity : registry.players.entities) {
 		player_motion = &motion_registry.get(entity);	
 	}
+
 	for(uint i = 0; i< motion_registry.size(); i++) {
 		Motion& motion = motion_registry.components[i];
 		motion.position += motion.velocity * step_seconds;
 	}
-
 
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	// TODO A2: HANDLE EGG UPDATES HERE
