@@ -191,7 +191,8 @@ Entity createDartProjectile(RenderSystem* renderer, vec2 position, vec2 velocity
 	return entity;
 }
 
-Entity createLerpProjectile(RenderSystem* renderer, vec2 position,vec2 startpos, vec2 end_pos)
+
+Entity createLerpProjectile(RenderSystem* renderer, vec2 position,vec2 startpos, vec2 end_pos,float time)
 {
 	auto entity = Entity();
 
@@ -208,7 +209,8 @@ Entity createLerpProjectile(RenderSystem* renderer, vec2 position,vec2 startpos,
 	auto& kills = registry.killsEnemyLerpyDerps.emplace(entity);
 	kills.end_pos = end_pos;
 	kills.start_pos = startpos;
-	kills.total_time = 0;
+
+	kills.total_time = time;
 	registry.renderRequests.insert(
 		entity,
 		{
