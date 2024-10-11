@@ -537,7 +537,13 @@ void WorldSystem::on_key(int key, int, int action, int mod) {
 	if (action == GLFW_RELEASE && key == GLFW_KEY_R) {
 		int w, h;
 		glfwGetWindowSize(window, &w, &h);
-
+		std::ofstream ofs("save.json", std::ios::trunc);
+		if (ofs.is_open()) {
+			ofs.close();
+			std::cout << "save.json contents erased." << std::endl;
+		} else {
+			std::cerr << "Unable to open save.json for erasing." << std::endl;
+		}
         restart_game();
 	}
 
