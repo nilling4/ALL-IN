@@ -104,7 +104,7 @@ Entity createKingClubs(RenderSystem* renderer, vec2 position)
 	return entity;
 }
 
-Entity createRouletteBall(RenderSystem* renderer, vec2 position,vec2 startpos, vec2 end_pos)
+Entity createRouletteBall(RenderSystem* renderer, vec2 position, vec2 velocity) 
 {
 	auto entity = Entity();
 
@@ -113,7 +113,7 @@ Entity createRouletteBall(RenderSystem* renderer, vec2 position,vec2 startpos, v
 
 	auto& motion = registry.motions.emplace(entity);
 	motion.angle = 0.f;
-	motion.velocity = { 0, 0 };
+	motion.velocity = velocity;
 	motion.position = position;
 
 	motion.scale = vec2({ ROULETTE_BALL_BB_WIDTH, ROULETTE_BALL_BB_HEIGHT });
@@ -122,9 +122,6 @@ Entity createRouletteBall(RenderSystem* renderer, vec2 position,vec2 startpos, v
 	kills.damage = 10.f;
 	kills.health = 5.f;
 	kills.dmg_taken_multiplier = 2.f;
-	kills.end_pos = end_pos;
-	kills.start_pos = startpos;
-	kills.total_time = 0;
 	registry.renderRequests.insert(
 		entity,
 		{
@@ -136,7 +133,7 @@ Entity createRouletteBall(RenderSystem* renderer, vec2 position,vec2 startpos, v
 	return entity;
 }
 
-Entity createCardProjectile(RenderSystem* renderer, vec2 position,vec2 startpos, vec2 end_pos)
+Entity createCardProjectile(RenderSystem* renderer, vec2 position, vec2 velocity)
 {
 	auto entity = Entity();
 
@@ -145,7 +142,7 @@ Entity createCardProjectile(RenderSystem* renderer, vec2 position,vec2 startpos,
 
 	auto& motion = registry.motions.emplace(entity);
 	motion.angle = 0.f;
-	motion.velocity = { 0, 0 };
+	motion.velocity = velocity;
 	motion.position = position;
 
 	motion.scale = vec2({ CARD_PROJECTILE_BB_WIDTH, CARD_PROJECTILE_BB_HEIGHT });
@@ -154,9 +151,6 @@ Entity createCardProjectile(RenderSystem* renderer, vec2 position,vec2 startpos,
 	kills.damage = 5.f;
 	kills.health = 10.f;
 	kills.dmg_taken_multiplier = 0.2;
-	kills.end_pos = end_pos;
-	kills.start_pos = startpos;
-	kills.total_time = 0;
 	registry.renderRequests.insert(
 		entity,
 		{
@@ -168,7 +162,7 @@ Entity createCardProjectile(RenderSystem* renderer, vec2 position,vec2 startpos,
 	return entity;
 }
 
-Entity createDartProjectile(RenderSystem* renderer, vec2 position,vec2 startpos, vec2 end_pos)
+Entity createDartProjectile(RenderSystem* renderer, vec2 position, vec2 velocity, float angle)
 {
 	auto entity = Entity();
 
@@ -176,7 +170,8 @@ Entity createDartProjectile(RenderSystem* renderer, vec2 position,vec2 startpos,
 	registry.meshPtrs.emplace(entity, &mesh);
 
 	auto& motion = registry.motions.emplace(entity);
-	motion.velocity = { 0, 0 };
+	motion.angle = angle + 0.5 * M_PI;
+	motion.velocity = velocity;
 	motion.position = position;
 
 	motion.scale = vec2({ DART_PROJECTILE_BB_WIDTH, DART_PROJECTILE_BB_HEIGHT });
@@ -185,9 +180,6 @@ Entity createDartProjectile(RenderSystem* renderer, vec2 position,vec2 startpos,
 	kills.damage = 50.f;
 	kills.health = 2.f;
 	kills.dmg_taken_multiplier = 2;
-	kills.end_pos = end_pos;
-	kills.start_pos = startpos;
-	kills.total_time = 0;
 	registry.renderRequests.insert(
 		entity,
 		{
@@ -198,6 +190,39 @@ Entity createDartProjectile(RenderSystem* renderer, vec2 position,vec2 startpos,
 
 	return entity;
 }
+
+Entity createLerpProjectile(RenderSystem* renderer, vec2 position,vec2 startpos, vec2 end_pos)
+{
+	auto entity = Entity();
+
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 0.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2({ CARD_PROJECTILE_BB_WIDTH, CARD_PROJECTILE_BB_HEIGHT }); 
+
+	auto& kills = registry.killsEnemyLerpyDerps.emplace(entity);
+	kills.damage = 0.f;
+	kills.health = 0.f;
+	kills.dmg_taken_multiplier = 69420;
+	kills.end_pos = end_pos;
+	kills.start_pos = startpos;
+	kills.total_time = 0;
+	registry.renderRequests.insert(
+		entity,
+		{
+			TEXTURE_ASSET_ID::LERP_PROJECTILE,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE
+		});
+
+	return entity;
+}
+
 
 Entity createLine(vec2 position, vec2 scale)
 {

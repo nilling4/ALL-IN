@@ -21,6 +21,7 @@ public:
 	ComponentContainer<ScreenState> screenStates;
 	ComponentContainer<Eatable> eatables;
 	ComponentContainer<KillsEnemy> killsEnemys;
+	ComponentContainer<KillsEnemyLerpyDerp> killsEnemyLerpyDerps;
 	ComponentContainer<Deadly> deadlys;
 	ComponentContainer<DebugComponent> debugComponents;
 	ComponentContainer<vec3> colors;
@@ -40,6 +41,7 @@ public:
 		registry_list.push_back(&screenStates);
 		registry_list.push_back(&eatables);
 		registry_list.push_back(&killsEnemys);
+		registry_list.push_back(&killsEnemyLerpyDerps);
 		registry_list.push_back(&deadlys);
 		registry_list.push_back(&debugComponents);
 		registry_list.push_back(&colors);

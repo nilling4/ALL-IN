@@ -23,6 +23,13 @@ struct Deadly
 struct KillsEnemy {
 	float damage = 0;
 	float health = 0;
+	float dmg_taken_multiplier = 1.f;		// multiplier to deadly's dmg_to_projectiles
+	void* last_touched = nullptr;
+};
+
+struct KillsEnemyLerpyDerp { 				
+	float damage = 0;
+	float health = 0;
 	vec2 start_pos = { 0, 0 };
 	vec2 end_pos = { 0, 0 };
 	float total_time = 0;
@@ -139,7 +146,8 @@ enum class TEXTURE_ASSET_ID {
 	KING_CLUBS = PROTAGONIST_BACK + 1, // To add to this, make sure to also add in render_system.hpp
 	FLOOR_BLOCK = KING_CLUBS + 1,
 	WALL_BLOCK = FLOOR_BLOCK + 1,
-	TEXTURE_COUNT = WALL_BLOCK + 1
+	LERP_PROJECTILE = WALL_BLOCK + 1,
+	TEXTURE_COUNT = LERP_PROJECTILE + 1
 };
 const int texture_count = (int)TEXTURE_ASSET_ID::TEXTURE_COUNT;
 

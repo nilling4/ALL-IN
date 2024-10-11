@@ -20,6 +20,7 @@ const size_t KING_CLUBS_SPAWN_DELAY = 400*3;
 const size_t ROULETTE_BALL_SPAWN_DELAY = 400 * 3;
 const size_t CARDS_SPAWN_DELAY = 1000 * 3;
 const size_t DARTS_SPAWN_DELAY = 1677 * 3;
+const size_t LERP_SPAWN_DELAY = 1000 * 3;
 // Room configuration
 const int num_blocks = 40;
 const int wallWidth = num_blocks * WALL_BLOCK_BB_WIDTH * 2;
@@ -31,7 +32,8 @@ WorldSystem::WorldSystem()
 	, next_king_clubs_spawn(10.f)
 	, next_roulette_ball_spawn(ROULETTE_BALL_SPAWN_DELAY)
 	, next_card_spawn(CARDS_SPAWN_DELAY)
-	, next_dart_spawn(DARTS_SPAWN_DELAY) {
+	, next_dart_spawn(DARTS_SPAWN_DELAY)
+	, next_lerp_spawn(LERP_SPAWN_DELAY) {
 	// Seeding rng with random device
 	rng = std::default_random_engine(std::random_device()());
 }
@@ -230,19 +232,41 @@ if (registry.deadlys.components.size() <= MAX_NUM_MELEE && next_king_clubs_spawn
 	next_roulette_ball_spawn -= elapsed_ms_since_last_update * current_speed;
 	if (next_roulette_ball_spawn < 0.f) {
 		next_roulette_ball_spawn = ROULETTE_BALL_SPAWN_DELAY;
-		createRouletteBall(renderer, vec2(p_motion.position.x, p_motion.position.y),vec2(p_motion.position.x, p_motion.position.y), vec2(p_motion.position.x+1000*cos(angle), p_motion.position.y+1000*sin(angle)));
+
+		float speed = 300.f;
+
+		float velocity_x = speed * std::cos(angle);
+		float velocity_y = speed * std::sin(angle);
+
+		createRouletteBall(renderer, vec2(p_motion.position.x, p_motion.position.y), vec2(velocity_x, velocity_y));
 	}
 
 	next_card_spawn -= elapsed_ms_since_last_update * current_speed;
 	if (next_card_spawn < 0.f) {
 		next_card_spawn = CARDS_SPAWN_DELAY;
-		createCardProjectile(renderer, vec2(p_motion.position.x, p_motion.position.y),vec2(p_motion.position.x, p_motion.position.y), vec2(p_motion.position.x+1400*cos(angle), p_motion.position.y+1400*sin(angle)));
+		float speed = 400.f;
+
+		float velocity_x = speed * std::cos(angle);
+		float velocity_y = speed * std::sin(angle);
+
+		createCardProjectile(renderer, vec2(p_motion.position.x, p_motion.position.y), vec2(velocity_x, velocity_y));
 	}
 
 	next_dart_spawn -= elapsed_ms_since_last_update * current_speed;
 	if (next_dart_spawn < 0.f) {
 		next_dart_spawn = DARTS_SPAWN_DELAY;
-		createDartProjectile(renderer, vec2(p_motion.position.x, p_motion.position.y),vec2(p_motion.position.x, p_motion.position.y), vec2(p_motion.position.x+1200*cos(angle), p_motion.position.y+1200*sin(angle)));
+		float speed = 380.f;
+
+		float velocity_x = speed * std::cos(angle);
+		float velocity_y = speed * std::sin(angle);
+
+		createDartProjectile(renderer, vec2(p_motion.position.x, p_motion.position.y), vec2(velocity_x, velocity_y), angle);
+	}
+	
+	next_lerp_spawn -= elapsed_ms_since_last_update * current_speed;
+	if (next_lerp_spawn < 0.f) {
+		next_lerp_spawn = LERP_SPAWN_DELAY;
+		createLerpProjectile(renderer, vec2(p_motion.position.x, p_motion.position.y),vec2(p_motion.position.x, p_motion.position.y), vec2(p_motion.position.x+1000*cos(angle), p_motion.position.y+1000*sin(angle)));
 	}
 
 
@@ -458,6 +482,22 @@ void WorldSystem::load() {
     // Load projectiles positions
     if (j.contains("projectiles")) {
         for (auto& [key, value] : j["projectiles"].items()) {
+			double velocity_x = value["velocity"][0];
+            double velocity_y = value["velocity"][1];
+            double velocity_magnitude = std::sqrt(velocity_x * velocity_x + velocity_y * velocity_y);
+
+            if (velocity_magnitude <= 300) {
+                createRouletteBall(renderer, vec2(value["position"][0], value["position"][1]), vec2(velocity_x, velocity_y));
+            } else if (velocity_magnitude <= 380) {
+                createDartProjectile(renderer, vec2(value["position"][0], value["position"][1]), vec2(velocity_x, velocity_y), 0);
+            } else {
+                createCardProjectile(renderer, vec2(value["position"][0], value["position"][1]), vec2(velocity_x, velocity_y));
+            }
+        }
+    }
+
+	if (j.contains("lerp_projectiles")) {
+		for (auto& [key, value] : j["lerp_projectiles"].items()) {
 			double start_x = value["start_pos"][0];
 			double start_y = value["start_pos"][1];
 			double end_x = value["end_pos"][0];
@@ -466,15 +506,9 @@ void WorldSystem::load() {
 			// Calculate the distance between start and end positions
 			double distance = std::sqrt((end_x - start_x) * (end_x - start_x) + (end_y - start_y) * (end_y - start_y));
 
-			if (distance <= 1000) {
-				createRouletteBall(renderer, vec2(value["position"][0], value["position"][1]), vec2(start_x, start_y), vec2(end_x, end_y));
-			} else if (distance <= 1200) {
-				createDartProjectile(renderer, vec2(value["position"][0], value["position"][1]), vec2(start_x, start_y), vec2(end_x, end_y));
-			} else {
-				createCardProjectile(renderer, vec2(value["position"][0], value["position"][1]), vec2(start_x, start_y), vec2(end_x, end_y));
-			}
+			createLerpProjectile(renderer, vec2(value["position"][0], value["position"][1]), vec2(start_x, start_y), vec2(end_x, end_y));
 		}
-    }
+	}
 
     std::cout << "Game state loaded from " << filename << std::endl;
 }
@@ -505,8 +539,19 @@ void WorldSystem::save() {
     for (Entity entity : registry.killsEnemys.entities) {
         if (registry.motions.has(entity)) {
             Motion ent = registry.motions.get(entity);
+            j["projectiles"][std::to_string(entity)] = {
+                {"position", {ent.position.x, ent.position.y}},
+                {"velocity", {ent.velocity.x, ent.velocity.y}},
+            };
+        }
+    }
 
-			KillsEnemy kills = registry.killsEnemys.get(entity);
+	j["lerp_projectiles"] = json::object();
+    for (Entity entity : registry.killsEnemyLerpyDerps.entities) {
+        if (registry.motions.has(entity)) {
+            Motion ent = registry.motions.get(entity);
+
+			KillsEnemyLerpyDerp kills = registry.killsEnemyLerpyDerps.get(entity);
             j["projectiles"][std::to_string(entity)] = {
                 {"position", {ent.position.x, ent.position.y}},
                 {"velocity", {ent.velocity.x, ent.velocity.y}},
