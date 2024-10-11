@@ -17,10 +17,10 @@ using json = nlohmann::json;
 // Game configuration
 const size_t MAX_NUM_MELEE = 25;
 const size_t KING_CLUBS_SPAWN_DELAY = 400*3;
-const size_t ROULETTE_BALL_SPAWN_DELAY = 400 * 3;
+const size_t ROULETTE_BALL_SPAWN_DELAY = 400*3;
 const size_t CARDS_SPAWN_DELAY = 1000 * 3;
 const size_t DARTS_SPAWN_DELAY = 1677 * 3;
-const size_t LERP_SPAWN_DELAY = 900 * 3;
+const size_t LERP_SPAWN_DELAY = 3*400;
 // Room configuration
 const int num_blocks = 40;
 const int wallWidth = num_blocks * WALL_BLOCK_BB_WIDTH * 2;
@@ -268,7 +268,7 @@ if (registry.deadlys.components.size() <= MAX_NUM_MELEE && next_king_clubs_spawn
 	next_lerp_spawn -= elapsed_ms_since_last_update * current_speed;
 	if (next_lerp_spawn < 0.f) {
 		next_lerp_spawn = LERP_SPAWN_DELAY;
-		createLerpProjectile(renderer, vec2(p_motion.position.x, p_motion.position.y),vec2(p_motion.position.x, p_motion.position.y), vec2(p_motion.position.x+400*cos(angle), p_motion.position.y+400*sin(angle)));
+		createLerpProjectile(renderer, vec2(p_motion.position.x, p_motion.position.y),vec2(p_motion.position.x, p_motion.position.y), vec2(p_motion.position.x+400*cos(angle), p_motion.position.y+400*sin(angle)),0);
 	}
 
 
@@ -517,7 +517,7 @@ void WorldSystem::load() {
 			// Calculate the distance between start and end positions
 			// double distance = std::sqrt((end_x - start_x) * (end_x - start_x) + (end_y - start_y) * (end_y - start_y));
 
-			createLerpProjectile(renderer, vec2(value["position"][0], value["position"][1]), vec2(start_x, start_y), vec2(end_x, end_y));
+			createLerpProjectile(renderer, vec2(value["position"][0], value["position"][1]), vec2(start_x, start_y), vec2(end_x, end_y),value["total_time"]);
 		}
 	}
 
