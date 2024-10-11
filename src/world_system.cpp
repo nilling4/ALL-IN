@@ -308,6 +308,7 @@ void WorldSystem::restart_game() {
 
 	// Debugging for memory/component leaks
 	registry.list_all_components();
+	points = 0;
 	load();
 	// create a new Protagonist
 	if (registry.players.size() == 0) {
@@ -367,7 +368,7 @@ void WorldSystem::handle_collisions() {
 				if (!registry.deathTimers.has(entity)) {
 					// Scream, reset timer, and make the salmon sink
 					registry.deathTimers.emplace(entity);
-					Mix_PlayChannel(-1, salmon_dead_sound, 0);
+					Mix_PlayChannel(-1, salmon_dead_sound, 0);		
 					std::ofstream ofs("save.json", std::ios::trunc);
 					if (ofs.is_open()) {
 						ofs.close();
