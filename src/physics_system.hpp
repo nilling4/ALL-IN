@@ -12,7 +12,7 @@ class PhysicsSystem
 {
 public:
 	void step(float elapsed_ms);
-
+	void lerp(float elapsed_ms,float total_ms);
 	PhysicsSystem()
 	{
 		rng = std::default_random_engine(std::random_device()());

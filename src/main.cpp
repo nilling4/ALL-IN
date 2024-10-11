@@ -53,6 +53,7 @@ int main()
 		world.step(elapsed_ms);
 		ai.step(elapsed_ms);
 		physics.step(elapsed_ms);
+		physics.lerp(elapsed_ms, 1000);
 		world.handle_collisions();
 		renderer.draw();
 		time += elapsed_ms;

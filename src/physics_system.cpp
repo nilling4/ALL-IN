@@ -25,7 +25,16 @@ bool collides(const Motion& motion1, const Motion& motion2)
 		return true;
 	return false;
 }
-
+void PhysicsSystem::lerp(float elapsed_ms,float total_ms) {
+	auto& motion_registry = registry.motions;
+	for (Entity entity : registry.killsEnemys.entities) {
+		Motion& motion = motion_registry.get(entity);
+		KillsEnemy& kills = registry.killsEnemys.get(entity);
+		kills.total_time += elapsed_ms/2;
+		motion.position.x = (1 - kills.total_time/total_ms) * kills.start_pos.x + kills.total_time/total_ms * kills.end_pos.x;
+		motion.position.y = (1 - kills.total_time/total_ms) * kills.start_pos.y + kills.total_time/total_ms * kills.end_pos.y;
+	}
+}
 
 void PhysicsSystem::step(float elapsed_ms)
 {
@@ -37,11 +46,12 @@ void PhysicsSystem::step(float elapsed_ms)
 	for (Entity entity : registry.players.entities) {
 		player_motion = &motion_registry.get(entity);	
 	}
-
-	for(uint i = 0; i< motion_registry.size(); i++) {
-		Motion& motion = motion_registry.components[i];
+	player_motion->position+=player_motion->velocity*step_seconds;
+	for(Entity entity : registry.deadlys.entities){ 
+		Motion& motion = motion_registry.get(entity);
 		motion.position += motion.velocity * step_seconds;
 	}
+
 
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	// TODO A2: HANDLE EGG UPDATES HERE

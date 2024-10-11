@@ -36,11 +36,11 @@ Entity createEel(RenderSystem* renderer, vec2 position);
 
 Entity createKingClubs(RenderSystem* renderer, vec2 position);
 
-Entity createRouletteBall(RenderSystem* renderer, vec2 position, vec2 velocity);
+Entity createRouletteBall(RenderSystem* renderer, vec2 position,vec2 startpos, vec2 end_pos);
 
-Entity createCardProjectile(RenderSystem* renderer, vec2 position, vec2 velocity);
+Entity createCardProjectile(RenderSystem* renderer, vec2 position,vec2 startpos, vec2 end_pos);
 
-Entity createDartProjectile(RenderSystem* renderer, vec2 position, vec2 velocity, float angle);
+Entity createDartProjectile(RenderSystem* renderer, vec2 position,vec2 startpos, vec2 end_pos);
 
 Entity createWallBlock(RenderSystem* renderer, vec2 position);
 
