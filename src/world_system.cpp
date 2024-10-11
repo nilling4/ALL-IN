@@ -8,11 +8,15 @@
 
 #include "physics_system.hpp"
 #include <iostream>
+#include <fstream>
+#include "nlohmann/json.hpp"
+#include <cmath> 
 
+using json = nlohmann::json;
 
 // Game configuration
 const size_t MAX_NUM_MELEE = 25;
-const size_t KING_CLUBS_SPAWN_DELAY = 400 * 3;
+const size_t KING_CLUBS_SPAWN_DELAY = 400*3;
 const size_t ROULETTE_BALL_SPAWN_DELAY = 400 * 3;
 const size_t CARDS_SPAWN_DELAY = 1000 * 3;
 const size_t DARTS_SPAWN_DELAY = 1677 * 3;
@@ -157,10 +161,15 @@ bool WorldSystem::step(float elapsed_ms_since_last_update) {
 	// Remove entities that leave the screen on the left side
 	// Iterate backwards to be able to remove without unterfering with the next object to visit
 	// (the containers exchange the last element with the current)
-	for (int i = (int)motions_registry.components.size()-1; i >= 0; --i) {
+	float left_bound = window_width_px / 2 - wallWidth / 2;
+	float right_bound = window_width_px / 2 + wallWidth / 2;
+	float top_bound = window_height_px / 2 - wallHeight / 2;
+	float bottom_bound = window_height_px / 2 + wallHeight / 2;
+
+for (int i = (int)motions_registry.components.size() - 1; i >= 0; --i) {
     Motion& motion = motions_registry.components[i];
-    float distance = sqrt(pow(motion.position.x - p_motion.position.x, 2) + pow(motion.position.y - p_motion.position.y, 2));
-    if (distance > 2000.f) {
+    if (motion.position.x < left_bound || motion.position.x > right_bound ||
+        motion.position.y < top_bound || motion.position.y > bottom_bound) {
         if (!registry.players.has(motions_registry.entities[i])) // don't remove the player
             registry.remove_all_components_of(motions_registry.entities[i]);
     }
@@ -168,19 +177,25 @@ bool WorldSystem::step(float elapsed_ms_since_last_update) {
 
 	// spawn new king clubs
 	next_king_clubs_spawn -= elapsed_ms_since_last_update * current_speed;
-	if (registry.deadlys.components.size() <= MAX_NUM_MELEE && next_king_clubs_spawn < 0.f) {
-		next_king_clubs_spawn = (KING_CLUBS_SPAWN_DELAY / 2) + uniform_dist(rng) * (KING_CLUBS_SPAWN_DELAY / 2);
+if (registry.deadlys.components.size() <= MAX_NUM_MELEE && next_king_clubs_spawn < 0.f) {
+    next_king_clubs_spawn = (KING_CLUBS_SPAWN_DELAY / 2) + uniform_dist(rng) * (KING_CLUBS_SPAWN_DELAY / 2);
 
-		float roomLeft = window_width_px / 2 - wallWidth / 2 + WALL_BLOCK_BB_WIDTH;   
-		float roomRight = window_width_px / 2 + wallWidth / 2 - WALL_BLOCK_BB_WIDTH; 
-		float roomTop = window_height_px / 2 - wallHeight / 2 + WALL_BLOCK_BB_HEIGHT; 
-		float roomBottom = window_height_px / 2 + wallHeight / 2 - WALL_BLOCK_BB_HEIGHT;
+    float roomLeft = window_width_px / 2 - wallWidth / 2 + WALL_BLOCK_BB_WIDTH;   
+    float roomRight = window_width_px / 2 + wallWidth / 2 - WALL_BLOCK_BB_WIDTH; 
+    float roomTop = window_height_px / 2 - wallHeight / 2 + WALL_BLOCK_BB_HEIGHT; 
+    float roomBottom = window_height_px / 2 + wallHeight / 2 - WALL_BLOCK_BB_HEIGHT;
 
-		float spawnX = uniform_dist(rng) * (roomRight - roomLeft) + roomLeft;   
-		float spawnY = uniform_dist(rng) * (roomBottom - roomTop) + roomTop;
+    vec2 player_position = p_motion.position;
+    float min_distance_from_player = 300.0f; 
 
-		createKingClubs(renderer, vec2(spawnX, spawnY));
-	}
+    float spawnX, spawnY;
+    do {
+        spawnX = uniform_dist(rng) * (roomRight - roomLeft) + roomLeft;   
+        spawnY = uniform_dist(rng) * (roomBottom - roomTop) + roomTop;
+    } while (sqrt(pow(spawnX - player_position.x, 2) + pow(spawnY - player_position.y, 2)) < min_distance_from_player);
+
+    createKingClubs(renderer, vec2(spawnX, spawnY));
+}
 
 	float dx = mouse_x - window_width_px / 2.0f;
 	float dy = mouse_y - window_height_px / 2.0f;
@@ -293,10 +308,13 @@ void WorldSystem::restart_game() {
 
 	// Debugging for memory/component leaks
 	registry.list_all_components();
-
+	points = 0;
+	load();
 	// create a new Protagonist
-	player_protagonist = createProtagonist(renderer, { window_width_px/2, window_height_px/2 });
-	registry.colors.insert(player_protagonist, {1, 0.8f, 0.8f});
+	if (registry.players.size() == 0) {
+		player_protagonist = createProtagonist(renderer, { window_width_px / 2, window_height_px / 2 });
+		registry.colors.insert(player_protagonist, {1, 0.8f, 0.8f});
+	}
 
 	// Top Wall
 	for (int i = 0; i < num_blocks * 2; i++) {
@@ -350,8 +368,15 @@ void WorldSystem::handle_collisions() {
 				if (!registry.deathTimers.has(entity)) {
 					// Scream, reset timer, and make the salmon sink
 					registry.deathTimers.emplace(entity);
-					Mix_PlayChannel(-1, salmon_dead_sound, 0);
-				}
+					Mix_PlayChannel(-1, salmon_dead_sound, 0);		
+					std::ofstream ofs("save.json", std::ios::trunc);
+					if (ofs.is_open()) {
+						ofs.close();
+						std::cout << "save.json contents erased." << std::endl;
+					} else {
+						std::cerr << "Unable to open save.json for erasing." << std::endl;
+					}
+					}
 			}
 			// Checking Player - Eatable collisions
 			else if (registry.eatables.has(entity_other)) {
@@ -411,14 +436,116 @@ void WorldSystem::handle_collisions() {
 bool WorldSystem::is_over() const {
 	return bool(glfwWindowShouldClose(window));
 }
+void WorldSystem::load() {
+    std::string filename = "save.json";
 
+    if (!std::__fs::filesystem::exists(filename)) {
+        std::cerr << "File does not exist: " << filename << std::endl;
+        return;
+    }
+
+    std::ifstream file(filename, std::ios::ate | std::ios::binary);
+    if (file.tellg() == 0) {
+        std::cerr << "File is empty: " << filename << std::endl;
+        return;
+    }
+
+    file.seekg(0, std::ios::beg);
+
+    json j;
+    file >> j;
+
+    if (j.contains("points")) {
+        points = j["points"].get<int>();
+    }
+
+    // Load player position
+    if (j.contains("player")) {
+		player_protagonist = createProtagonist(renderer, { j["player"]["position"][0],j["player"]["position"][1]});
+		registry.colors.insert(player_protagonist, {1, 0.8f, 0.8f});
+    }
+
+    // Load enemies positions
+    if (j.contains("enemies")) {
+        for (auto& [key, value] : j["enemies"].items()) {
+            createKingClubs(renderer, vec2(value["position"][0], value["position"][1]));
+        }
+    }
+
+    // Load projectiles positions
+    if (j.contains("projectiles")) {
+        for (auto& [key, value] : j["projectiles"].items()) {
+            double velocity_x = value["velocity"][0];
+            double velocity_y = value["velocity"][1];
+            double velocity_magnitude = std::sqrt(velocity_x * velocity_x + velocity_y * velocity_y);
+
+            if (velocity_magnitude <= 300) {
+                createRouletteBall(renderer, vec2(value["position"][0], value["position"][1]), vec2(velocity_x, velocity_y));
+            } else if (velocity_magnitude <= 380) {
+                createDartProjectile(renderer, vec2(value["position"][0], value["position"][1]), vec2(velocity_x, velocity_y), 0);
+            } else {
+                createCardProjectile(renderer, vec2(value["position"][0], value["position"][1]), vec2(velocity_x, velocity_y));
+            }
+        }
+    }
+
+    std::cout << "Game state loaded from " << filename << std::endl;
+}
+void WorldSystem::save() {
+	json j;
+	j["points"] = points;
+  	for (Entity entity : registry.players.entities) {
+        if (registry.players.has(entity)) {
+            j["player"] = {
+                {"position", {registry.motions.get(entity).position.x, registry.motions.get(entity).position.y}}
+            };
+        }
+    }
+
+    // Save enemies positions
+    j["enemies"] = json::object();
+    for (Entity entity : registry.deadlys.entities) {
+        if (registry.motions.has(entity)) {
+            j["enemies"][std::to_string(entity)] = {
+                {"position", {registry.motions.get(entity).position.x, registry.motions.get(entity).position.y}}
+            };
+        }
+    }
+
+    // Save projectiles positions
+    j["projectiles"] = json::object();
+    for (Entity entity : registry.killsEnemys.entities) {
+        if (registry.motions.has(entity)) {
+            Motion ent = registry.motions.get(entity);
+            j["projectiles"][std::to_string(entity)] = {
+                {"position", {ent.position.x, ent.position.y}},
+                {"velocity", {ent.velocity.x, ent.velocity.y}}
+            };
+        }
+    }
+	std::ofstream o("save.json");
+	    if (o.is_open()) {
+        o << j.dump(4) << std::endl; // Pretty print with 4 spaces
+        o.close();
+		std::cout << "Game state saved to save.json" << std::endl; // Debug statement
+    } else {
+        std::cerr << "Unable to open file for writing: save.json" << std::endl;
+    }
+}
 // On key callback
 void WorldSystem::on_key(int key, int, int action, int mod) {
 	// Resetting game
 	if (action == GLFW_RELEASE && key == GLFW_KEY_R) {
 		int w, h;
 		glfwGetWindowSize(window, &w, &h);
-
+		std::ofstream ofs("save.json", std::ios::trunc);
+		if (ofs.is_open()) {
+			ofs.close();
+			std::cout << "save.json contents erased." << std::endl;
+		} else {
+			std::cerr << "Unable to open save.json for erasing." << std::endl;
+		}
+		points = 0;
         restart_game();
 	}
 
@@ -432,7 +559,9 @@ void WorldSystem::on_key(int key, int, int action, int mod) {
 
 	// Close game
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
+		save();
 		glfwSetWindowShouldClose(window, GL_TRUE);
+
 	}
 
 	Motion& motion = registry.motions.get(player_protagonist);
