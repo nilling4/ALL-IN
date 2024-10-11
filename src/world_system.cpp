@@ -480,14 +480,16 @@ void WorldSystem::load() {
 
     // Load enemies positions
     if (j.contains("enemies")) {
-        for (auto& [key, value] : j["enemies"].items()) {
+        for (auto& item : j["enemies"].items()) {
+    		auto& value = item.value();
             createKingClubs(renderer, vec2(value["position"][0], value["position"][1]));
         }
     }
 
     // Load projectiles positions
     if (j.contains("projectiles")) {
-        for (auto& [key, value] : j["projectiles"].items()) {
+        for (auto& item : j["projectiles"].items()) {
+    		auto& value = item.value();
 			double velocity_x = value["velocity"][0];
             double velocity_y = value["velocity"][1];
             double velocity_magnitude = std::sqrt(velocity_x * velocity_x + velocity_y * velocity_y);
@@ -505,7 +507,8 @@ void WorldSystem::load() {
     }
 
 	if (j.contains("lerp_projectiles")) {
-		for (auto& [key, value] : j["lerp_projectiles"].items()) {
+		for (auto& item : j["lerp_projectiles"].items()) {
+			auto& value = item.value();
 			double start_x = value["start_pos"][0];
 			double start_y = value["start_pos"][1];
 			double end_x = value["end_pos"][0];
