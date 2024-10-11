@@ -104,7 +104,7 @@ Entity createKingClubs(RenderSystem* renderer, vec2 position)
 	return entity;
 }
 
-Entity createRouletteBall(RenderSystem* renderer, vec2 position, vec2 velocity)
+Entity createRouletteBall(RenderSystem* renderer, vec2 position, vec2 velocity) 
 {
 	auto entity = Entity();
 
@@ -190,6 +190,36 @@ Entity createDartProjectile(RenderSystem* renderer, vec2 position, vec2 velocity
 
 	return entity;
 }
+
+Entity createLerpProjectile(RenderSystem* renderer, vec2 position,vec2 startpos, vec2 end_pos)
+{
+	auto entity = Entity();
+
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 0.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2({ CARD_PROJECTILE_BB_WIDTH, CARD_PROJECTILE_BB_HEIGHT }); 
+
+	auto& kills = registry.killsEnemyLerpyDerps.emplace(entity);
+	kills.end_pos = end_pos;
+	kills.start_pos = startpos;
+	kills.total_time = 0;
+	registry.renderRequests.insert(
+		entity,
+		{
+			TEXTURE_ASSET_ID::LERP_PROJECTILE,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE
+		});
+
+	return entity;
+}
+
 
 Entity createLine(vec2 position, vec2 scale)
 {

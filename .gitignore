@@ -1,3 +1,7 @@
+# FOR the many of you who don't use build folder
+save.json
+_deps/
+
 # Mac stuff:
 *.DS_Store
 .DS_Store 

@@ -27,6 +27,12 @@ struct KillsEnemy {
 	void* last_touched = nullptr;
 };
 
+struct KillsEnemyLerpyDerp { 				
+	vec2 start_pos = { 0, 0 };
+	vec2 end_pos = { 0, 0 };
+	float total_time = 0;
+};
+
 // anything the player can eat
 struct Eatable
 {
@@ -136,7 +142,8 @@ enum class TEXTURE_ASSET_ID {
 	KING_CLUBS = PROTAGONIST_BACK + 1, // To add to this, make sure to also add in render_system.hpp
 	FLOOR_BLOCK = KING_CLUBS + 1,
 	WALL_BLOCK = FLOOR_BLOCK + 1,
-	TEXTURE_COUNT = WALL_BLOCK + 1
+	LERP_PROJECTILE = WALL_BLOCK + 1,
+	TEXTURE_COUNT = LERP_PROJECTILE + 1
 };
 const int texture_count = (int)TEXTURE_ASSET_ID::TEXTURE_COUNT;
 

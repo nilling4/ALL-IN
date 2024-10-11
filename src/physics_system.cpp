@@ -25,7 +25,16 @@ bool collides(const Motion& motion1, const Motion& motion2)
 		return true;
 	return false;
 }
-
+void PhysicsSystem::lerp(float elapsed_ms,float total_ms) {
+	auto& motion_registry = registry.motions;
+	for (Entity entity : registry.killsEnemyLerpyDerps.entities) {
+		Motion& motion = motion_registry.get(entity);
+		KillsEnemyLerpyDerp& kills = registry.killsEnemyLerpyDerps.get(entity);
+		kills.total_time += elapsed_ms/2;
+		motion.position.x = (1 - kills.total_time/total_ms) * kills.start_pos.x + kills.total_time/total_ms * kills.end_pos.x;
+		motion.position.y = (1 - kills.total_time/total_ms) * kills.start_pos.y + kills.total_time/total_ms * kills.end_pos.y;
+	}
+}
 
 void PhysicsSystem::step(float elapsed_ms)
 {
