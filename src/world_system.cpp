@@ -434,6 +434,7 @@ void WorldSystem::load() {
 
     file.seekg(0, std::ios::beg);
 
+
     json j;
     file >> j;
 
@@ -488,6 +489,7 @@ void WorldSystem::save() {
         }
     }
 
+
     // Save enemies positions
     j["enemies"] = json::object();
     for (Entity entity : registry.deadlys.entities) {
@@ -503,6 +505,7 @@ void WorldSystem::save() {
     for (Entity entity : registry.killsEnemys.entities) {
         if (registry.motions.has(entity)) {
             Motion ent = registry.motions.get(entity);
+
 			KillsEnemy kills = registry.killsEnemys.get(entity);
             j["projectiles"][std::to_string(entity)] = {
                 {"position", {ent.position.x, ent.position.y}},
@@ -510,6 +513,7 @@ void WorldSystem::save() {
 				{"start_pos", {kills.start_pos.x, kills.start_pos.y}},
 				{"end_pos", {kills.end_pos.x, kills.end_pos.y}},
 				{"total_time", kills.total_time},
+
             };
         }
     }
