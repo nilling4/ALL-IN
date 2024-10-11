@@ -544,6 +544,7 @@ void WorldSystem::on_key(int key, int, int action, int mod) {
 		} else {
 			std::cerr << "Unable to open save.json for erasing." << std::endl;
 		}
+		points = 0;
         restart_game();
 	}
 
