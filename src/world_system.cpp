@@ -8,7 +8,11 @@
 
 #include "physics_system.hpp"
 #include <iostream>
+#include <fstream>
+#include "nlohmann/json.hpp"
+#include <cmath> 
 
+using json = nlohmann::json;
 
 // Game configuration
 const size_t MAX_NUM_MELEE = 25;
@@ -304,10 +308,12 @@ void WorldSystem::restart_game() {
 
 	// Debugging for memory/component leaks
 	registry.list_all_components();
-
+	load();
 	// create a new Protagonist
-	player_protagonist = createProtagonist(renderer, { window_width_px/2, window_height_px/2 });
-	registry.colors.insert(player_protagonist, {1, 0.8f, 0.8f});
+	if (registry.players.size() == 0) {
+		player_protagonist = createProtagonist(renderer, { window_width_px / 2, window_height_px / 2 });
+		registry.colors.insert(player_protagonist, {1, 0.8f, 0.8f});
+	}
 
 	// Top Wall
 	for (int i = 0; i < num_blocks * 2; i++) {
@@ -362,7 +368,14 @@ void WorldSystem::handle_collisions() {
 					// Scream, reset timer, and make the salmon sink
 					registry.deathTimers.emplace(entity);
 					Mix_PlayChannel(-1, salmon_dead_sound, 0);
-				}
+					std::ofstream ofs("save.json", std::ios::trunc);
+					if (ofs.is_open()) {
+						ofs.close();
+						std::cout << "save.json contents erased." << std::endl;
+					} else {
+						std::cerr << "Unable to open save.json for erasing." << std::endl;
+					}
+					}
 			}
 			// Checking Player - Eatable collisions
 			else if (registry.eatables.has(entity_other)) {
@@ -422,7 +435,102 @@ void WorldSystem::handle_collisions() {
 bool WorldSystem::is_over() const {
 	return bool(glfwWindowShouldClose(window));
 }
+void WorldSystem::load() {
+    std::string filename = "save.json";
 
+    if (!std::__fs::filesystem::exists(filename)) {
+        std::cerr << "File does not exist: " << filename << std::endl;
+        return;
+    }
+
+    std::ifstream file(filename, std::ios::ate | std::ios::binary);
+    if (file.tellg() == 0) {
+        std::cerr << "File is empty: " << filename << std::endl;
+        return;
+    }
+
+    file.seekg(0, std::ios::beg);
+
+    json j;
+    file >> j;
+
+    if (j.contains("points")) {
+        points = j["points"].get<int>();
+    }
+
+    // Load player position
+    if (j.contains("player")) {
+		player_protagonist = createProtagonist(renderer, { j["player"]["position"][0],j["player"]["position"][1]});
+		registry.colors.insert(player_protagonist, {1, 0.8f, 0.8f});
+    }
+
+    // Load enemies positions
+    if (j.contains("enemies")) {
+        for (auto& [key, value] : j["enemies"].items()) {
+            createKingClubs(renderer, vec2(value["position"][0], value["position"][1]));
+        }
+    }
+
+    // Load projectiles positions
+    if (j.contains("projectiles")) {
+        for (auto& [key, value] : j["projectiles"].items()) {
+            double velocity_x = value["velocity"][0];
+            double velocity_y = value["velocity"][1];
+            double velocity_magnitude = std::sqrt(velocity_x * velocity_x + velocity_y * velocity_y);
+
+            if (velocity_magnitude <= 300) {
+                createRouletteBall(renderer, vec2(value["position"][0], value["position"][1]), vec2(velocity_x, velocity_y));
+            } else if (velocity_magnitude <= 380) {
+                createDartProjectile(renderer, vec2(value["position"][0], value["position"][1]), vec2(velocity_x, velocity_y), 0);
+            } else {
+                createCardProjectile(renderer, vec2(value["position"][0], value["position"][1]), vec2(velocity_x, velocity_y));
+            }
+        }
+    }
+
+    std::cout << "Game state loaded from " << filename << std::endl;
+}
+void WorldSystem::save() {
+	json j;
+	j["points"] = points;
+  	for (Entity entity : registry.players.entities) {
+        if (registry.players.has(entity)) {
+            j["player"] = {
+                {"position", {registry.motions.get(entity).position.x, registry.motions.get(entity).position.y}}
+            };
+        }
+    }
+
+    // Save enemies positions
+    j["enemies"] = json::object();
+    for (Entity entity : registry.deadlys.entities) {
+        if (registry.motions.has(entity)) {
+            j["enemies"][std::to_string(entity)] = {
+                {"position", {registry.motions.get(entity).position.x, registry.motions.get(entity).position.y}}
+            };
+        }
+    }
+
+    // Save projectiles positions
+    j["projectiles"] = json::object();
+    for (Entity entity : registry.killsEnemys.entities) {
+        if (registry.motions.has(entity)) {
+            Motion ent = registry.motions.get(entity);
+            j["projectiles"][std::to_string(entity)] = {
+                {"position", {ent.position.x, ent.position.y}},
+                {"velocity", {ent.velocity.x, ent.velocity.y}}
+            };
+        }
+    }
+	std::ofstream o("save.json");
+	    if (o.is_open()) {
+        o << j.dump(4) << std::endl; // Pretty print with 4 spaces
+        o.close();
+		std::cout << "Game state saved to save.json" << std::endl; // Debug statement
+    } else {
+        std::cerr << "Unable to open file for writing: save.json" << std::endl;
+    }
+}
 // On key callback
 void WorldSystem::on_key(int key, int, int action, int mod) {
 	// Resetting game
@@ -443,7 +551,9 @@ void WorldSystem::on_key(int key, int, int action, int mod) {
 
 	// Close game
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
+		save();
 		glfwSetWindowShouldClose(window, GL_TRUE);
+
 	}
 
 	Motion& motion = registry.motions.get(player_protagonist);

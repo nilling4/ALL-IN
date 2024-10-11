@@ -156,3 +156,13 @@ target_link_libraries(${PROJECT_NAME} PUBLIC ${GLFW_LIBRARIES} ${SDL2_LIBRARIES}
 if(IS_OS_LINUX)
   target_link_libraries(${PROJECT_NAME} PUBLIC glfw ${CMAKE_DL_LIBS})
 endif()
+# Add nlohmann/json
+include(FetchContent)
+FetchContent_Declare(
+  json
+  GIT_REPOSITORY https://github.com/nlohmann/json.git
+  GIT_TAG v3.10.5  # You can specify the version you want
+)
+FetchContent_MakeAvailable(json)
+
+target_link_libraries(${PROJECT_NAME} PUBLIC nlohmann_json::nlohmann_json)
