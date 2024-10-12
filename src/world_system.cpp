@@ -453,61 +453,62 @@ bool WorldSystem::is_over() const {
 	return bool(glfwWindowShouldClose(window));
 }
 void WorldSystem::load() {
-    std::string filename = "save.json";
+	std::string filename = "save.json";
 
-    if (!std::__fs::filesystem::exists(filename)) {
-        std::cerr << "File does not exist: " << filename << std::endl;
-        return;
-    }
+	std::ifstream file_check(filename);
+	if (!file_check.good()) {
+		std::cerr << "File does not exist: " << filename << std::endl;
+		return;
+	}
 
-    std::ifstream file(filename, std::ios::ate | std::ios::binary);
-    if (file.tellg() == 0) {
-        std::cerr << "File is empty: " << filename << std::endl;
-        return;
-    }
+	std::ifstream file(filename, std::ios::ate | std::ios::binary);
+	if (file.tellg() == 0) {
+		std::cerr << "File is empty: " << filename << std::endl;
+		return;
+	}
 
-    file.seekg(0, std::ios::beg);
+	file.seekg(0, std::ios::beg);
 
-    json j;
-    file >> j;
+	json j;
+	file >> j;
 
-    if (j.contains("points")) {
-        points = j["points"].get<int>();
-    }
+	if (j.contains("points")) {
+		points = j["points"].get<int>();
+	}
 
-    // Load player position
-    if (j.contains("player")) {
-		player_protagonist = createProtagonist(renderer, { j["player"]["position"][0],j["player"]["position"][1]});
-		registry.colors.insert(player_protagonist, {1, 0.8f, 0.8f});
-    }
+	// Load player position
+	if (j.contains("player")) {
+		player_protagonist = createProtagonist(renderer, { j["player"]["position"][0],j["player"]["position"][1] });
+		registry.colors.insert(player_protagonist, { 1, 0.8f, 0.8f });
+	}
 
-    // Load enemies positions
-    if (j.contains("enemies")) {
-        for (auto& item : j["enemies"].items()) {
-    		auto& value = item.value();
-            createKingClubs(renderer, vec2(value["position"][0], value["position"][1]));
-        }
-    }
+	// Load enemies positions
+	if (j.contains("enemies")) {
+		for (auto& item : j["enemies"].items()) {
+			auto& value = item.value();
+			createKingClubs(renderer, vec2(value["position"][0], value["position"][1]));
+		}
+	}
 
-    // Load projectiles positions
-    if (j.contains("projectiles")) {
-        for (auto& item : j["projectiles"].items()) {
-    		auto& value = item.value();
+	// Load projectiles positions
+	if (j.contains("projectiles")) {
+		for (auto& item : j["projectiles"].items()) {
+			auto& value = item.value();
 			double velocity_x = value["velocity"][0];
-            double velocity_y = value["velocity"][1];
-            double velocity_magnitude = std::sqrt(velocity_x * velocity_x + velocity_y * velocity_y);
+			double velocity_y = value["velocity"][1];
+			double velocity_magnitude = std::sqrt(velocity_x * velocity_x + velocity_y * velocity_y);
 
-            if (velocity_magnitude <= 300) {
-                createRouletteBall(renderer, vec2(value["position"][0], value["position"][1]), vec2(velocity_x, velocity_y));
-            } 
+			if (velocity_magnitude <= 300) {
+				createRouletteBall(renderer, vec2(value["position"][0], value["position"][1]), vec2(velocity_x, velocity_y));
+			}
 			else if (velocity_magnitude <= 380) {
-                createDartProjectile(renderer, vec2(value["position"][0], value["position"][1]), vec2(velocity_x, velocity_y), 0);
-            }
+				createDartProjectile(renderer, vec2(value["position"][0], value["position"][1]), vec2(velocity_x, velocity_y), 0);
+			}
 			else {
-                createCardProjectile(renderer, vec2(value["position"][0], value["position"][1]), vec2(velocity_x, velocity_y));
-            }
-        }
-    }
+				createCardProjectile(renderer, vec2(value["position"][0], value["position"][1]), vec2(velocity_x, velocity_y));
+			}
+		}
+	}
 
 	if (j.contains("lerp_projectiles")) {
 		for (auto& item : j["lerp_projectiles"].items()) {
@@ -517,17 +518,13 @@ void WorldSystem::load() {
 			double end_x = value["end_pos"][0];
 			double end_y = value["end_pos"][1];
 
-			// Calculate the distance between start and end positions
-			// double distance = std::sqrt((end_x - start_x) * (end_x - start_x) + (end_y - start_y) * (end_y - start_y));
-
-
-			createLerpProjectile(renderer, vec2(value["position"][0], value["position"][1]), vec2(start_x, start_y), vec2(end_x, end_y),value["total_time"]);
-
+			createLerpProjectile(renderer, vec2(value["position"][0], value["position"][1]), vec2(start_x, start_y), vec2(end_x, end_y), value["total_time"]);
 		}
 	}
 
-    std::cout << "Game state loaded from " << filename << std::endl;
+	std::cout << "Game state loaded from " << filename << std::endl;
 }
+
 void WorldSystem::save() {
 	json j;
 	j["points"] = points;
