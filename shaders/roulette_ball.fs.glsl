@@ -16,7 +16,7 @@ void main()
 {
 	color = vec4(fcolor * vcolor, 1.0);
 
-	// salmon mesh is contained in a 1x1 square
+	// ROULETTE BALL mesh is contained in a 1x1 square
 	float radius = distance(vec2(0.0), vpos);
 	if (light_up == 1 && radius < 0.3)
 	{
