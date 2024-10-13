@@ -89,7 +89,7 @@ Entity createRouletteBall(RenderSystem* renderer, vec2 position, vec2 velocity)
 	motion.velocity = velocity;
 	motion.position = position;
 
-	// motion.scale = vec2({ ROULETTE_BALL_BB_WIDTH, ROULETTE_BALL_BB_HEIGHT });
+	// motion.scale = vec2({ ROULETTE_BALL_BB_WIDTH, ROULETTE_BALL_BB_HEIGHT }); // keep this in case we revert back to png. 
 	motion.scale = mesh.original_size * 60.f;
 
 	auto& kills = registry.killsEnemys.emplace(entity);
