@@ -43,7 +43,7 @@ Entity createCardProjectile(RenderSystem* renderer, vec2 position, vec2 velocity
 Entity createDartProjectile(RenderSystem* renderer, vec2 position, vec2 velocity, float angle);
 
 
-Entity createLerpProjectile(RenderSystem* renderer, vec2 position, vec2 startpos, vec2 endpos,float time);
+Entity createLerpProjectile(RenderSystem* renderer, vec2 position, vec2 startpos, vec2 endpos, float time, float angle);
 
 
 Entity createWallBlock(RenderSystem* renderer, vec2 position);
