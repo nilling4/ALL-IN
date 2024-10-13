@@ -270,7 +270,7 @@ if (registry.deadlys.components.size() <= MAX_NUM_MELEE && next_king_clubs_spawn
 	if (next_lerp_spawn < 0.f) {
 		next_lerp_spawn = LERP_SPAWN_DELAY;
 
-		createLerpProjectile(renderer, vec2(p_motion.position.x, p_motion.position.y),vec2(p_motion.position.x, p_motion.position.y), vec2(p_motion.position.x+400*cos(angle), p_motion.position.y+400*sin(angle)),0);
+		createLerpProjectile(renderer, vec2(p_motion.position.x, p_motion.position.y),vec2(p_motion.position.x, p_motion.position.y), vec2(p_motion.position.x+400*cos(angle), p_motion.position.y+400*sin(angle)),0,0);
 
 	}
 
@@ -517,8 +517,9 @@ void WorldSystem::load() {
 			double start_y = value["start_pos"][1];
 			double end_x = value["end_pos"][0];
 			double end_y = value["end_pos"][1];
+			double angle = value["angle"];
 
-			createLerpProjectile(renderer, vec2(value["position"][0], value["position"][1]), vec2(start_x, start_y), vec2(end_x, end_y), value["total_time"]);
+			createLerpProjectile(renderer, vec2(value["position"][0], value["position"][1]), vec2(start_x, start_y), vec2(end_x, end_y), value["total_time"], angle);
 		}
 	}
 
@@ -571,7 +572,7 @@ void WorldSystem::save() {
 				{"start_pos", {kills.start_pos.x, kills.start_pos.y}},
 				{"end_pos", {kills.end_pos.x, kills.end_pos.y}},
 				{"total_time", kills.total_time},
-
+				{"angle", ent.angle},
             };
         }
     }

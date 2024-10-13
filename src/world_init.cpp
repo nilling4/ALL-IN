@@ -192,7 +192,7 @@ Entity createDartProjectile(RenderSystem* renderer, vec2 position, vec2 velocity
 }
 
 
-Entity createLerpProjectile(RenderSystem* renderer, vec2 position,vec2 startpos, vec2 end_pos,float time)
+Entity createLerpProjectile(RenderSystem* renderer, vec2 position,vec2 startpos, vec2 end_pos, float time, float angle)
 {
 	auto entity = Entity();
 
@@ -200,7 +200,7 @@ Entity createLerpProjectile(RenderSystem* renderer, vec2 position,vec2 startpos,
 	registry.meshPtrs.emplace(entity, &mesh);
 
 	auto& motion = registry.motions.emplace(entity);
-	motion.angle = 0.f;
+	motion.angle = angle;
 	motion.velocity = { 0, 0 };
 	motion.position = position;
 
