@@ -108,7 +108,7 @@ Entity createRouletteBall(RenderSystem* renderer, vec2 position, vec2 velocity)
 {
 	auto entity = Entity();
 
-	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SALMON);
 	registry.meshPtrs.emplace(entity, &mesh);
 
 	auto& motion = registry.motions.emplace(entity);
@@ -116,7 +116,8 @@ Entity createRouletteBall(RenderSystem* renderer, vec2 position, vec2 velocity)
 	motion.velocity = velocity;
 	motion.position = position;
 
-	motion.scale = vec2({ ROULETTE_BALL_BB_WIDTH, ROULETTE_BALL_BB_HEIGHT });
+	// motion.scale = vec2({ ROULETTE_BALL_BB_WIDTH, ROULETTE_BALL_BB_HEIGHT });
+	motion.scale = mesh.original_size * 60.f;
 
 	auto& kills = registry.killsEnemys.emplace(entity);
 	kills.damage = 10.f;
@@ -124,10 +125,9 @@ Entity createRouletteBall(RenderSystem* renderer, vec2 position, vec2 velocity)
 	kills.dmg_taken_multiplier = 2.f;
 	registry.renderRequests.insert(
 		entity,
-		{
-			TEXTURE_ASSET_ID::ROULETTE_BALL,
-			EFFECT_ASSET_ID::TEXTURED,
-			GEOMETRY_BUFFER_ID::SPRITE
+		{ TEXTURE_ASSET_ID::TEXTURE_COUNT, 
+			EFFECT_ASSET_ID::SALMON,
+			GEOMETRY_BUFFER_ID::SALMON 
 		});
 
 	return entity;
