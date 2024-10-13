@@ -1,33 +1,6 @@
 #include "world_init.hpp"
 #include "tiny_ecs_registry.hpp"
 
-Entity createSalmon(RenderSystem* renderer, vec2 pos)
-{
-	auto entity = Entity();
-
-	// Store a reference to the potentially re-used mesh object
-	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SALMON);
-	registry.meshPtrs.emplace(entity, &mesh);
-
-	// Setting initial motion values
-	Motion& motion = registry.motions.emplace(entity);
-	motion.position = pos;
-	motion.angle = 0.f;
-	motion.velocity = { 0.f, 0.f };
-	motion.scale = mesh.original_size * 300.f;
-	motion.scale.y *= -1; // point front to the right
-
-	// create an empty Salmon component for our character
-	registry.players.emplace(entity);
-	registry.renderRequests.insert(
-		entity,
-		{ TEXTURE_ASSET_ID::TEXTURE_COUNT, // TEXTURE_COUNT indicates that no texture is needed
-			EFFECT_ASSET_ID::SALMON,
-			GEOMETRY_BUFFER_ID::SALMON });
-
-	return entity;
-}
-
 Entity createProtagonist(RenderSystem* renderer, vec2 pos) {
 	auto entity = Entity();
 
@@ -108,7 +81,7 @@ Entity createRouletteBall(RenderSystem* renderer, vec2 position, vec2 velocity)
 {
 	auto entity = Entity();
 
-	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::ROULETTE_BALL_GEOB);
 	registry.meshPtrs.emplace(entity, &mesh);
 
 	auto& motion = registry.motions.emplace(entity);
@@ -116,7 +89,8 @@ Entity createRouletteBall(RenderSystem* renderer, vec2 position, vec2 velocity)
 	motion.velocity = velocity;
 	motion.position = position;
 
-	motion.scale = vec2({ ROULETTE_BALL_BB_WIDTH, ROULETTE_BALL_BB_HEIGHT });
+	// motion.scale = vec2({ ROULETTE_BALL_BB_WIDTH, ROULETTE_BALL_BB_HEIGHT }); // keep this in case we revert back to png. 
+	motion.scale = mesh.original_size * 60.f;
 
 	auto& kills = registry.killsEnemys.emplace(entity);
 	kills.damage = 10.f;
@@ -124,10 +98,9 @@ Entity createRouletteBall(RenderSystem* renderer, vec2 position, vec2 velocity)
 	kills.dmg_taken_multiplier = 2.f;
 	registry.renderRequests.insert(
 		entity,
-		{
-			TEXTURE_ASSET_ID::ROULETTE_BALL,
-			EFFECT_ASSET_ID::TEXTURED,
-			GEOMETRY_BUFFER_ID::SPRITE
+		{ TEXTURE_ASSET_ID::TEXTURE_COUNT, 
+			EFFECT_ASSET_ID::ROULETTE_BALL_EFFA,
+			GEOMETRY_BUFFER_ID::ROULETTE_BALL_GEOB 
 		});
 
 	return entity;
