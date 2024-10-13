@@ -14,6 +14,7 @@ Entity createProtagonist(RenderSystem* renderer, vec2 pos) {
 	motion.scale = vec2({ FISH_BB_WIDTH, FISH_BB_HEIGHT });
 
 	registry.players.emplace(entity);
+
 	registry.renderRequests.insert(
 		entity,
 		{ TEXTURE_ASSET_ID::PROTAGONIST_FORWARD, 
@@ -164,6 +165,58 @@ Entity createDartProjectile(RenderSystem* renderer, vec2 position, vec2 velocity
 	return entity;
 }
 
+Entity createCoin(RenderSystem* renderer, vec2 position) {
+	auto entity = Entity();
+
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 0.f;
+	motion.velocity = { 0.f, 0.f };
+	motion.position = position;
+
+	motion.scale = vec2({ COIN_BB_WIDTH, COIN_BB_HEIGHT });
+
+	registry.eatables.emplace(entity);
+	
+	registry.renderRequests.insert(
+		entity,
+		{
+			TEXTURE_ASSET_ID::COIN,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE
+		});
+
+	return entity;
+}
+
+Entity createHUD(RenderSystem* renderer, vec2 position, vec2 size) {
+	auto entity = Entity();
+
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::HUD);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	Motion& motion = registry.motions.emplace(entity);
+	motion.position = position;
+	motion.angle = 0.f;
+	motion.velocity = { 0.f, 0.f };
+	motion.scale = size;
+
+	registry.hud.emplace(entity);
+
+	registry.renderRequests.insert(
+		entity,
+		{
+			TEXTURE_ASSET_ID::TEXTURE_COUNT,
+			EFFECT_ASSET_ID::COLOURED,
+			GEOMETRY_BUFFER_ID::HUD
+		}
+	);
+
+	return entity;
+}
+
 
 Entity createLerpProjectile(RenderSystem* renderer, vec2 position,vec2 startpos, vec2 end_pos, float time, float angle)
 {
@@ -194,7 +247,6 @@ Entity createLerpProjectile(RenderSystem* renderer, vec2 position,vec2 startpos,
 
 	return entity;
 }
-
 
 Entity createLine(vec2 position, vec2 scale)
 {

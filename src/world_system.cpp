@@ -29,7 +29,7 @@ const int wallHeight = num_blocks * WALL_BLOCK_BB_HEIGHT;
 
 // create the casino
 WorldSystem::WorldSystem()
-	: points(0)
+	: coins(0)
 	, next_king_clubs_spawn(10.f)
 	, next_roulette_ball_spawn(ROULETTE_BALL_SPAWN_DELAY)
 	, next_card_spawn(CARDS_SPAWN_DELAY)
@@ -148,9 +148,9 @@ void WorldSystem::init(RenderSystem* renderer_arg) {
 
 // Update our game world
 bool WorldSystem::step(float elapsed_ms_since_last_update) {
-	// Updating window title with points
+	// Updating window title with coin count
 	std::stringstream title_ss;
-	title_ss << "Points: " << points;
+	title_ss << "Coins: " << coins;
 	glfwSetWindowTitle(window, title_ss.str().c_str());
 
 	// Remove debug info from the last step
@@ -315,31 +315,34 @@ void WorldSystem::restart_game() {
 	// Remove all entities that we created
 	// All that have a motion, we could also iterate over all fish, eels, ... but that would be more cumbersome
 	while (registry.motions.entities.size() > 0)
-	    registry.remove_all_components_of(registry.motions.entities.back());
+		registry.remove_all_components_of(registry.motions.entities.back());
 
 	// Debugging for memory/component leaks
 	registry.list_all_components();
-	points = 0;
 	load();
+
 	// create a new Protagonist
 	if (registry.players.size() == 0) {
 		player_protagonist = createProtagonist(renderer, { window_width_px / 2, window_height_px / 2 });
-		registry.colors.insert(player_protagonist, {1, 0.8f, 0.8f});
+		registry.colors.insert(player_protagonist, { 1, 0.8f, 0.8f });
 	}
 
-	// Top Wall
-	for (int i = 0; i < num_blocks * 2; i++) {
-		createWallBlock(renderer, {
-			window_width_px / 2 - wallWidth / 2 + i * WALL_BLOCK_BB_WIDTH,
-			window_height_px / 2 - wallHeight / 2
-			});
-	}
+	// create a new HUD
+	createHUD(renderer, { window_width_px / 2, window_height_px }, { window_width_px / 4, window_height_px / 2 });
+
+		// Top Wall
+		for (int i = 0; i < num_blocks * 2; i++) {
+			createWallBlock(renderer, {
+				window_width_px / 2 - wallWidth / 2 + i * WALL_BLOCK_BB_WIDTH,
+				window_height_px / 2 - wallHeight / 2
+				});
+		}
 
 	// Right Wall
 	for (int i = 0; i < num_blocks; i++) {
 		createWallBlock(renderer, {
-			window_width_px / 2 + wallWidth / 2, 
-			window_height_px / 2 - wallHeight / 2 + i * WALL_BLOCK_BB_HEIGHT 
+			window_width_px / 2 + wallWidth / 2,
+			window_height_px / 2 - wallHeight / 2 + i * WALL_BLOCK_BB_HEIGHT
 			});
 	}
 
@@ -347,14 +350,14 @@ void WorldSystem::restart_game() {
 	for (int i = 0; i < num_blocks * 2; i++) {
 		createWallBlock(renderer, {
 			window_width_px / 2 + wallWidth / 2 - i * WALL_BLOCK_BB_WIDTH,
-			window_height_px / 2 + wallHeight / 2 
+			window_height_px / 2 + wallHeight / 2
 			});
 	}
 
 	// Left Wall
 	for (int i = 0; i < num_blocks; i++) {
 		createWallBlock(renderer, {
-			window_width_px / 2 - wallWidth / 2, 
+			window_width_px / 2 - wallWidth / 2,
 			window_height_px / 2 - wallHeight / 2 + (num_blocks - i) * WALL_BLOCK_BB_HEIGHT
 			});
 	}
@@ -392,30 +395,31 @@ void WorldSystem::handle_collisions() {
 			// Checking Player - Eatable collisions
 			else if (registry.eatables.has(entity_other)) {
 				if (!registry.deathTimers.has(entity)) {
-					// chew, count points, and set the LightUp timer
+
+					// check if the eatable entity is a coin and increase player's coin count
+					int oldCoinCount = coins;
+					coins++;
+
+					// add coins collected to HUD
+					for (int i = oldCoinCount; i < coins; ++i) {
+						Entity coinEntity = createCoin(renderer, { 50.f + i * 40.f, 50.f }); // + i spaces the coins out
+						Motion& motion = registry.motions.get(coinEntity);
+						motion.scale = { 30.f, 30.f };
+
+						// add to HUD
+						registry.hud.emplace(coinEntity);
+					}
+
+					std::cout << "Coin count: " << coins << std::endl;
+					
+
+					// chew, count coins, and set the LightUp timer
 					registry.remove_all_components_of(entity_other);
 					Mix_PlayChannel(-1, roulette_hit_sound, 0);
-					++points;
 				}
 			}
 			else if (registry.solids.has(entity_other)) {
-				// Player - Wall collision
-				Motion& motion = registry.motions.get(entity);
-				Motion& motion_other = registry.motions.get(entity_other);
-				vec2 normal = { 0, 0 };
-				if (motion.position.x < motion_other.position.x) {
-					normal.x = -1;
-				}
-				else if (motion.position.x > motion_other.position.x) {
-					normal.x = 1;
-				}
-				if (motion.position.y < motion_other.position.y) {
-					normal.y = -1;
-				}
-				else if (motion.position.y > motion_other.position.y) {
-					normal.y = 1;
-				}
-				motion.position += normal;
+				// Player - Wall collision handled in physics system for now, move here later.
 			}
 		}
 		if (registry.killsEnemys.has(entity)) {
@@ -430,8 +434,8 @@ void WorldSystem::handle_collisions() {
 						registry.remove_all_components_of(entity);
 					}
 					if (deadly.health < 0.f) {
+						createCoin(renderer, registry.motions.get(entity_other).position);
 						registry.remove_all_components_of(entity_other);
-						++points;
 					}
 					Mix_PlayChannel(-1, roulette_hit_sound, 0);
 				}
@@ -472,8 +476,17 @@ void WorldSystem::load() {
 	json j;
 	file >> j;
 
-	if (j.contains("points")) {
-		points = j["points"].get<int>();
+	if (j.contains("coin_count")) {
+		coins = j["coin_count"].get<int>();
+	}
+
+	// Update the HUD based on the coin count
+	for (uint i = 0; i < coins; ++i) {
+		Entity coinEntity = createCoin(renderer, { 50.f + i * 40.f, 50.f }); // + i spaces the coins out
+		Motion& motion = registry.motions.get(coinEntity);
+		motion.scale = { 30.f, 30.f };
+
+		registry.hud.emplace(coinEntity);
 	}
 
 	// Load player position
@@ -522,13 +535,19 @@ void WorldSystem::load() {
 			createLerpProjectile(renderer, vec2(value["position"][0], value["position"][1]), vec2(start_x, start_y), vec2(end_x, end_y), value["total_time"], angle);
 		}
 	}
+	if (j.contains("coins")) {
+		for (auto& item : j["coins"].items()) {
+			auto& value = item.value();
+			createCoin(renderer, vec2(value["position"][0], value["position"][1]));
+		}
+	}
 
 	std::cout << "Game state loaded from " << filename << std::endl;
 }
 
 void WorldSystem::save() {
 	json j;
-	j["points"] = points;
+	j["coin_count"] = coins;
   	for (Entity entity : registry.players.entities) {
         if (registry.players.has(entity)) {
             j["player"] = {
@@ -536,8 +555,7 @@ void WorldSystem::save() {
             };
         }
     }
-
-
+	
     // Save enemies positions
     j["enemies"] = json::object();
     for (Entity entity : registry.deadlys.entities) {
@@ -547,7 +565,16 @@ void WorldSystem::save() {
             };
         }
     }
-
+    j["coins"] = json::object();
+    for (Entity entity : registry.eatables.entities) {
+        if (registry.motions.has(entity)) {
+			if (!registry.hud.has(entity)) {
+            j["coins"][std::to_string(entity)] = {
+                {"position", {registry.motions.get(entity).position.x, registry.motions.get(entity).position.y}}
+            };
+			}
+        }
+    }
     // Save projectiles positions
     j["projectiles"] = json::object();
     for (Entity entity : registry.killsEnemys.entities) {
@@ -585,6 +612,7 @@ void WorldSystem::save() {
         std::cerr << "Unable to open file for writing: save.json" << std::endl;
     }
 }
+
 // On key callback
 void WorldSystem::on_key(int key, int, int action, int mod) {
 	// Resetting game
@@ -598,7 +626,6 @@ void WorldSystem::on_key(int key, int, int action, int mod) {
 		} else {
 			std::cerr << "Unable to open save.json for erasing." << std::endl;
 		}
-		points = 0;
         restart_game();
 	}
 

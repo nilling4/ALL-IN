@@ -159,6 +159,9 @@ void RenderSystem::initializeGlGeometryBuffers()
 	textured_vertices[2].texcoord = { 1.f, 0.f };
 	textured_vertices[3].texcoord = { 0.f, 0.f };
 
+	// Initialize HUD
+	initializeHUDGeometry();
+
 	// Counterclockwise as it's the default opengl front winding direction.
 	const std::vector<uint16_t> textured_indices = { 0, 3, 1, 1, 3, 2 };
 	bindVBOandIBO(GEOMETRY_BUFFER_ID::SPRITE, textured_vertices, textured_indices);
@@ -224,6 +227,25 @@ void RenderSystem::initializeGlGeometryBuffers()
 	const std::vector<uint16_t> screen_indices = { 0, 1, 2 };
 	bindVBOandIBO(GEOMETRY_BUFFER_ID::SCREEN_TRIANGLE, screen_vertices, screen_indices);
 }
+
+void RenderSystem::initializeHUDGeometry()
+{
+	std::vector<TexturedVertex> hud_vertices(4);
+	hud_vertices[0].position = { -0.5f, -0.05f, 0.f }; // bottom left
+	hud_vertices[1].position = { 0.5f, -0.05f, 0.f };  // bottom right
+	hud_vertices[2].position = { 0.5f, 0.05f, 0.f };   // top right
+	hud_vertices[3].position = { -0.5f, 0.05f, 0.f };  // top left
+
+	hud_vertices[0].texcoord = { 0.f, 1.f };
+	hud_vertices[1].texcoord = { 1.f, 1.f };
+	hud_vertices[2].texcoord = { 1.f, 0.f };
+	hud_vertices[3].texcoord = { 0.f, 0.f };
+
+	const std::vector<uint16_t> hud_indices = { 0, 1, 2, 0, 2, 3 };
+
+	bindVBOandIBO(GEOMETRY_BUFFER_ID::HUD, hud_vertices, hud_indices);
+}
+
 
 RenderSystem::~RenderSystem()
 {

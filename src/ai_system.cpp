@@ -5,7 +5,6 @@ void AISystem::step(float elapsed_ms)
 {
 	(void)elapsed_ms; // placeholder to silence unused warning until implemented
 	auto& motion_registry = registry.motions;
-	float step_seconds = elapsed_ms / 1000.f;
 	Motion* player_motion;
 	
 	for (Entity entity : registry.players.entities) {

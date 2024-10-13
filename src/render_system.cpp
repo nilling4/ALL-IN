@@ -39,7 +39,22 @@ void RenderSystem::drawTexturedMesh(Entity entity,
 	gl_has_errors();
 
 	// Input data location as in the vertex buffer
-	if (render_request.used_effect == EFFECT_ASSET_ID::TEXTURED)
+	if (render_request.used_geometry == GEOMETRY_BUFFER_ID::HUD)
+	{
+		GLint in_position_loc = glGetAttribLocation(program, "in_position");
+		gl_has_errors();
+
+		glEnableVertexAttribArray(in_position_loc);
+		glVertexAttribPointer(in_position_loc, 3, GL_FLOAT, GL_FALSE,
+			sizeof(TexturedVertex), (void*)0);
+		gl_has_errors();
+
+		GLint color_uloc = glGetUniformLocation(program, "fcolor");
+		vec3 hud_color = vec3(1.0f, 1.0f, 1.0f);  // White
+		glUniform3fv(color_uloc, 1, (float*)&hud_color);
+		gl_has_errors();
+	}
+	else if (render_request.used_effect == EFFECT_ASSET_ID::TEXTURED)
 	{
 		GLint in_position_loc = glGetAttribLocation(program, "in_position");
 		GLint in_texcoord_loc = glGetAttribLocation(program, "in_texcoord");
@@ -214,9 +229,18 @@ void RenderSystem::draw()
 	{
 		if (!registry.motions.has(entity))
 			continue;
+		if (registry.hud.has(entity)) {
+			continue;
+		}
 		// Note, its not very efficient to access elements indirectly via the entity
 		// albeit iterating through all Sprites in sequence. A good point to optimize
 		drawTexturedMesh(entity, projection_2D);
+	}
+
+	// draw the hud at the end so it stays on top and use a separate projection matrix to lock it to screen
+	mat3 hud_projection = createHUDProjectionMatrix();
+	for (Entity hud_entity : registry.hud.entities) {
+		drawTexturedMesh(hud_entity, hud_projection);
 	}
 
 	// Truely render to the screen
@@ -249,4 +273,12 @@ mat3 RenderSystem::createProjectionMatrix()
 	float tx = -(right + left) / (right - left) - offsetX * sx;
 	float ty = -(top + bottom) / (top - bottom) - offsetY * sy;
 	return {{sx, 0.f, 0.f}, {0.f, sy, 0.f}, {tx, ty, 1.f}};
+}
+
+mat3 RenderSystem::createHUDProjectionMatrix()
+{
+	// Projection matrix for HUD (screen coordinates)
+	float sx = 2.f / (float)window_width_px;
+	float sy = 2.f / (float)window_height_px;
+	return { {sx, 0.f, 0.f}, {0.f, -sy, 0.f}, {-1.f, 1.f, 1.f} };
 }

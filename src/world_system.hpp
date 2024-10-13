@@ -49,8 +49,8 @@ private:
 	// OpenGL window handle
 	GLFWwindow* window;
 
-	// Number of fish eaten by the salmon, displayed in the window title
-	unsigned int points;
+	// Number of coins collected
+	unsigned int coins;
 
 	// Game state
 	RenderSystem* renderer;

@@ -39,7 +39,8 @@ class RenderSystem {
 			textures_path("king_clubs.png"),
 			textures_path("floor_block.png"),
 			textures_path("wall_block.png"),
-			textures_path("lerp_projectile.png")
+			textures_path("lerp_projectile.png"),
+			textures_path("coin.png")
 	};
 
 	std::array<GLuint, effect_count> effects;
@@ -82,6 +83,10 @@ public:
 	void draw();
 
 	mat3 createProjectionMatrix();
+	mat3 createHUDProjectionMatrix();
+
+	// initialize the HUD geometry
+	void initializeHUDGeometry();
 
 private:
 	// Internal drawing functions for each entity type

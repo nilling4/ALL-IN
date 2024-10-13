@@ -103,6 +103,15 @@ struct Mesh
 	std::vector<uint16_t> vertex_indices;
 };
 
+struct HUD
+{
+	
+};
+
+struct Coin {
+	
+};
+
 struct Solid
 {
 
@@ -143,7 +152,8 @@ enum class TEXTURE_ASSET_ID {
 	FLOOR_BLOCK = KING_CLUBS + 1,
 	WALL_BLOCK = FLOOR_BLOCK + 1,
 	LERP_PROJECTILE = WALL_BLOCK + 1,
-	TEXTURE_COUNT = LERP_PROJECTILE + 1
+	COIN = LERP_PROJECTILE + 1,
+	TEXTURE_COUNT = COIN + 1
 };
 const int texture_count = (int)TEXTURE_ASSET_ID::TEXTURE_COUNT;
 
@@ -163,7 +173,8 @@ enum class GEOMETRY_BUFFER_ID {
 	EGG = SPRITE + 1,
 	DEBUG_LINE = EGG + 1,
 	SCREEN_TRIANGLE = DEBUG_LINE + 1,
-	GEOMETRY_COUNT = SCREEN_TRIANGLE + 1
+	HUD = SCREEN_TRIANGLE + 1,
+	GEOMETRY_COUNT = HUD + 1
 };
 const int geometry_count = (int)GEOMETRY_BUFFER_ID::GEOMETRY_COUNT;
 

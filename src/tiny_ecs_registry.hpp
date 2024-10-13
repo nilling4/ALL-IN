@@ -25,6 +25,8 @@ public:
 	ComponentContainer<Deadly> deadlys;
 	ComponentContainer<DebugComponent> debugComponents;
 	ComponentContainer<vec3> colors;
+	ComponentContainer<HUD> hud;
+	ComponentContainer<Coin> coins;
 	ComponentContainer<Solid> solids;
 
 	// constructor that adds all containers for looping over them
@@ -45,6 +47,8 @@ public:
 		registry_list.push_back(&deadlys);
 		registry_list.push_back(&debugComponents);
 		registry_list.push_back(&colors);
+		registry_list.push_back(&hud);
+		registry_list.push_back(&coins);
 		registry_list.push_back(&solids);
 	}
 

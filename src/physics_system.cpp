@@ -43,16 +43,78 @@ void PhysicsSystem::step(float elapsed_ms)
 	// having entities move at different speed based on the machine.
 	auto& motion_registry = registry.motions;
 	float step_seconds = elapsed_ms / 1000.f;
-	Motion* player_motion;
 	for (Entity entity : registry.players.entities) {
-		player_motion = &motion_registry.get(entity);	
-	}
+		// move this wall collision handling to world_system.handle collision once bounding box is fixed
+		Motion& player_motion = motion_registry.get(entity);
+		const int num_blocks = 40;
+		const int wallWidth = num_blocks * WALL_BLOCK_BB_WIDTH * 2;
+		const int wallHeight = num_blocks * WALL_BLOCK_BB_HEIGHT;
+        float roomLeft = window_width_px / 2 - wallWidth / 2 + WALL_BLOCK_BB_WIDTH + 11;   
+        float roomRight = window_width_px / 2 + wallWidth / 2 - WALL_BLOCK_BB_WIDTH - 11; 
+        float roomTop = window_height_px / 2 - wallHeight / 2 + WALL_BLOCK_BB_HEIGHT + 17; 
+        float roomBottom = window_height_px / 2 + wallHeight / 2 - WALL_BLOCK_BB_HEIGHT - 15;
+		
+        // Update x position
+        if ((player_motion.position.x + player_motion.velocity.x * step_seconds >= roomLeft) &&
+            (player_motion.position.x + player_motion.velocity.x * step_seconds <= roomRight)) {
+            player_motion.position.x += player_motion.velocity.x * step_seconds;
+        } else {
+            if (player_motion.velocity.x > 0) {
+                // player_motion.position.x = roomRight - WALL_BLOCK_BB_WIDTH / 2 - FISH_BB_WIDTH / 2;
+                player_motion.position.x = roomRight;
 
-	for(uint i = 0; i< motion_registry.size(); i++) {
-		Motion& motion = motion_registry.components[i];
+            } else if (player_motion.velocity.x < 0){
+                player_motion.position.x = roomLeft;
+            }
+        }
+        // Update y position
+        if ((player_motion.position.y + player_motion.velocity.y * step_seconds >= roomTop) &&
+            (player_motion.position.y + player_motion.velocity.y * step_seconds <= roomBottom)) {
+            player_motion.position.y += player_motion.velocity.y * step_seconds;
+        } else {
+            if (player_motion.velocity.y > 0) {
+                player_motion.position.y = roomBottom;
+            } else if (player_motion.velocity.y < 0){
+                player_motion.position.y = roomTop;
+            }
+        }
+	}
+	// for (Entity entity : registry.players.entities) {
+	// 	Motion& player_motion = motion_registry.get(entity);
+	// 	const int num_blocks = 40;
+	// 	const int wallWidth = num_blocks * WALL_BLOCK_BB_WIDTH * 2;
+	// 	const int wallHeight = num_blocks * WALL_BLOCK_BB_HEIGHT;
+	// 	float roomLeft = window_width_px / 2 - wallWidth / 2 + WALL_BLOCK_BB_WIDTH;   
+	// 	float roomRight = window_width_px / 2 + wallWidth / 2 - WALL_BLOCK_BB_WIDTH; 
+	// 	float roomTop = window_height_px / 2 - wallHeight / 2 + WALL_BLOCK_BB_HEIGHT; 
+	// 	float roomBottom = window_height_px / 2 + wallHeight / 2 - WALL_BLOCK_BB_HEIGHT;
+	// 	std::cout << "roomLeft: " << roomLeft << " roomRight: " << roomRight << " roomTop: " << roomTop << " roomBottom: " << roomBottom << std::endl;
+		
+	// 	// Update x position
+	// 	if (player_motion.position.x + player_motion.velocity.x * step_seconds >= roomLeft &&
+	// 		player_motion.position.x + player_motion.velocity.x * step_seconds <= roomRight) {
+	// 			player_motion.position.x += player_motion.velocity.x * step_seconds;
+	// 	}
+		
+	// 	// Update y position
+	// 	if (player_motion.position.y + player_motion.velocity.y * step_seconds >= roomTop &&
+	// 		player_motion.position.y + player_motion.velocity.y * step_seconds <= roomBottom) {
+	// 			player_motion.position.y += player_motion.velocity.y * step_seconds;
+	// 	}
+	// }
+	for(Entity entity : registry.killsEnemys.entities){ {
+		Motion& motion = motion_registry.get(entity);
 		motion.position += motion.velocity * step_seconds;
 	}
-
+	for (Entity entity : registry.killsEnemyLerpyDerps.entities) {
+		Motion& motion = motion_registry.get(entity);
+		motion.position += motion.velocity * step_seconds;
+	}
+	}
+	for (Entity entity : registry.deadlys.entities) {
+		Motion& motion = motion_registry.get(entity);
+		motion.position += motion.velocity * step_seconds;
+	}
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	// TODO A2: HANDLE EGG UPDATES HERE
 	// DON'T WORRY ABOUT THIS UNTIL ASSIGNMENT 2
