@@ -99,7 +99,7 @@ Entity createRouletteBall(RenderSystem* renderer, vec2 position, vec2 velocity)
 	registry.renderRequests.insert(
 		entity,
 		{ TEXTURE_ASSET_ID::TEXTURE_COUNT, 
-			EFFECT_ASSET_ID::SALMON,
+			EFFECT_ASSET_ID::ROULETTE_BALL_EFFA,
 			GEOMETRY_BUFFER_ID::ROULETTE_BALL_GEOB 
 		});
 
