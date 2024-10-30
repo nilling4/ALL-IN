@@ -16,7 +16,12 @@ struct Deadly
 	float health = 0;
 	float armour = 0;
 	float dmg_to_projectiles = 0;
+	std::string type = "";
 	// float melee damage
+};
+
+struct Boid {
+	
 };
 
 // anything that is deadly to the enemies (like projecties player shoots)
@@ -148,12 +153,13 @@ enum class TEXTURE_ASSET_ID {
 	PROTAGONIST_LEFT = DART_PROJECTILE + 1,
 	PROTAGONIST_FORWARD = PROTAGONIST_LEFT + 1,
 	PROTAGONIST_BACK = PROTAGONIST_FORWARD + 1,
-	KING_CLUBS = PROTAGONIST_BACK + 1, // To add to this, make sure to also add in render_system.hpp
+	KING_CLUBS = PROTAGONIST_BACK + 1, 
 	FLOOR_BLOCK = KING_CLUBS + 1,
 	WALL_BLOCK = FLOOR_BLOCK + 1,
 	LERP_PROJECTILE = WALL_BLOCK + 1,
 	COIN = LERP_PROJECTILE + 1,
-	TEXTURE_COUNT = COIN + 1
+	BIRD_CLUBS = COIN + 1, // To add to this, make sure to also add in render_system.hpp
+	TEXTURE_COUNT = BIRD_CLUBS + 1
 };
 const int texture_count = (int)TEXTURE_ASSET_ID::TEXTURE_COUNT;
 

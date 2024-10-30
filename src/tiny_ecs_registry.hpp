@@ -21,13 +21,14 @@ public:
 	ComponentContainer<ScreenState> screenStates;
 	ComponentContainer<Eatable> eatables;
 	ComponentContainer<KillsEnemy> killsEnemys;
-	ComponentContainer<KillsEnemyLerpyDerp> killsEnemyLerpyDerps;
+	ComponentContainer<KillsEnemyLerpyDerp> killsEnemyLerpyDerps; 
 	ComponentContainer<Deadly> deadlys;
+	ComponentContainer<Boid> boids;
 	ComponentContainer<DebugComponent> debugComponents;
 	ComponentContainer<vec3> colors;
 	ComponentContainer<HUD> hud;
 	ComponentContainer<Coin> coins;
-	ComponentContainer<Solid> solids;
+	ComponentContainer<Solid> solids; // psst, if you're adding here, make sure to also add it below in the same place !!!
 
 	// constructor that adds all containers for looping over them
 	// IMPORTANT: Don't forget to add any newly added containers!
@@ -45,11 +46,12 @@ public:
 		registry_list.push_back(&killsEnemys);
 		registry_list.push_back(&killsEnemyLerpyDerps);
 		registry_list.push_back(&deadlys);
+		registry_list.push_back(&boids);
 		registry_list.push_back(&debugComponents);
 		registry_list.push_back(&colors);
 		registry_list.push_back(&hud);
 		registry_list.push_back(&coins);
-		registry_list.push_back(&solids);
+		registry_list.push_back(&solids); 
 	}
 
 	void clear_all_components() {

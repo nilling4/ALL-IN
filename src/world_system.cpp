@@ -15,8 +15,9 @@
 using json = nlohmann::json;
 
 // Game configuration
-const size_t MAX_NUM_MELEE = 25;
-const size_t KING_CLUBS_SPAWN_DELAY = 400*3;
+const size_t MAX_NUM_MELEE = 40;
+const size_t KING_CLUBS_SPAWN_DELAY = 3200*3;
+const size_t BIRD_CLUBS_SPAWN_DELAY = 400*3;
 const size_t ROULETTE_BALL_SPAWN_DELAY = 400*3;
 const size_t CARDS_SPAWN_DELAY = 1000 * 3;
 const size_t DARTS_SPAWN_DELAY = 1677 * 3;
@@ -30,7 +31,8 @@ const int wallHeight = num_blocks * WALL_BLOCK_BB_HEIGHT;
 // create the casino
 WorldSystem::WorldSystem()
 	: coins(0)
-	, next_king_clubs_spawn(10.f)
+	, next_king_clubs_spawn(1000.f)
+	, next_bird_clubs_spawn(10.f)
 	, next_roulette_ball_spawn(ROULETTE_BALL_SPAWN_DELAY)
 	, next_card_spawn(CARDS_SPAWN_DELAY)
 	, next_dart_spawn(DARTS_SPAWN_DELAY)
@@ -199,6 +201,27 @@ if (registry.deadlys.components.size() <= MAX_NUM_MELEE && next_king_clubs_spawn
 
     createKingClubs(renderer, vec2(spawnX, spawnY));
 }
+
+	next_bird_clubs_spawn -= elapsed_ms_since_last_update * current_speed;
+	if (registry.deadlys.components.size() <= MAX_NUM_MELEE && next_bird_clubs_spawn < 0.f) {
+		next_bird_clubs_spawn = (BIRD_CLUBS_SPAWN_DELAY / 2) + uniform_dist(rng) * (BIRD_CLUBS_SPAWN_DELAY / 2);
+
+		float roomLeft = window_width_px / 2 - wallWidth / 2 + WALL_BLOCK_BB_WIDTH;   
+		float roomRight = window_width_px / 2 + wallWidth / 2 - WALL_BLOCK_BB_WIDTH; 
+		float roomTop = window_height_px / 2 - wallHeight / 2 + WALL_BLOCK_BB_HEIGHT; 
+		float roomBottom = window_height_px / 2 + wallHeight / 2 - WALL_BLOCK_BB_HEIGHT;
+
+		vec2 player_position = p_motion.position;
+		float min_distance_from_player = 300.0f; 
+
+		float spawnX, spawnY;
+		do {
+			spawnX = uniform_dist(rng) * (roomRight - roomLeft) + roomLeft;   
+			spawnY = uniform_dist(rng) * (roomBottom - roomTop) + roomTop;
+		} while (sqrt(pow(spawnX - player_position.x, 2) + pow(spawnY - player_position.y, 2)) < min_distance_from_player);
+
+		createBirdClubs(renderer, vec2(spawnX, spawnY));
+	}
 
 	float dx = mouse_x - window_width_px / 2.0f;
 	float dy = mouse_y - window_height_px / 2.0f;
@@ -499,7 +522,12 @@ void WorldSystem::load() {
 	if (j.contains("enemies")) {
 		for (auto& item : j["enemies"].items()) {
 			auto& value = item.value();
-			createKingClubs(renderer, vec2(value["position"][0], value["position"][1]));
+			if (value["type"] == "king_clubs") {
+				createKingClubs(renderer, vec2(value["position"][0], value["position"][1]));
+			} else if (value["type"] == "bird_clubs") {
+				createBirdClubs(renderer, vec2(value["position"][0], value["position"][1]));
+			}
+			
 		}
 	}
 
@@ -561,7 +589,8 @@ void WorldSystem::save() {
     for (Entity entity : registry.deadlys.entities) {
         if (registry.motions.has(entity)) {
             j["enemies"][std::to_string(entity)] = {
-                {"position", {registry.motions.get(entity).position.x, registry.motions.get(entity).position.y}}
+                {"position", {registry.motions.get(entity).position.x, registry.motions.get(entity).position.y}},
+				{"type", registry.deadlys.get(entity).type}
             };
         }
     }

@@ -56,6 +56,7 @@ private:
 	RenderSystem* renderer;
 	float current_speed;
 	float next_king_clubs_spawn;
+	float next_bird_clubs_spawn;
 	float next_roulette_ball_spawn;
 	float next_card_spawn;
 	float next_dart_spawn;

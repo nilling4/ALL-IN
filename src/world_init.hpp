@@ -22,6 +22,8 @@ const float FISH_BB_WIDTH  = 0.6f * 80.f;
 const float FISH_BB_HEIGHT = 0.6f * 100.f;
 const float EEL_BB_WIDTH   = 0.6f * 150.f;	// 1001
 const float EEL_BB_HEIGHT  = 0.6f * 100.f;	// 870
+const float BIRD_CLUB_BB_WIDTH = 0.6f * 40.f;
+const float BIRD_CLUB_BB_HEIGHT = 0.6f * 40.f;
 
 const float WALL_BLOCK_BB_WIDTH = 24.0f;
 const float WALL_BLOCK_BB_HEIGHT = 24.0f;
@@ -38,6 +40,7 @@ Entity createFish(RenderSystem* renderer, vec2 position);
 Entity createEel(RenderSystem* renderer, vec2 position);
 
 Entity createKingClubs(RenderSystem* renderer, vec2 position);
+Entity createBirdClubs(RenderSystem* renderer, vec2 position);
 
 Entity createRouletteBall(RenderSystem* renderer, vec2 position, vec2 velocity);
 
