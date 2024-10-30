@@ -67,10 +67,42 @@ Entity createKingClubs(RenderSystem* renderer, vec2 position)
 	deadly.health = 25.f;
 	deadly.armour = 1.f;
 	deadly.dmg_to_projectiles = 25.f;
+	deadly.type = "king_clubs";
 	registry.renderRequests.insert(
 		entity,
 		{
 			TEXTURE_ASSET_ID::KING_CLUBS,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE
+		});
+
+	return entity;
+}
+
+Entity createBirdClubs(RenderSystem* renderer, vec2 position)
+{
+	auto entity = Entity();
+
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 0.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2({ BIRD_CLUB_BB_WIDTH, BIRD_CLUB_BB_HEIGHT });
+
+	registry.boids.emplace(entity);
+	auto& deadly = registry.deadlys.emplace(entity);
+	deadly.health = 15.f;
+	deadly.armour = 5.f;
+	deadly.dmg_to_projectiles = 25.f;
+	deadly.type = "bird_clubs";
+	registry.renderRequests.insert(
+		entity,
+		{
+			TEXTURE_ASSET_ID::BIRD_CLUBS,
 			EFFECT_ASSET_ID::TEXTURED,
 			GEOMETRY_BUFFER_ID::SPRITE
 		});
