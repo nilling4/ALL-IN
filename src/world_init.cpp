@@ -13,7 +13,9 @@ Entity createProtagonist(RenderSystem* renderer, vec2 pos) {
 	motion.velocity = { 0.f, 0.f };
 	motion.scale = vec2({ FISH_BB_WIDTH, FISH_BB_HEIGHT });
 
-	registry.players.emplace(entity);
+	Player& player = registry.players.emplace(entity);
+	player.health = 1000.f;
+	player.armour = 0.f;
 
 	registry.renderRequests.insert(
 		entity,
@@ -95,8 +97,10 @@ Entity createBirdClubs(RenderSystem* renderer, vec2 position)
 
 	registry.boids.emplace(entity);
 	auto& deadly = registry.deadlys.emplace(entity);
-	deadly.health = 15.f;
-	deadly.armour = 5.f;
+
+	deadly.health = 4.f;
+	deadly.armour = 0.f;
+
 	deadly.dmg_to_projectiles = 25.f;
 	deadly.type = "bird_clubs";
 	registry.renderRequests.insert(

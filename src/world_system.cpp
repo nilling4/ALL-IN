@@ -151,8 +151,10 @@ void WorldSystem::init(RenderSystem* renderer_arg) {
 // Update our game world
 bool WorldSystem::step(float elapsed_ms_since_last_update) {
 	// Updating window title with coin count
+	Motion& p_motion = registry.motions.get(player_protagonist);
+	Player& p_you = registry.players.get(player_protagonist);
 	std::stringstream title_ss;
-	title_ss << "Coins: " << coins;
+	title_ss << "Coins: " << coins << ", Health: " << p_you.health;
 	glfwSetWindowTitle(window, title_ss.str().c_str());
 
 	// Remove debug info from the last step
@@ -161,7 +163,6 @@ bool WorldSystem::step(float elapsed_ms_since_last_update) {
 
 	// Removing out of screen entities
 	auto& motions_registry = registry.motions;
-	Motion& p_motion = registry.motions.get(player_protagonist);
 
 	// Remove entities that leave the screen on the left side
 	// Iterate backwards to be able to remove without unterfering with the next object to visit
@@ -413,23 +414,33 @@ void WorldSystem::handle_collisions() {
 
 		// for now, we are only interested in collisions that involve the player
 		if (registry.players.has(entity)) {
-			//Player& player = registry.players.get(entity);
-
+			Player& your = registry.players.get(entity);
+			Motion& your_motion = registry.motions.get(entity);
 			// Checking Player - Deadly collisions
 			if (registry.deadlys.has(entity_other)) {
 				// initiate death unless already dying
-				if (!registry.deathTimers.has(entity)) {
-					// Scream, reset timer, and make the salmon sink
-					registry.deathTimers.emplace(entity);
-					Mix_PlayChannel(-1, salmon_dead_sound, 0);		
-					std::ofstream ofs("save.json", std::ios::trunc);
-					if (ofs.is_open()) {
-						ofs.close();
-						std::cout << "save.json contents erased." << std::endl;
-					} else {
-						std::cerr << "Unable to open save.json for erasing." << std::endl;
+				Deadly& deadly = registry.deadlys.get(entity_other);
+				Motion& deadly_motion = registry.motions.get(entity_other);
+
+				your.health -= 1;
+				vec2 push = normalize(your_motion.position - deadly_motion.position);
+				your.push += 100.f*push;
+				deadly_motion.velocity += -10.f*push;
+
+				if (your.health <= 0) {
+					if (!registry.deathTimers.has(entity)) {
+						// Scream, reset timer, and make the salmon sink
+						registry.deathTimers.emplace(entity);
+						Mix_PlayChannel(-1, salmon_dead_sound, 0);		
+						std::ofstream ofs("save.json", std::ios::trunc);
+						if (ofs.is_open()) {
+							ofs.close();
+							std::cout << "save.json contents erased." << std::endl;
+						} else {
+							std::cerr << "Unable to open save.json for erasing." << std::endl;
+						}
 					}
-					}
+				}
 			}
 			// Checking Player - Eatable collisions
 			else if (registry.eatables.has(entity_other)) {
@@ -695,7 +706,7 @@ void WorldSystem::on_key(int key, int, int action, int mod) {
 	}
 
 	Motion& motion = registry.motions.get(player_protagonist);
-	
+	Player& your = registry.players.get(player_protagonist);
 
 	motion.velocity.x = 0.0f;
 	motion.velocity.y = 0.0f;
@@ -739,6 +750,12 @@ void WorldSystem::on_key(int key, int, int action, int mod) {
 		motion.velocity.x = 100.f;   
 
 	} 
+
+	if (action == GLFW_PRESS && key == GLFW_KEY_SPACE) {
+		if (length(your.push) < 0.00001f) {
+			your.push += motion.velocity*10.f;
+		}
+	}
 
 	// Control the current speed with `<` `>`
 	if (action == GLFW_RELEASE && (mod & GLFW_MOD_SHIFT) && key == GLFW_KEY_COMMA) {

@@ -2,10 +2,16 @@
 #include "ai_system.hpp"
 #include <iostream>
 
+#include <cmath>
+
+
+
 const float SEPARATION_DIST = 50.0f;  
 const float ALIGNMENT_DIST = 400.0f;  
 const float COHESION_DIST = 500.0f;   
-const float MAX_SPEED = 100.0f;
+
+const float MAX_SPEED = 200.0f;
+
 const float MAX_PUSH = 50.0f;
 const float RANDOM_FORCE = 10.0f;
 const float UPDATE_VELO_PROPORTION = 0.1f;
@@ -89,9 +95,17 @@ void AISystem::step(float elapsed_ms)
         vec2 acceleration;
 		float random_angle = (rand() % 360) * M_PI / 180.0f; 
 		acceleration = {cos(random_angle), sin(random_angle)};
-		acceleration *= RANDOM_FORCE; 
+
+		acceleration *= RANDOM_FORCE * fmin((cohesion_count+1.f), 15.f); 
 
 		acceleration += separation_force * 1.f + alignment_force * 1.f + cohesion_force * 1.f;
+
+		acceleration += normalize(player_motion->position - position)* fmin(2.f * (cohesion_count+0.f), 20.f);
+
+        if (length(player_motion->position - position) < SEPARATION_DIST*2) {
+            acceleration += normalize(player_motion->position - position) * 1000.f;
+            acceleration += separation_force * 10.f;
+        }
 
 
         velocity += acceleration;
@@ -111,9 +125,42 @@ void AISystem::step(float elapsed_ms)
 			continue;
 		}
 
+        vec2 separation_force = {0.f, 0.f};
+        int separation_count = 0;
+
+        for (Entity other : registry.deadlys.entities) {
+		    Deadly& deadly_other = registry.deadlys.get(entity);
+
+            if (deadly_other.type != "king_clubs") {
+                continue;
+            }
+            if (other == entity) {
+				continue;
+			}
+
+            Motion& other_motion = registry.motions.get(other);
+            vec2 other_position = {other_motion.position.x, other_motion.position.y};
+
+            float dist = length(other_position - motion.position);
+
+            if (dist < SEPARATION_DIST && dist > 0) {
+                vec2 diff = normalize(motion.position - other_position) / dist;
+                separation_force += diff;
+                separation_count++;
+            }
+        }
+
+        if (separation_count > 0) {
+            separation_force /= (float)separation_count;
+			separation_force *= 69420.f;
+            separation_force = cap_velocity(separation_force, 0.5*MAX_PUSH * (1+0.05*separation_count));
+        }
+
 		float angle = atan2(player_motion->position.x - motion.position.x,player_motion->position.y - motion.position.y);
-		motion.velocity.x = sin(angle)*50;
-		motion.velocity.y = cos(angle)*50;
+		vec2 velocity = {sin(angle)*50, cos(angle)*50};
+        motion.velocity = cap_velocity(velocity + separation_force, 50);
+
+
 		if ((motion.position.x > player_motion->position.x && motion.scale.y < 0) || 
 			(motion.position.x < player_motion->position.x && motion.scale.y > 0)) {
 			motion.scale.y *= -1;
