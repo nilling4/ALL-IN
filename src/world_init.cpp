@@ -97,8 +97,10 @@ Entity createBirdClubs(RenderSystem* renderer, vec2 position)
 
 	registry.boids.emplace(entity);
 	auto& deadly = registry.deadlys.emplace(entity);
+
 	deadly.health = 4.f;
 	deadly.armour = 0.f;
+
 	deadly.dmg_to_projectiles = 25.f;
 	deadly.type = "bird_clubs";
 	registry.renderRequests.insert(

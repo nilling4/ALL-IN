@@ -1,13 +1,17 @@
 // internal
 #include "ai_system.hpp"
 #include <iostream>
+
 #include <cmath>
+
 
 
 const float SEPARATION_DIST = 50.0f;  
 const float ALIGNMENT_DIST = 400.0f;  
 const float COHESION_DIST = 500.0f;   
+
 const float MAX_SPEED = 200.0f;
+
 const float MAX_PUSH = 50.0f;
 const float RANDOM_FORCE = 10.0f;
 const float UPDATE_VELO_PROPORTION = 0.1f;
@@ -91,6 +95,7 @@ void AISystem::step(float elapsed_ms)
         vec2 acceleration;
 		float random_angle = (rand() % 360) * M_PI / 180.0f; 
 		acceleration = {cos(random_angle), sin(random_angle)};
+
 		acceleration *= RANDOM_FORCE * fmin((cohesion_count+1.f), 15.f); 
 
 		acceleration += separation_force * 1.f + alignment_force * 1.f + cohesion_force * 1.f;
@@ -101,6 +106,7 @@ void AISystem::step(float elapsed_ms)
             acceleration += normalize(player_motion->position - position) * 1000.f;
             acceleration += separation_force * 10.f;
         }
+
 
         velocity += acceleration;
         velocity = cap_velocity(velocity, MAX_SPEED);
@@ -118,6 +124,7 @@ void AISystem::step(float elapsed_ms)
 		if (deadly.type != "king_clubs") {
 			continue;
 		}
+
         vec2 separation_force = {0.f, 0.f};
         int separation_count = 0;
 
@@ -152,6 +159,7 @@ void AISystem::step(float elapsed_ms)
 		float angle = atan2(player_motion->position.x - motion.position.x,player_motion->position.y - motion.position.y);
 		vec2 velocity = {sin(angle)*50, cos(angle)*50};
         motion.velocity = cap_velocity(velocity + separation_force, 50);
+
 
 		if ((motion.position.x > player_motion->position.x && motion.scale.y < 0) || 
 			(motion.position.x < player_motion->position.x && motion.scale.y > 0)) {
