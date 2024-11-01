@@ -322,7 +322,23 @@ if (registry.deadlys.components.size() <= MAX_NUM_MELEE && next_king_clubs_spawn
 	}
 	// reduce window brightness if the salmon is dying
 	screen.darken_screen_factor = 1 - min_counter_ms / 3000;
-
+	if (debugging.in_debug_mode){
+		for (Entity entity : motions_registry.entities) {
+			if (registry.motions.has(entity)) {
+				Motion &motion = registry.motions.get(entity);
+				if (registry.players.has(entity)||!registry.collisions.has(entity)||registry.eatables.has(entity)||registry.deadlys.has(entity)) {
+					float min_x = motion.position.x - motion.scale.x / 2;
+					float max_x = motion.position.x + motion.scale.x / 2;
+					float min_y = motion.position.y - motion.scale.y / 2;
+					float max_y = motion.position.y + motion.scale.y / 2;
+					createLine({(min_x+max_x)/2, min_y}, {max_x - min_x, 2}); 
+					createLine({(min_x+max_x)/2, max_y}, {max_x - min_x, 2}); 
+					createLine({min_x, (min_y+max_y)/2}, {2, max_y - min_y}); 
+					createLine({max_x, (min_y+max_y)/2}, {2, max_y - min_y}); 
+				}
+		}
+		}
+		}
 	return true;
 }
 
@@ -659,13 +675,18 @@ void WorldSystem::on_key(int key, int, int action, int mod) {
 	}
 
 	// Debugging
-	if (key == GLFW_KEY_D) {
-		if (action == GLFW_RELEASE)
+	if (key == GLFW_KEY_F&&action == GLFW_PRESS) {
+		if (debugging.in_debug_mode ){
+			std::cout<<("Now in normal mode")<<std::endl;
 			debugging.in_debug_mode = false;
-		else
+		}
+			
+		else{
+			std::cout<<("Now in debug mode")<<std::endl;
 			debugging.in_debug_mode = true;
-	}
+		}
 
+	}
 	// Close game
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
 		save();

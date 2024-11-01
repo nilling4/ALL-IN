@@ -12,18 +12,22 @@ vec2 get_bounding_box(const Motion& motion)
 // This is a SUPER APPROXIMATE check that puts a circle around the bounding boxes and sees
 // if the center point of either object is inside the other's bounding-box-circle. You can
 // surely implement a more accurate detection
+
 bool collides(const Motion& motion1, const Motion& motion2)
 {
-	vec2 dp = motion1.position - motion2.position;
-	float dist_squared = dot(dp,dp);
-	const vec2 other_bonding_box = get_bounding_box(motion1) / 2.f;
-	const float other_r_squared = dot(other_bonding_box, other_bonding_box);
-	const vec2 my_bonding_box = get_bounding_box(motion2) / 2.f;
-	const float my_r_squared = dot(my_bonding_box, my_bonding_box);
-	const float r_squared = max(other_r_squared, my_r_squared);
-	if (dist_squared < r_squared)
-		return true;
-	return false;
+    vec2 pos1 = motion1.position;
+    vec2 pos2 = motion2.position;
+    vec2 halfSize1 = get_bounding_box(motion1) / 2.f;
+    vec2 halfSize2 = get_bounding_box(motion2) / 2.f;
+
+
+    bool overlapX = (pos1.x - halfSize1.x < pos2.x + halfSize2.x) && (pos1.x + halfSize1.x > pos2.x - halfSize2.x);
+
+
+    bool overlapY = (pos1.y - halfSize1.y < pos2.y + halfSize2.y) && (pos1.y + halfSize1.y > pos2.y - halfSize2.y);
+
+
+    return overlapX && overlapY;
 }
 void PhysicsSystem::lerp(float elapsed_ms,float total_ms) {
 	auto& motion_registry = registry.motions;
