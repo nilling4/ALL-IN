@@ -7,7 +7,9 @@
 // Player component
 struct Player
 {
-
+	float health = 0;
+	float armour = 0;
+	vec2 push = {0, 0};
 };
 
 // anything that is deadly to the player
