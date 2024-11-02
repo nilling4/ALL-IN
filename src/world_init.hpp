@@ -63,3 +63,8 @@ Entity createLine(vec2 position, vec2 size);
 
 // a egg
 Entity createEgg(vec2 pos, vec2 size);
+
+Entity createHomeScreen(RenderSystem* renderer, vec2 position);
+
+Entity createTutScreen(RenderSystem* renderer, vec2 position);
+

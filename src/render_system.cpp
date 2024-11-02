@@ -1,6 +1,7 @@
 // internal
 #include "render_system.hpp"
 #include <SDL.h>
+#include <iostream>
 
 #include "tiny_ecs_registry.hpp"
 
@@ -202,45 +203,75 @@ void RenderSystem::drawToScreen()
 
 // Render our game world
 // http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-14-render-to-texture/
-void RenderSystem::draw()
+void RenderSystem::draw(std::string what)
 {
 	// Getting size of window
 	int w, h;
 	glfwGetFramebufferSize(window, &w, &h); // Note, this will be 2x the resolution given to glfwCreateWindow on retina displays
-
-	// First render to the custom framebuffer
 	glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer);
 	gl_has_errors();
 	// Clearing backbuffer
 	glViewport(0, 0, w, h);
-	glDepthRange(0.00001, 10);
-	glClearColor(0.5, 0.4, 0.3, 1.0);
-	glClearDepth(10.f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glDisable(GL_DEPTH_TEST); // native OpenGL does not work with a depth buffer
-							  // and alpha blending, one would have to sort
-							  // sprites back to front
-	gl_has_errors();
-	mat3 projection_2D = createProjectionMatrix();
-	// Draw all textured meshes that have a position and size component
-	for (Entity entity : registry.renderRequests.entities)
-	{
-		if (!registry.motions.has(entity))
-			continue;
-		if (registry.hud.has(entity)) {
-			continue;
-		}
-		// Note, its not very efficient to access elements indirectly via the entity
-		// albeit iterating through all Sprites in sequence. A good point to optimize
-		drawTexturedMesh(entity, projection_2D);
-	}
 
-	// draw the hud at the end so it stays on top and use a separate projection matrix to lock it to screen
-	mat3 hud_projection = createHUDProjectionMatrix();
-	for (Entity hud_entity : registry.hud.entities) {
-		drawTexturedMesh(hud_entity, hud_projection);
+	if (what == "the game bruh") {
+		// First render to the custom framebuffer
+		glDepthRange(0.00001, 10);
+		glClearColor(0.5, 0.4, 0.3, 1.0);
+		glClearDepth(10.f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glDisable(GL_DEPTH_TEST); // native OpenGL does not work with a depth buffer
+								// and alpha blending, one would have to sort
+								// sprites back to front
+		gl_has_errors();
+		mat3 projection_2D = createProjectionMatrix();
+		// Draw all textured meshes that have a position and size component
+		for (Entity entity : registry.renderRequests.entities)
+		{
+			if (!registry.motions.has(entity))
+				continue;
+			if (registry.hud.has(entity)) {
+				continue;
+			}
+			if (registry.homeAndTuts.has(entity)) {
+				continue;
+			}
+			// Note, its not very efficient to access elements indirectly via the entity
+			// albeit iterating through all Sprites in sequence. A good point to optimize
+			drawTexturedMesh(entity, projection_2D);
+		}
+
+
+		// draw the hud at the end so it stays on top and use a separate projection matrix to lock it to screen
+		mat3 hud_projection = createHUDProjectionMatrix();
+		for (Entity hud_entity : registry.hud.entities) {
+			drawTexturedMesh(hud_entity, hud_projection);
+		}
+
+	} else if (what == "the home screen duh" || what == "the tuts") {
+		mat3 projection_2D = createStaticProjectionMatrix();
+		for (Entity entity : registry.renderRequests.entities)
+		{
+			if (!registry.homeAndTuts.has(entity)) {
+				continue;
+			} else {
+				auto& screen = registry.homeAndTuts.get(entity);
+				if (what == "the home screen duh") {
+					if (screen.type != "home") {
+						continue;
+					}
+				} else if (what == "the tuts") {
+					if (screen.type != "tut") {
+						continue;
+					}
+				}
+			}
+
+			// Note, its not very efficient to access elements indirectly via the entity
+			// albeit iterating through all Sprites in sequence. A good point to optimize
+			drawTexturedMesh(entity, projection_2D);
+		}
 	}
 
 	// Truely render to the screen
@@ -249,6 +280,12 @@ void RenderSystem::draw()
 	// flicker-free display with a double buffer
 	glfwSwapBuffers(window);
 	gl_has_errors();
+}
+
+mat3 RenderSystem::createStaticProjectionMatrix() {
+    float sx = 2.f / (float)window_width_px;
+    float sy = 2.f / (float)window_height_px;
+    return {{sx, 0.f, 0.f}, {0.f, -sy, 0.f}, {-1.f, 1.f, 1.f}};
 }
 
 mat3 RenderSystem::createProjectionMatrix()

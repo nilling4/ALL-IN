@@ -149,7 +149,7 @@ void WorldSystem::init(RenderSystem* renderer_arg) {
 }
 
 // Update our game world
-bool WorldSystem::step(float elapsed_ms_since_last_update) {
+bool WorldSystem::step(float elapsed_ms_since_last_update, std::string* game_state) {
 	// Updating window title with coin count
 	Motion& p_motion = registry.motions.get(player_protagonist);
 	Player& p_you = registry.players.get(player_protagonist);
@@ -317,7 +317,8 @@ if (registry.deadlys.components.size() <= MAX_NUM_MELEE && next_king_clubs_spawn
 		if (counter.counter_ms < 0) {
 			registry.deathTimers.remove(entity);
 			screen.darken_screen_factor = 0;
-            restart_game();
+            // restart_game();
+			go_to_home(game_state);
 			return true;
 		}
 	}
@@ -341,6 +342,21 @@ if (registry.deadlys.components.size() <= MAX_NUM_MELEE && next_king_clubs_spawn
 		}
 		}
 	return true;
+}
+
+void WorldSystem::go_to_home(std::string* game_state) {
+	registry.list_all_components();
+	current_speed = 1.f;
+	printf("Restarting\n");
+	while (registry.motions.entities.size() > 0)
+		registry.remove_all_components_of(registry.motions.entities.back());
+	*game_state = "home";
+	registry.list_all_components();
+	if (registry.players.size() == 0) {
+		player_protagonist = createProtagonist(renderer, { window_width_px / 2, window_height_px / 2 });
+		registry.colors.insert(player_protagonist, { 1, 0.8f, 0.8f });
+	}
+
 }
 
 // Reset the world state to its initial state

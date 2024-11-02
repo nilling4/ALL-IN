@@ -30,11 +30,12 @@ public:
 	~WorldSystem();
 
 	// Steps the game ahead by ms milliseconds
-	bool step(float elapsed_ms);
+	bool step(float elapsed_ms, std::string* game_state);
 	void save();
 	void load();
 	// Check for collisions
 	void handle_collisions();
+	void go_to_home(std::string* game_state);
 
 	// Should the game be over ?
 	bool is_over()const;

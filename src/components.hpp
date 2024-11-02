@@ -22,6 +22,10 @@ struct Deadly
 	// float melee damage
 };
 
+struct HomeAndTut {
+	std::string type = "";
+};
+
 struct Boid {
 	
 };
@@ -160,8 +164,10 @@ enum class TEXTURE_ASSET_ID {
 	WALL_BLOCK = FLOOR_BLOCK + 1,
 	LERP_PROJECTILE = WALL_BLOCK + 1,
 	COIN = LERP_PROJECTILE + 1,
-	BIRD_CLUBS = COIN + 1, // To add to this, make sure to also add in render_system.hpp
-	TEXTURE_COUNT = BIRD_CLUBS + 1
+	BIRD_CLUBS = COIN + 1, 
+	HOME_SCREEN = BIRD_CLUBS + 1,
+	TUT_SCREEN = HOME_SCREEN + 1, // To add to this, make sure to also add in render_system.hpp
+	TEXTURE_COUNT = TUT_SCREEN + 1
 };
 const int texture_count = (int)TEXTURE_ASSET_ID::TEXTURE_COUNT;
 
