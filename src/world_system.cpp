@@ -22,6 +22,7 @@ const size_t ROULETTE_BALL_SPAWN_DELAY = 400*3;
 const size_t CARDS_SPAWN_DELAY = 1000 * 3;
 const size_t DARTS_SPAWN_DELAY = 1677 * 3;
 const size_t LERP_SPAWN_DELAY = 900 * 3;
+const size_t DIAMOND_SPAWN_DELAY = 1000*3;
 
 // Room configuration
 const int num_blocks = 40;
@@ -36,7 +37,8 @@ WorldSystem::WorldSystem()
 	, next_roulette_ball_spawn(ROULETTE_BALL_SPAWN_DELAY)
 	, next_card_spawn(CARDS_SPAWN_DELAY)
 	, next_dart_spawn(DARTS_SPAWN_DELAY)
-	, next_lerp_spawn(LERP_SPAWN_DELAY) {
+	, next_lerp_spawn(LERP_SPAWN_DELAY)
+	, next_diamond_spawn(DIAMOND_SPAWN_DELAY) {
 	// Seeding rng with random device
 	rng = std::default_random_engine(std::random_device()());
 }
@@ -289,7 +291,17 @@ if (registry.deadlys.components.size() <= MAX_NUM_MELEE && next_king_clubs_spawn
 
 		createDartProjectile(renderer, vec2(p_motion.position.x, p_motion.position.y), vec2(velocity_x, velocity_y), angle);
 	}
-	
+	next_diamond_spawn -= elapsed_ms_since_last_update * current_speed;
+	if (next_diamond_spawn < 0.f) {
+		next_diamond_spawn = DIAMOND_SPAWN_DELAY;
+
+		float speed = 250.f;
+
+		float velocity_x = speed * std::cos(angle);
+		float velocity_y = speed * std::sin(angle);
+
+		createDiamondProjectile(renderer, vec2(p_motion.position.x, p_motion.position.y), vec2(velocity_x, velocity_y), angle);
+	}
 	next_lerp_spawn -= elapsed_ms_since_last_update * current_speed;
 	if (next_lerp_spawn < 0.f) {
 		next_lerp_spawn = LERP_SPAWN_DELAY;
@@ -581,12 +593,14 @@ void WorldSystem::load() {
 			double velocity_x = value["velocity"][0];
 			double velocity_y = value["velocity"][1];
 			double velocity_magnitude = std::sqrt(velocity_x * velocity_x + velocity_y * velocity_y);
-
-			if (velocity_magnitude <= 300) {
+			if (velocity_magnitude <= 260) {
+				createDiamondProjectile(renderer, vec2(value["position"][0], value["position"][1]), vec2(velocity_x, velocity_y), value["angle"]);
+			}
+			else if (velocity_magnitude <= 300) {
 				createRouletteBall(renderer, vec2(value["position"][0], value["position"][1]), vec2(velocity_x, velocity_y));
 			}
 			else if (velocity_magnitude <= 380) {
-				createDartProjectile(renderer, vec2(value["position"][0], value["position"][1]), vec2(velocity_x, velocity_y), 0);
+				createDartProjectile(renderer, vec2(value["position"][0], value["position"][1]), vec2(velocity_x, velocity_y), value["angle"]);
 			}
 			else {
 				createCardProjectile(renderer, vec2(value["position"][0], value["position"][1]), vec2(velocity_x, velocity_y));
@@ -655,6 +669,7 @@ void WorldSystem::save() {
             j["projectiles"][std::to_string(entity)] = {
                 {"position", {ent.position.x, ent.position.y}},
                 {"velocity", {ent.velocity.x, ent.velocity.y}},
+				{"angle", ent.angle},
             };
         }
     }

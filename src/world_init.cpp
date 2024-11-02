@@ -200,7 +200,34 @@ Entity createDartProjectile(RenderSystem* renderer, vec2 position, vec2 velocity
 
 	return entity;
 }
+Entity createDiamondProjectile(RenderSystem* renderer, vec2 position, vec2 velocity, float angle)
+{
+	auto entity = Entity();
 
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::DIAMOND);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = angle + 0.5 * M_PI;
+	motion.velocity = velocity;
+	motion.position = position;
+
+	motion.scale = vec2({ DIAMOND_PROJECTILE_BB_HEIGHT, DIAMOND_PROJECTILE_BB_HEIGHT });
+
+	auto& kills = registry.killsEnemys.emplace(entity);
+	kills.damage = 50.f;
+	kills.health = 2.f;
+	kills.dmg_taken_multiplier = 2;
+	registry.renderRequests.insert(
+		entity,
+		{
+			TEXTURE_ASSET_ID::DIAMOND_PROJECTILE,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::DIAMOND
+		});
+
+	return entity;
+}
 Entity createCoin(RenderSystem* renderer, vec2 position) {
 	auto entity = Entity();
 

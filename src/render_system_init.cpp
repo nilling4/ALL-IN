@@ -50,7 +50,6 @@ bool RenderSystem::init(GLFWwindow* window_arg)
 
 	// We are not really using VAO's but without at least one bound we will crash in
 	// some systems.
-	GLuint vao;
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
 	gl_has_errors();
@@ -145,7 +144,8 @@ void RenderSystem::initializeGlGeometryBuffers()
 
 	// Index and Vertex buffer data initialization.
 	initializeGlMeshes();
-
+	glGenTextures(1, &m_diamond_texture);
+	glBindTexture(GL_TEXTURE_2D, m_diamond_texture);
 	//////////////////////////
 	// Initialize sprite
 	// The position corresponds to the center of the texture.
@@ -159,6 +159,54 @@ void RenderSystem::initializeGlGeometryBuffers()
 	textured_vertices[2].texcoord = { 1.f, 0.f };
 	textured_vertices[3].texcoord = { 0.f, 0.f };
 
+	std::vector<TexturedVertex> diamondVertices(18);
+	diamondVertices[0].position = { 0.16f,  0.16f, 0.0f };
+	diamondVertices[1].position = { 0.16f,  -0.16f, 0.0f };
+	diamondVertices[2].position = { -0.16f, 0.16f, 0.0f };
+	diamondVertices[0].texcoord = { 0.67f, 0.67f };
+	diamondVertices[1].texcoord = { 0.67f, 0.33f};
+	diamondVertices[2].texcoord = { 0.33f, 0.67f };
+
+	diamondVertices[3].position = { 0.16f, -0.16f, 0.0f };
+	diamondVertices[4].position = { -0.16f,  -0.16f, 0.0f };
+	diamondVertices[5].position = { -0.16f, 0.16f, 0.0f };
+	diamondVertices[3].texcoord = { 0.67f, 0.33f };
+	diamondVertices[4].texcoord = {0.33f, 0.33f};
+	diamondVertices[5].texcoord = {0.33f, 0.67f};
+
+	diamondVertices[6].position = { 0.16f, 0.16f, 0.0f };
+	diamondVertices[7].position = { 0.0f,  0.5f, 0.0f };
+	diamondVertices[8].position = { -0.16f, 0.16f, 0.0f };
+	diamondVertices[6].texcoord = { 0.67f, 0.67f };
+	diamondVertices[7].texcoord = {0.5f, 0.95f};
+	diamondVertices[8].texcoord = {0.33f, 0.67f};
+
+	diamondVertices[9].position = { 0.16f, 0.16f, 0.0f };
+	diamondVertices[10].position = { 0.5f, 0.f, 0.0f };
+	diamondVertices[11].position = { 0.16f, -0.16f, 0.0f };
+	diamondVertices[9].texcoord = { 0.67f, 0.67f};
+	diamondVertices[10].texcoord = {0.95f, 0.5f};
+	diamondVertices[11].texcoord = {0.67f, 0.33f};
+
+
+	diamondVertices[12].position = { -0.5f, -0.0f, 0.0f };
+	diamondVertices[13].position = { -0.16f, -0.16f, 0.0f };
+	diamondVertices[14].position = { -0.16f, 0.16f, 0.0f };
+	diamondVertices[12].texcoord = { 0.05f, 0.5f};
+	diamondVertices[13].texcoord = {0.33f, 0.33f};
+	diamondVertices[14].texcoord = {0.33f, 0.67f};
+
+	diamondVertices[15].position = { 0.16f,  -0.16f, 0.0f };
+	diamondVertices[16].position = { -0.16f,  -0.16f, 0.0f };
+	diamondVertices[17].position = { 0.0f, -0.5f, 0.0f };
+	diamondVertices[15].texcoord = { 0.67f, 0.33f};
+	diamondVertices[16].texcoord = {0.33f, 0.33f};
+	diamondVertices[17].texcoord = {0.5f, 0.05f};
+	
+	meshes[(int)GEOMETRY_BUFFER_ID::DIAMOND].vertices = std::vector<ColoredVertex>{{diamondVertices[0].position, { 0.8, 0.8, 0.8 }},{diamondVertices[1].position, { 0.8, 0.8, 0.8 }},{diamondVertices[2].position, { 0.8, 0.8, 0.8 }},{diamondVertices[3].position, { 0.8, 0.8, 0.8 }},{diamondVertices[4].position, { 0.8, 0.8, 0.8 }},{diamondVertices[5].position, { 0.8, 0.8, 0.8 }}
+	,{diamondVertices[6].position, { 0.8, 0.8, 0.8 }},{diamondVertices[7].position, { 0.8, 0.8, 0.8 }},{diamondVertices[8].position, { 0.8, 0.8, 0.8 }},{diamondVertices[9].position, { 0.8, 0.8, 0.8 }},{diamondVertices[10].position, { 0.8, 0.8, 0.8 }},{diamondVertices[11].position, { 0.8, 0.8, 0.8 }},{diamondVertices[12].position, { 0.8, 0.8, 0.8 }},{diamondVertices[13].position, { 0.8, 0.8, 0.8 }},{diamondVertices[14].position, { 0.8, 0.8, 0.8 }},{diamondVertices[15].position, { 0.8, 0.8, 0.8 }},{diamondVertices[16].position, { 0.8, 0.8, 0.8 }},{diamondVertices[17].position, { 0.8, 0.8, 0.8 }}};
+	meshes[(int)GEOMETRY_BUFFER_ID::DIAMOND].vertex_indices = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17};
+
 	// Initialize HUD
 	initializeHUDGeometry();
 
@@ -166,6 +214,7 @@ void RenderSystem::initializeGlGeometryBuffers()
 	const std::vector<uint16_t> textured_indices = { 0, 3, 1, 1, 3, 2 };
 	bindVBOandIBO(GEOMETRY_BUFFER_ID::SPRITE, textured_vertices, textured_indices);
 
+	bindVBOandIBO(GEOMETRY_BUFFER_ID::DIAMOND, diamondVertices, {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17});
 	////////////////////////
 	// Initialize Egg
 	std::vector<ColoredVertex> egg_vertices;
@@ -188,6 +237,7 @@ void RenderSystem::initializeGlGeometryBuffers()
 		egg_indices.push_back((uint16_t)NUM_TRIANGLES);
 	}
 	int geom_index = (int)GEOMETRY_BUFFER_ID::EGG;
+
 	meshes[geom_index].vertices = egg_vertices;
 	meshes[geom_index].vertex_indices = egg_indices;
 	bindVBOandIBO(GEOMETRY_BUFFER_ID::EGG, meshes[geom_index].vertices, meshes[geom_index].vertex_indices);
@@ -256,6 +306,7 @@ RenderSystem::~RenderSystem()
 	glDeleteTextures((GLsizei)texture_gl_handles.size(), texture_gl_handles.data());
 	glDeleteTextures(1, &off_screen_render_buffer_color);
 	glDeleteRenderbuffers(1, &off_screen_render_buffer_depth);
+	glDeleteTextures(1,&m_diamond_texture);
 	gl_has_errors();
 
 	for(uint i = 0; i < effect_count; i++) {
@@ -277,7 +328,7 @@ bool RenderSystem::initScreenTexture()
 
 	int framebuffer_width, framebuffer_height;
 	glfwGetFramebufferSize(const_cast<GLFWwindow*>(window), &framebuffer_width, &framebuffer_height);  // Note, this will be 2x the resolution given to glfwCreateWindow on retina displays
-
+	
 	glGenTextures(1, &off_screen_render_buffer_color);
 	glBindTexture(GL_TEXTURE_2D, off_screen_render_buffer_color);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, framebuffer_width, framebuffer_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);

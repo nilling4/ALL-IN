@@ -167,7 +167,8 @@ enum class TEXTURE_ASSET_ID {
 	BIRD_CLUBS = COIN + 1, 
 	HOME_SCREEN = BIRD_CLUBS + 1,
 	TUT_SCREEN = HOME_SCREEN + 1, // To add to this, make sure to also add in render_system.hpp
-	TEXTURE_COUNT = TUT_SCREEN + 1
+  	DIAMOND_PROJECTILE = TUT_SCREEN + 1,
+	TEXTURE_COUNT = DIAMOND_PROJECTILE + 1
 };
 const int texture_count = (int)TEXTURE_ASSET_ID::TEXTURE_COUNT;
 
@@ -188,7 +189,8 @@ enum class GEOMETRY_BUFFER_ID {
 	DEBUG_LINE = EGG + 1,
 	SCREEN_TRIANGLE = DEBUG_LINE + 1,
 	HUD = SCREEN_TRIANGLE + 1,
-	GEOMETRY_COUNT = HUD + 1
+	DIAMOND = HUD + 1,
+	GEOMETRY_COUNT = DIAMOND + 1
 };
 const int geometry_count = (int)GEOMETRY_BUFFER_ID::GEOMETRY_COUNT;
 

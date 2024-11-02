@@ -19,7 +19,8 @@ class RenderSystem {
 	 */
 	std::array<GLuint, texture_count> texture_gl_handles;
 	std::array<ivec2, texture_count> texture_dimensions;
-
+	GLuint m_diamond_texture;
+	GLuint vao;
 	// Make sure these paths remain in sync with the associated enumerators.
 	// Associated id with .obj path
 	const std::vector < std::pair<GEOMETRY_BUFFER_ID, std::string>> mesh_paths =
@@ -43,7 +44,8 @@ class RenderSystem {
 			textures_path("coin.png"),
 			textures_path("clubs_bird.png"),
 			textures_path("home_screen.png"),
-			textures_path("tutorial_screen.png")
+			textures_path("tutorial_screen.png"),
+			textures_path("diamond.png")
 	};
 
 	std::array<GLuint, effect_count> effects;

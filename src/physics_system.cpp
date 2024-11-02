@@ -1,6 +1,7 @@
 // internal
 #include "physics_system.hpp"
 #include "world_init.hpp"
+#include "iostream"
 const float COLLECT_DIST = 100.0f;  
 
 // Returns the local bounding coordinates scaled by the current size of the entity
@@ -29,6 +30,30 @@ bool collides(const Motion& motion1, const Motion& motion2)
 
 
     return overlapX && overlapY;
+}
+bool vertexCollidesWithBoundingBox(Entity player_entity, Motion& other_motion) {
+    Mesh& mesh = *registry.meshPtrs.get(player_entity);
+    Motion& player_motion = registry.motions.get(player_entity);
+
+    Transform transform;
+    transform.translate(player_motion.position);
+    transform.rotate(player_motion.angle);
+    transform.scale(player_motion.scale);
+
+    vec2 other_half_size = get_bounding_box(other_motion) / 2.f;
+    vec2 other_min = other_motion.position - other_half_size;
+    vec2 other_max = other_motion.position + other_half_size;
+    for (ColoredVertex vertex : mesh.vertices) {
+        vec3 worldPosition = transform.mat * vec3(vertex.position.x, vertex.position.y, 1.0f);
+        vec2 worldPos2D = vec2(worldPosition.x, worldPosition.y);
+
+        if (worldPos2D.x >= other_min.x && worldPos2D.x <= other_max.x &&
+            worldPos2D.y >= other_min.y && worldPos2D.y <= other_max.y) {
+            return true;
+        }
+    }
+
+    return false;
 }
 void PhysicsSystem::lerp(float elapsed_ms,float total_ms) {
 	auto& motion_registry = registry.motions;
@@ -127,6 +152,10 @@ void PhysicsSystem::step(float elapsed_ms)
 	// }
 	for(Entity entity : registry.killsEnemys.entities){ {
 		Motion& motion = motion_registry.get(entity);
+		if(motion.scale.x == DIAMOND_PROJECTILE_BB_HEIGHT && motion.scale.y == DIAMOND_PROJECTILE_BB_HEIGHT){
+			
+			motion.angle += 2.0f * step_seconds;
+		}
 		motion.position += motion.velocity * step_seconds;
 	}
 	for (Entity entity : registry.killsEnemyLerpyDerps.entities) {
@@ -143,6 +172,7 @@ void PhysicsSystem::step(float elapsed_ms)
 		Motion& motion = motion_registry.get(entity);
 		motion.position += motion.velocity * step_seconds;
 	}
+	
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	// TODO A2: HANDLE EGG UPDATES HERE
 	// DON'T WORRY ABOUT THIS UNTIL ASSIGNMENT 2
@@ -161,11 +191,23 @@ void PhysicsSystem::step(float elapsed_ms)
 			Motion& motion_j = motion_container.components[j];
 			if (collides(motion_i, motion_j))
 			{
-				Entity entity_j = motion_container.entities[j];
-				// Create a collisions event
-				// We are abusing the ECS system a bit in that we potentially insert muliple collisions for the same entity
-				registry.collisions.emplace_with_duplicates(entity_i, entity_j);
-				registry.collisions.emplace_with_duplicates(entity_j, entity_i);
+
+				if (motion_i.scale.x != DIAMOND_PROJECTILE_BB_HEIGHT && motion_i.scale.y != DIAMOND_PROJECTILE_BB_HEIGHT && motion_j.scale.x != DIAMOND_PROJECTILE_BB_HEIGHT && motion_j.scale.y != DIAMOND_PROJECTILE_BB_HEIGHT) {
+					// Create a collisions event
+					// We are abusing the ECS system a bit in that we potentially insert muliple collisions for the same entity
+					registry.collisions.emplace_with_duplicates(entity_i, motion_container.entities[j]);
+					registry.collisions.emplace_with_duplicates(motion_container.entities[j], entity_i);
+				} else if (motion_i.scale.x == DIAMOND_PROJECTILE_BB_HEIGHT && motion_i.scale.y == DIAMOND_PROJECTILE_BB_HEIGHT) {
+					if (vertexCollidesWithBoundingBox(entity_i, motion_j)) {
+						registry.collisions.emplace_with_duplicates(entity_i, motion_container.entities[j]);
+						registry.collisions.emplace_with_duplicates(motion_container.entities[j], entity_i);
+					}
+				} else if (motion_j.scale.x == DIAMOND_PROJECTILE_BB_HEIGHT && motion_j.scale.y == DIAMOND_PROJECTILE_BB_HEIGHT) {
+					if (vertexCollidesWithBoundingBox(motion_container.entities[j], motion_i)) {
+						registry.collisions.emplace_with_duplicates(entity_i, motion_container.entities[j]);
+						registry.collisions.emplace_with_duplicates(motion_container.entities[j], entity_i);
+					}
+				} 
 			}
 		}
 	}

@@ -15,6 +15,9 @@ const float CARD_PROJECTILE_BB_HEIGHT = 0.75f * 15.f;
 const float DART_PROJECTILE_BB_WIDTH = 0.25f * 15.f;
 const float DART_PROJECTILE_BB_HEIGHT = 0.8f * 15.f;
 
+const float DIAMOND_PROJECTILE_BB_WIDTH = 0.25f * 40.f;
+const float DIAMOND_PROJECTILE_BB_HEIGHT = 0.8f * 40.f;
+
 const float COIN_BB_WIDTH = 0.6f * 15.f;
 const float COIN_BB_HEIGHT = 0.6f * 15.f;
 
@@ -47,7 +50,7 @@ Entity createRouletteBall(RenderSystem* renderer, vec2 position, vec2 velocity);
 Entity createCardProjectile(RenderSystem* renderer, vec2 position, vec2 velocity);
 
 Entity createDartProjectile(RenderSystem* renderer, vec2 position, vec2 velocity, float angle);
-
+Entity createDiamondProjectile(RenderSystem* renderer, vec2 position, vec2 velocity, float angle);
 
 Entity createLerpProjectile(RenderSystem* renderer, vec2 position, vec2 startpos, vec2 endpos, float time, float angle);
 

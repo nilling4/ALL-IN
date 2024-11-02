@@ -62,6 +62,7 @@ private:
 	float next_card_spawn;
 	float next_dart_spawn;
 	float next_lerp_spawn;
+	float next_diamond_spawn;
 	Entity player_protagonist;
 
 	float mouse_x;
