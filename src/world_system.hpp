@@ -56,14 +56,10 @@ private:
 	// Game state
 	RenderSystem* renderer;
 	float current_speed;
-	float next_king_clubs_spawn;
-	float next_bird_clubs_spawn;
-	float next_roulette_ball_spawn;
-	float next_card_spawn;
-	float next_dart_spawn;
-	float next_lerp_spawn;
+
 	float next_diamond_spawn;
 	Entity player_protagonist;
+	Entity global_wave;
 
 	float mouse_x;
 	float mouse_y;

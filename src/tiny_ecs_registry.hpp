@@ -26,6 +26,8 @@ public:
 	ComponentContainer<Boid> boids;
 	ComponentContainer<DebugComponent> debugComponents;
 	ComponentContainer<HomeAndTut> homeAndTuts;
+	ComponentContainer<Wave> waves;
+	ComponentContainer<Door> doors;
 	ComponentContainer<vec3> colors;
 	ComponentContainer<HUD> hud;
 	ComponentContainer<Coin> coins;
@@ -50,6 +52,8 @@ public:
 		registry_list.push_back(&boids);
 		registry_list.push_back(&debugComponents);
 		registry_list.push_back(&homeAndTuts);
+		registry_list.push_back(&waves);
+		registry_list.push_back(&doors);
 		registry_list.push_back(&colors);
 		registry_list.push_back(&hud);
 		registry_list.push_back(&coins);

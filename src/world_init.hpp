@@ -34,7 +34,7 @@ const float WALL_BLOCK_BB_HEIGHT = 24.0f;
 Entity createSalmon(RenderSystem* renderer, vec2 pos);
 
 // the new player
-Entity createProtagonist(RenderSystem* renderer, vec2 pos);
+Entity createProtagonist(RenderSystem* renderer, vec2 pos, Player* copy_player);
 
 // the prey
 Entity createFish(RenderSystem* renderer, vec2 position);
@@ -56,6 +56,7 @@ Entity createLerpProjectile(RenderSystem* renderer, vec2 position, vec2 startpos
 
 
 Entity createWallBlock(RenderSystem* renderer, vec2 position);
+Entity createDoor(RenderSystem* renderer, vec2 position);
 
 Entity createHUD(RenderSystem* renderer, vec2 position, vec2 size);
 
@@ -70,4 +71,6 @@ Entity createEgg(vec2 pos, vec2 size);
 Entity createHomeScreen(RenderSystem* renderer, vec2 position);
 
 Entity createTutScreen(RenderSystem* renderer, vec2 position);
+
+Entity createWave();
 

@@ -1,7 +1,8 @@
 #include "world_init.hpp"
 #include "tiny_ecs_registry.hpp"
+#include <iostream>
 
-Entity createProtagonist(RenderSystem* renderer, vec2 pos) {
+Entity createProtagonist(RenderSystem* renderer, vec2 pos, Player* copy_player) {
 	auto entity = Entity();
 
 	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
@@ -14,8 +15,19 @@ Entity createProtagonist(RenderSystem* renderer, vec2 pos) {
 	motion.scale = vec2({ FISH_BB_WIDTH, FISH_BB_HEIGHT });
 
 	Player& player = registry.players.emplace(entity);
-	player.health = 1000.f;
-	player.armour = 0.f;
+	if (copy_player == nullptr) {
+
+		player.health = 100.f;
+		player.armour = 0.f;
+		player.roulette_reload_time = 1514.f;
+	} else {
+		player.health = copy_player->health;
+
+		player.roulette_reload_time = copy_player->roulette_reload_time;
+		player.card_reload_time = copy_player->card_reload_time;
+		player.dart_reload_time = copy_player->dart_reload_time;
+
+	}
 
 	registry.renderRequests.insert(
 		entity,
@@ -50,6 +62,28 @@ Entity createWallBlock(RenderSystem* renderer, vec2 pos) {
 
 }
 
+Entity createDoor(RenderSystem* renderer, vec2 pos) {
+	auto entity = Entity();
+
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	Motion& motion = registry.motions.emplace(entity);
+	motion.position = pos;
+	motion.angle = 0.f;
+	motion.velocity = { 0.f, 0.f };
+	motion.scale = vec2({ 50, 70 });
+
+	registry.doors.emplace(entity);
+	registry.renderRequests.insert(
+		entity,
+		{ TEXTURE_ASSET_ID::DOOR,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE });
+
+	return entity;
+
+}
 
 Entity createKingClubs(RenderSystem* renderer, vec2 position)
 {
@@ -66,7 +100,7 @@ Entity createKingClubs(RenderSystem* renderer, vec2 position)
 	motion.scale = vec2({ FISH_BB_WIDTH, FISH_BB_HEIGHT });
 
 	auto& deadly = registry.deadlys.emplace(entity);
-	deadly.health = 25.f;
+	deadly.health = 50.f;
 	deadly.armour = 1.f;
 	deadly.dmg_to_projectiles = 25.f;
 	deadly.type = "king_clubs";
@@ -98,7 +132,7 @@ Entity createBirdClubs(RenderSystem* renderer, vec2 position)
 	registry.boids.emplace(entity);
 	auto& deadly = registry.deadlys.emplace(entity);
 
-	deadly.health = 4.f;
+	deadly.health = 6.f;
 	deadly.armour = 0.f;
 
 	deadly.dmg_to_projectiles = 25.f;
@@ -385,6 +419,16 @@ Entity createTutScreen(RenderSystem* renderer, vec2 position)
 			EFFECT_ASSET_ID::TEXTURED,
 			GEOMETRY_BUFFER_ID::SPRITE
 		});
+
+	return entity;
+}
+
+Entity createWave() {
+	auto entity = Entity();
+
+
+	Wave& wave = registry.waves.emplace(entity);
+
 
 	return entity;
 }

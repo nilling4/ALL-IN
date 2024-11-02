@@ -10,6 +10,49 @@ struct Player
 	float health = 0;
 	float armour = 0;
 	vec2 push = {0, 0};
+
+	float agility = 100.f;
+
+	float roulette_reload_counter = 0;
+	float roulette_reload_time = 0;
+	float roulette_dmg = 0;
+	float roulette_bounce = 0;
+	float roulette_health = 0;
+
+	float card_reload_counter = 0;
+	float card_reload_time = 0;
+	float card_dmg = 0;
+	float card_pierce = 0;
+	float card_health = 0;
+
+	float dart_reload_counter = 0;
+	float dart_reload_time = 0;
+	float dart_dmg = 0;
+	float dart_pierce = 0;
+	float dart_health = 0;
+};
+
+struct Door {
+
+};
+
+struct Wave {
+	int wave_num = 0;
+	float next_wave_multiple = 1.5;
+
+	int num_enemy_types = 1;
+	float delay_for_all_entities = 1000;
+
+	int max_king_clubs = 7;
+	int num_king_clubs = 3;
+	float progress_king_clubs = 0;
+
+	int max_bird_clubs = 10;
+	int num_bird_clubs = 0;
+	float progress_bird_clubs = 0;
+
+	std::string state = "game on"; // "game on", "spawn doors", "limbo"
+
 };
 
 // anything that is deadly to the player
@@ -166,9 +209,10 @@ enum class TEXTURE_ASSET_ID {
 	COIN = LERP_PROJECTILE + 1,
 	BIRD_CLUBS = COIN + 1, 
 	HOME_SCREEN = BIRD_CLUBS + 1,
-	TUT_SCREEN = HOME_SCREEN + 1, // To add to this, make sure to also add in render_system.hpp
-  	DIAMOND_PROJECTILE = TUT_SCREEN + 1,
-	TEXTURE_COUNT = DIAMOND_PROJECTILE + 1
+	TUT_SCREEN = HOME_SCREEN + 1, 
+  DIAMOND_PROJECTILE = TUT_SCREEN + 1,
+  DOOR = DIAMOND_PROJECTILE + 1,
+	TEXTURE_COUNT = DOOR + 1
 };
 const int texture_count = (int)TEXTURE_ASSET_ID::TEXTURE_COUNT;
 
