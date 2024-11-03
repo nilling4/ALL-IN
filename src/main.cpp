@@ -78,10 +78,13 @@ int main()
 
 			time += elapsed_ms;
 			frames++;
-			if (time >= 5000) {
+			if (time >= 1000) {
 				float time_in_seconds = time / 1000;
 				int fps = static_cast<int>(frames / time_in_seconds);
 				std::cout<<"FPS: "<< fps <<std::endl;
+
+				world.update_title(fps);
+
 				time = 0;
 				frames = 0;
 			}
