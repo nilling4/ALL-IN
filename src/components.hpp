@@ -60,7 +60,6 @@ struct Deadly
 {
 	float health = 0;
 	float armour = 0;
-	float dmg_to_projectiles = 0;
 	std::string type = "";
 	// float melee damage
 };
@@ -76,8 +75,9 @@ struct Boid {
 // anything that is deadly to the enemies (like projecties player shoots)
 struct KillsEnemy {
 	float damage = 0;
-	float health = 0;
-	float dmg_taken_multiplier = 1.f;		// multiplier to deadly's dmg_to_projectiles
+	unsigned int pierce_left = 0;
+	unsigned int bounce_left = 0;
+	std::string type = "";
 	void* last_touched = nullptr;
 };
 

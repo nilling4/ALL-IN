@@ -22,15 +22,13 @@ bool collides(const Motion& motion1, const Motion& motion2)
     vec2 halfSize1 = get_bounding_box(motion1) / 2.f;
     vec2 halfSize2 = get_bounding_box(motion2) / 2.f;
 
-
     bool overlapX = (pos1.x - halfSize1.x < pos2.x + halfSize2.x) && (pos1.x + halfSize1.x > pos2.x - halfSize2.x);
-
 
     bool overlapY = (pos1.y - halfSize1.y < pos2.y + halfSize2.y) && (pos1.y + halfSize1.y > pos2.y - halfSize2.y);
 
-
     return overlapX && overlapY;
 }
+
 bool vertexCollidesWithBoundingBox(Entity player_entity, Motion& other_motion) {
     Mesh& mesh = *registry.meshPtrs.get(player_entity);
     Motion& player_motion = registry.motions.get(player_entity);
@@ -127,36 +125,60 @@ void PhysicsSystem::step(float elapsed_ms)
 			}
 		}
 	}
-	// for (Entity entity : registry.players.entities) {
-	// 	Motion& player_motion = motion_registry.get(entity);
-	// 	const int num_blocks = 40;
-	// 	const int wallWidth = num_blocks * WALL_BLOCK_BB_WIDTH * 2;
-	// 	const int wallHeight = num_blocks * WALL_BLOCK_BB_HEIGHT;
-	// 	float roomLeft = window_width_px / 2 - wallWidth / 2 + WALL_BLOCK_BB_WIDTH;   
-	// 	float roomRight = window_width_px / 2 + wallWidth / 2 - WALL_BLOCK_BB_WIDTH; 
-	// 	float roomTop = window_height_px / 2 - wallHeight / 2 + WALL_BLOCK_BB_HEIGHT; 
-	// 	float roomBottom = window_height_px / 2 + wallHeight / 2 - WALL_BLOCK_BB_HEIGHT;
-	// 	std::cout << "roomLeft: " << roomLeft << " roomRight: " << roomRight << " roomTop: " << roomTop << " roomBottom: " << roomBottom << std::endl;
-		
-	// 	// Update x position
-	// 	if (player_motion.position.x + player_motion.velocity.x * step_seconds >= roomLeft &&
-	// 		player_motion.position.x + player_motion.velocity.x * step_seconds <= roomRight) {
-	// 			player_motion.position.x += player_motion.velocity.x * step_seconds;
-	// 	}
-		
-	// 	// Update y position
-	// 	if (player_motion.position.y + player_motion.velocity.y * step_seconds >= roomTop &&
-	// 		player_motion.position.y + player_motion.velocity.y * step_seconds <= roomBottom) {
-	// 			player_motion.position.y += player_motion.velocity.y * step_seconds;
-	// 	}
-	// }
+	
 	for(Entity entity : registry.killsEnemys.entities){ {
+		const int num_blocks = 40;
+		const int wallWidth = num_blocks * WALL_BLOCK_BB_WIDTH * 2;
+		const int wallHeight = num_blocks * WALL_BLOCK_BB_HEIGHT;
+
+		int topWallY = window_height_px / 2 - wallHeight / 2 + WALL_BLOCK_BB_HEIGHT / 2;
+		int bottomWallY = window_height_px / 2 + wallHeight / 2 - WALL_BLOCK_BB_HEIGHT / 2;
+		int rightWallX = window_width_px / 2 + wallWidth / 2 - WALL_BLOCK_BB_WIDTH / 2;
+		int leftWallX = window_width_px / 2 - wallWidth / 2 + WALL_BLOCK_BB_WIDTH / 2;
 		Motion& motion = motion_registry.get(entity);
+		KillsEnemy& kills = registry.killsEnemys.get(entity);
 		if(motion.scale.x == DIAMOND_PROJECTILE_BB_HEIGHT && motion.scale.y == DIAMOND_PROJECTILE_BB_HEIGHT){
-			
 			motion.angle += 2.0f * step_seconds;
 		}
 		motion.position += motion.velocity * step_seconds;
+		if (kills.type == "ball") {
+			std::cout<< "ball position: " << motion.position.x << ", " << motion.position.y << std::endl;
+			std::cout << "rightwall: " << rightWallX << std::endl;
+			std::cout << "leftWall: " << leftWallX << std::endl;
+			if (motion.position.y - motion.scale.y/2 < topWallY) {
+				if (kills.bounce_left <= 0) {
+					registry.remove_all_components_of(entity);
+				} else {
+					kills.bounce_left -= 1;
+					motion.position.y = topWallY + motion.scale.y/2;
+					motion.velocity.y *= -1;
+				}
+			}
+			if (motion.position.y + motion.scale.y/2 > bottomWallY) {
+				if (kills.bounce_left <= 0) {
+					registry.remove_all_components_of(entity);
+				} else {
+					motion.position.y = bottomWallY - motion.scale.y/2;
+					motion.velocity.y *= -1;
+				}
+			}
+			if (motion.position.x + motion.scale.x/2 > rightWallX) {
+				if (kills.bounce_left <= 0) {
+					registry.remove_all_components_of(entity);
+				} else {
+					motion.position.x = rightWallX - motion.scale.x/2;
+					motion.velocity.x *= -1;
+				}
+			}
+			if (motion.position.x - motion.scale.x/2 < leftWallX) {
+				if (kills.bounce_left <= 0) {
+					registry.remove_all_components_of(entity);
+				} else {
+					motion.position.x = leftWallX + motion.scale.x/2;
+					motion.velocity.x *= -1;
+				}
+			}
+		}
 	}
 	for (Entity entity : registry.killsEnemyLerpyDerps.entities) {
 		Motion& motion = motion_registry.get(entity);

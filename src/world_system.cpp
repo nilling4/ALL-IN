@@ -353,7 +353,6 @@ if (angle > -M_PI / 4 && angle <= M_PI / 4) {
 
 
 
-	// Processing the salmon state
 	assert(registry.screenStates.components.size() <= 1);
     ScreenState &screen = registry.screenStates.components[0];
 
@@ -375,7 +374,7 @@ if (angle > -M_PI / 4 && angle <= M_PI / 4) {
 			return true;
 		}
 	}
-	// reduce window brightness if the salmon is dying
+	// reduce window brightness if the player is dying
 	screen.darken_screen_factor = 1 - min_counter_ms / 3000;
 	if (debugging.in_debug_mode){
 		for (Entity entity : motions_registry.entities) {
@@ -398,7 +397,6 @@ if (angle > -M_PI / 4 && angle <= M_PI / 4) {
 }
 
 void WorldSystem::update_title(int fps) {
-	Motion& p_motion = registry.motions.get(player_protagonist);
 	Player& p_you = registry.players.get(player_protagonist);
 	Wave& wave = registry.waves.get(global_wave);
 
@@ -468,13 +466,13 @@ void WorldSystem::restart_game() {
 	// create a new HUD
 	createHUD(renderer, { window_width_px / 2, window_height_px }, { window_width_px / 4, window_height_px / 2 });
 
-		// Top Wall
-		for (int i = 0; i < num_blocks * 2; i++) {
-			createWallBlock(renderer, {
-				window_width_px / 2 - wallWidth / 2 + i * WALL_BLOCK_BB_WIDTH,
-				window_height_px / 2 - wallHeight / 2
-				});
-		}
+	// Top Wall
+	for (int i = 0; i < num_blocks * 2; i++) {
+		createWallBlock(renderer, {
+			window_width_px / 2 - wallWidth / 2 + i * WALL_BLOCK_BB_WIDTH,
+			window_height_px / 2 - wallHeight / 2
+			});
+	}
 
 	// Right Wall
 	for (int i = 0; i < num_blocks; i++) {
@@ -517,7 +515,6 @@ void WorldSystem::handle_collisions() {
 			// Checking Player - Deadly collisions
 			if (registry.deadlys.has(entity_other)) {
 				// initiate death unless already dying
-				Deadly& deadly = registry.deadlys.get(entity_other);
 				Motion& deadly_motion = registry.motions.get(entity_other);
 
 				your.health -= 1;
@@ -609,22 +606,129 @@ void WorldSystem::handle_collisions() {
 				restart_game();
 			}
 		}
+
+		// Collisions involving projectiles
 		if (registry.killsEnemys.has(entity)) {
+			KillsEnemy& kills = registry.killsEnemys.get(entity);
+			Motion& kills_motion = registry.motions.get(entity);
 			if (registry.deadlys.has(entity_other)) {
-				KillsEnemy& kills = registry.killsEnemys.get(entity);
 				Deadly& deadly = registry.deadlys.get(entity_other);
 				if (kills.last_touched != &deadly) {
 					deadly.health -= (kills.damage - deadly.armour);
-					kills.health -= (kills.dmg_taken_multiplier * deadly.dmg_to_projectiles);
 					kills.last_touched = &deadly;
-					if (kills.health < 0.f) {
+					if (kills.type == "dart") {
 						registry.remove_all_components_of(entity);
+					} else if (kills.type == "card") {
+						if (kills.pierce_left <= 0) {
+							registry.remove_all_components_of(entity);
+						} else {
+							kills.pierce_left -= 1;
+						}
+					} else if (kills.type == "ball") {
+						// currently handled in physics_system as workaround for issue
+						// where if it hits two wall blocks at once, cant control which collision to handle first
+						// and it may not bounce as it forces it to push up into second block instead of out.
+						if (kills.bounce_left <= 0) {
+							registry.remove_all_components_of(entity);
+						} else {
+							kills.bounce_left -= 1;
+							Motion& kills_motion = registry.motions.get(entity);
+							Motion& deadly_motion = registry.motions.get(entity_other);
+							if (deadly.type == "king_clubs") {
+								unsigned int dist_from_top = abs((deadly_motion.position.y - deadly_motion.scale.y/2) - kills_motion.position.y);
+								unsigned int dist_from_bottom = abs((deadly_motion.position.y + deadly_motion.scale.y/2) - kills_motion.position.y);
+								unsigned int dist_from_right = abs((deadly_motion.position.x + deadly_motion.scale.x/2) - kills_motion.position.x);
+								unsigned int dist_from_left = abs((deadly_motion.position.x - deadly_motion.scale.x/2) - kills_motion.position.x);
+								unsigned int min_distance = std::min({dist_from_top, dist_from_bottom, dist_from_right, dist_from_left});
+								if (min_distance == dist_from_top) {
+									if (min_distance == dist_from_right) {
+										kills_motion.velocity.x *= -1;
+										kills_motion.velocity.y *= -1;
+									} else if (min_distance == dist_from_left) {
+										kills_motion.velocity.x *= -1;
+										kills_motion.velocity.y *= -1;
+									} else {
+										kills_motion.velocity.y *= -1;
+									}
+								} else if (min_distance == dist_from_bottom) {
+									if (min_distance == dist_from_right) {
+										kills_motion.velocity.x *= -1;
+										kills_motion.velocity.y *= -1;
+									} else if (min_distance == dist_from_left) {
+										kills_motion.velocity.x *= -1;
+										kills_motion.velocity.y *= -1;
+									} else {
+										kills_motion.velocity.y *= -1;
+									}
+								} else if (min_distance == dist_from_right) {
+									kills_motion.velocity.x *= -1;
+								} else if (min_distance == dist_from_left) {
+									kills_motion.velocity.x *= -1;
+								}
+							} else {	
+								vec2 bounce_normal = glm::normalize(kills_motion.position - deadly_motion.position);
+								kills_motion.velocity = kills_motion.velocity - 2 * dot(kills_motion.velocity, bounce_normal) * bounce_normal;
+							}
+
+						}
 					}
+					
 					if (deadly.health < 0.f) {
 						createCoin(renderer, registry.motions.get(entity_other).position);
 						registry.remove_all_components_of(entity_other);
 					}
 					Mix_PlayChannel(-1, roulette_hit_sound, 0);
+				}
+			}
+
+			// collision between projectile and wall
+			if (registry.solids.has(entity_other)) {
+				Solid& solid = registry.solids.get(entity_other);
+				if (kills.last_touched != &solid) {
+					kills.last_touched = &solid;
+					if (kills.type == "ball") {
+						if (kills.bounce_left <= 0) {
+							registry.remove_all_components_of(entity);
+						} else {
+							kills.bounce_left -= 1;
+							Motion& solid_motion = registry.motions.get(entity_other);
+							unsigned int dist_from_top = abs((solid_motion.position.y - solid_motion.scale.y/2) - kills_motion.position.y);
+							unsigned int dist_from_bottom = abs((solid_motion.position.y + solid_motion.scale.y/2) - kills_motion.position.y);
+							unsigned int dist_from_right = abs((solid_motion.position.x + solid_motion.scale.x/2) - kills_motion.position.x);
+							unsigned int dist_from_left = abs((solid_motion.position.x - solid_motion.scale.x/2) - kills_motion.position.x);
+							unsigned int min_distance = std::min({dist_from_top, dist_from_bottom, dist_from_right, dist_from_left});
+							if (min_distance == dist_from_top) {
+								if (min_distance == dist_from_right) {
+									kills_motion.velocity.x *= -1;
+									kills_motion.velocity.y *= -1;
+								} else if (min_distance == dist_from_left) {
+									kills_motion.velocity.x *= -1;
+									kills_motion.velocity.y *= -1;
+								} else {
+									kills_motion.velocity.y *= -1;
+									kills_motion.position.y = solid_motion.position.y - solid_motion.scale.y/2 - kills_motion.scale.y/2;
+								}
+							} else if (min_distance == dist_from_bottom) {
+								if (min_distance == dist_from_right) {
+									kills_motion.velocity.x *= -1;
+									kills_motion.velocity.y *= -1;
+								} else if (min_distance == dist_from_left) {
+									kills_motion.velocity.x *= -1;
+									kills_motion.velocity.y *= -1;
+								} else {
+									kills_motion.velocity.y *= -1;
+									kills_motion.position.y = solid_motion.position.y + solid_motion.scale.y/2 + kills_motion.scale.y/2;
+								}
+							} else if (min_distance == dist_from_right) {
+								kills_motion.velocity.x *= -1;
+								kills_motion.position.x = solid_motion.position.x + solid_motion.scale.x/2 + kills_motion.scale.x/2;
+							} else if (min_distance == dist_from_left) {
+								kills_motion.velocity.x *= -1;
+								kills_motion.position.x = solid_motion.position.x - solid_motion.scale.x/2 - kills_motion.scale.x/2;
+							}
+							Mix_PlayChannel(-1, roulette_hit_sound, 0);
+						}
+					}
 				}
 			}
 		}

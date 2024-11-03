@@ -102,7 +102,6 @@ Entity createKingClubs(RenderSystem* renderer, vec2 position)
 	auto& deadly = registry.deadlys.emplace(entity);
 	deadly.health = 50.f;
 	deadly.armour = 1.f;
-	deadly.dmg_to_projectiles = 25.f;
 	deadly.type = "king_clubs";
 	registry.renderRequests.insert(
 		entity,
@@ -135,7 +134,6 @@ Entity createBirdClubs(RenderSystem* renderer, vec2 position)
 	deadly.health = 6.f;
 	deadly.armour = 0.f;
 
-	deadly.dmg_to_projectiles = 25.f;
 	deadly.type = "bird_clubs";
 	registry.renderRequests.insert(
 		entity,
@@ -165,8 +163,8 @@ Entity createRouletteBall(RenderSystem* renderer, vec2 position, vec2 velocity)
 
 	auto& kills = registry.killsEnemys.emplace(entity);
 	kills.damage = 10.f;
-	kills.health = 5.f;
-	kills.dmg_taken_multiplier = 2.f;
+	kills.bounce_left = 2;
+	kills.type = "ball";
 	registry.renderRequests.insert(
 		entity,
 		{ TEXTURE_ASSET_ID::TEXTURE_COUNT, 
@@ -193,8 +191,8 @@ Entity createCardProjectile(RenderSystem* renderer, vec2 position, vec2 velocity
 
 	auto& kills = registry.killsEnemys.emplace(entity);
 	kills.damage = 5.f;
-	kills.health = 10.f;
-	kills.dmg_taken_multiplier = 0.2;
+	kills.pierce_left = 2;
+	kills.type = "card";
 	registry.renderRequests.insert(
 		entity,
 		{
@@ -222,8 +220,7 @@ Entity createDartProjectile(RenderSystem* renderer, vec2 position, vec2 velocity
 
 	auto& kills = registry.killsEnemys.emplace(entity);
 	kills.damage = 50.f;
-	kills.health = 2.f;
-	kills.dmg_taken_multiplier = 2;
+	kills.type = "dart";
 	registry.renderRequests.insert(
 		entity,
 		{
@@ -234,6 +231,7 @@ Entity createDartProjectile(RenderSystem* renderer, vec2 position, vec2 velocity
 
 	return entity;
 }
+
 Entity createDiamondProjectile(RenderSystem* renderer, vec2 position, vec2 velocity, float angle)
 {
 	auto entity = Entity();
@@ -250,8 +248,6 @@ Entity createDiamondProjectile(RenderSystem* renderer, vec2 position, vec2 veloc
 
 	auto& kills = registry.killsEnemys.emplace(entity);
 	kills.damage = 50.f;
-	kills.health = 2.f;
-	kills.dmg_taken_multiplier = 2;
 	registry.renderRequests.insert(
 		entity,
 		{
@@ -262,6 +258,7 @@ Entity createDiamondProjectile(RenderSystem* renderer, vec2 position, vec2 veloc
 
 	return entity;
 }
+
 Entity createCoin(RenderSystem* renderer, vec2 position) {
 	auto entity = Entity();
 
