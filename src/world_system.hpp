@@ -52,7 +52,7 @@ private:
 
 	// Number of coins collected
 	unsigned int coins;
-
+	float texture_num;
 	// Game state
 	RenderSystem* renderer;
 	float current_speed;

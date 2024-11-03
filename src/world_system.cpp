@@ -27,6 +27,7 @@ WorldSystem::WorldSystem()
 	: coins(0)
 	, next_diamond_spawn(DIAMOND_SPAWN_DELAY) {
 	// Seeding rng with random device
+	texture_num = 0.5f;
 	rng = std::default_random_engine(std::random_device()());
 }
 
@@ -261,29 +262,36 @@ for (int i = (int)motions_registry.components.size() - 1; i >= 0; --i) {
 
 	auto& p_render = registry.renderRequests.get(player_protagonist);
 	auto& motion = registry.motions.get(player_protagonist);
-	if (angle>-M_PI/4 && angle<M_PI/4) {
-		p_render = { TEXTURE_ASSET_ID::PROTAGONIST_LEFT, 
-			EFFECT_ASSET_ID::TEXTURED,
-			GEOMETRY_BUFFER_ID::SPRITE };
-		if (motion.scale.x > 0) {
-			motion.scale.x *= -1;
-		}
-	} else if (angle>M_PI/4 && angle<3*M_PI/4) {
-		p_render = { TEXTURE_ASSET_ID::PROTAGONIST_FORWARD, 
-			EFFECT_ASSET_ID::TEXTURED,
-			GEOMETRY_BUFFER_ID::SPRITE };
-	} else if (angle>3*M_PI/4 && angle<5*M_PI/4) {
-		p_render = { TEXTURE_ASSET_ID::PROTAGONIST_LEFT, 
-			EFFECT_ASSET_ID::TEXTURED,
-			GEOMETRY_BUFFER_ID::SPRITE };
-		if (motion.scale.x < 0) {
-			motion.scale.x *= -1;
-		}
-	} else {
-		p_render = { TEXTURE_ASSET_ID::PROTAGONIST_BACK, 
-			EFFECT_ASSET_ID::TEXTURED,
-			GEOMETRY_BUFFER_ID::SPRITE };
-	}
+	
+if (angle > -M_PI / 4 && angle <= M_PI / 4) {
+    // Right
+    TEXTURE_ASSET_ID result = static_cast<TEXTURE_ASSET_ID>(static_cast<int>(TEXTURE_ASSET_ID::PROTAGONIST_LEFT) + static_cast<int>(texture_num) % 2);
+    p_render = { result, 
+        EFFECT_ASSET_ID::TEXTURED,
+        GEOMETRY_BUFFER_ID::SPRITE };
+    if (motion.scale.x > 0) {
+        motion.scale.x *= -1;
+    }
+} else if (angle > M_PI / 4 && angle <= 3 * M_PI / 4) {
+    // Up
+    TEXTURE_ASSET_ID result = static_cast<TEXTURE_ASSET_ID>(static_cast<int>(TEXTURE_ASSET_ID::PROTAGONIST_FORWARD) + static_cast<int>(texture_num));
+    p_render = { result, 
+        EFFECT_ASSET_ID::TEXTURED,
+        GEOMETRY_BUFFER_ID::SPRITE };
+} else if (angle > 3 * M_PI / 4 || angle <= -3 * M_PI / 4) {
+    // Left
+    p_render = {static_cast<TEXTURE_ASSET_ID>(static_cast<int>(TEXTURE_ASSET_ID::PROTAGONIST_LEFT) + static_cast<int>(texture_num) % 2), 
+        EFFECT_ASSET_ID::TEXTURED,
+        GEOMETRY_BUFFER_ID::SPRITE };
+    if (motion.scale.x < 0) {
+        motion.scale.x *= -1;
+    }
+} else {
+    // Down
+    p_render = {static_cast<TEXTURE_ASSET_ID>(static_cast<int>(TEXTURE_ASSET_ID::PROTAGONIST_BACK) + static_cast<int>(texture_num)), 
+        EFFECT_ASSET_ID::TEXTURED,
+        GEOMETRY_BUFFER_ID::SPRITE };
+}
 	// spawn roulette balls
 	if (p_you.roulette_reload_time > 0) {
 		p_you.roulette_reload_counter += elapsed_ms_since_last_update * current_speed;
@@ -847,6 +855,12 @@ void WorldSystem::on_key(int key, int, int action, int mod) {
 		} else if (key == GLFW_KEY_D) {
 			want_go_right = true;
 		}
+
+		// keep running
+		texture_num += 0.5f;
+		if (texture_num > 2.99f)
+			texture_num = 1.0f;
+
 	} 
 	else if (action == GLFW_RELEASE) {
 		if (key == GLFW_KEY_W) {
@@ -858,8 +872,11 @@ void WorldSystem::on_key(int key, int, int action, int mod) {
 		} else if (key == GLFW_KEY_D) {
 			want_go_right = false;
 		}
+		
 	}
+	
 	if (want_go_up && !want_go_down) {
+		
 		motion.velocity.y = -100.f;  
 
 	} else if (want_go_down && !want_go_up) {
@@ -873,12 +890,16 @@ void WorldSystem::on_key(int key, int, int action, int mod) {
 		motion.velocity.x = 100.f;   
 
 	} 
+	if (!want_go_up && !want_go_down && !want_go_left && !want_go_right) {
+			texture_num = 0.5f;
+	}
 
 	if (action == GLFW_PRESS && key == GLFW_KEY_SPACE) {
 		if (length(your.push) < 0.00001f) {
 			your.push += motion.velocity*10.f;
 		}
 	}
+
 
 	// Control the current speed with `<` `>`
 	if (action == GLFW_RELEASE && (mod & GLFW_MOD_SHIFT) && key == GLFW_KEY_COMMA) {
