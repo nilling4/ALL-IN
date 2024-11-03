@@ -223,7 +223,75 @@ void RenderSystem::drawToScreen()
 				  // no offset from the bound index buffer
 	gl_has_errors();
 }
+void RenderSystem::drawBackground() {
+    // Set up transformation and projection matrices
+    Transform transform;
+    transform.translate(vec2(window_width_px/2, window_height_px/2));
+    transform.scale(vec2(window_width_px*9/12, window_height_px*2/3));
+    mat3 projection = createProjectionMatrix();
 
+    // Get the shader program
+    const GLuint program = effects[(GLuint)EFFECT_ASSET_ID::TEXTURED];
+    assert(program != 0);
+
+    // Use the shader program
+    glUseProgram(program);
+    gl_has_errors();
+
+    // Bind buffers
+    const GLuint vbo = vertex_buffers[(GLuint)GEOMETRY_BUFFER_ID::BACKGROUND];
+    const GLuint ibo = index_buffers[(GLuint)GEOMETRY_BUFFER_ID::BACKGROUND];
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+    gl_has_errors();
+
+    // Get attribute locations
+    GLint in_position_loc = glGetAttribLocation(program, "in_position");
+    GLint in_texcoord_loc = glGetAttribLocation(program, "in_texcoord");
+    gl_has_errors();
+    assert(in_position_loc >= 0);
+    assert(in_texcoord_loc >= 0);
+
+    // Enable and set vertex attribute pointers
+    glEnableVertexAttribArray(in_position_loc);
+    glVertexAttribPointer(in_position_loc, 3, GL_FLOAT, GL_FALSE,
+                          sizeof(TexturedVertex), (void *)0);
+    gl_has_errors();
+
+    glEnableVertexAttribArray(in_texcoord_loc);
+    glVertexAttribPointer(in_texcoord_loc, 2, GL_FLOAT, GL_FALSE,
+                          sizeof(TexturedVertex), (void *)sizeof(vec3));
+    gl_has_errors();
+
+    // Bind texture
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture_gl_handles[(GLuint)TEXTURE_ASSET_ID::FLOOR_BLOCK]);
+    gl_has_errors();
+
+    // Set uniforms
+    GLint color_uloc = glGetUniformLocation(program, "fcolor");
+    GLint transform_loc = glGetUniformLocation(program, "transform");
+    GLint projection_loc = glGetUniformLocation(program, "projection");
+	vec3 color = vec3(1.0f, 1.0f, 1.0f);
+    glUniform3fv(color_uloc, 1, (float *)&color);
+    glUniformMatrix3fv(transform_loc, 1, GL_FALSE, (float *)&transform.mat);
+    glUniformMatrix3fv(projection_loc, 1, GL_FALSE, (float *)&projection);
+    gl_has_errors();
+
+    // Get the number of indices
+    GLint size = 0;
+    glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
+    gl_has_errors();
+    GLsizei num_indices = size / sizeof(uint16_t);
+
+    // Draw the background
+    glDrawElements(GL_TRIANGLES, num_indices, GL_UNSIGNED_SHORT, nullptr);
+    gl_has_errors();
+
+    // Disable attributes
+    glDisableVertexAttribArray(in_position_loc);
+    glDisableVertexAttribArray(in_texcoord_loc);
+}
 // Render our game world
 // http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-14-render-to-texture/
 void RenderSystem::draw(std::string what)
@@ -249,6 +317,7 @@ void RenderSystem::draw(std::string what)
 								// sprites back to front
 		gl_has_errors();
 		mat3 projection_2D = createProjectionMatrix();
+		drawBackground();
 		// Draw all textured meshes that have a position and size component
 		for (Entity entity : registry.renderRequests.entities)
 		{

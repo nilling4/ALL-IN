@@ -76,7 +76,8 @@ public:
 	void bindVBOandIBO(GEOMETRY_BUFFER_ID gid, std::vector<T> vertices, std::vector<uint16_t> indices);
 
 	void initializeGlTextures();
-
+	void drawBackground();
+	void initializeBackgroundQuad();
 	void initializeGlEffects();
 
 	void initializeGlMeshes();

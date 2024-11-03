@@ -53,41 +53,58 @@ bool RenderSystem::init(GLFWwindow* window_arg)
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
 	gl_has_errors();
-
+	
 	initScreenTexture();
     initializeGlTextures();
+
 	initializeGlEffects();
 	initializeGlGeometryBuffers();
 
 	return true;
 }
+void RenderSystem::initializeBackgroundQuad()
+{
+    std::vector<TexturedVertex> vertices(4);
+    vertices[0].position = { -1.f, -1.f, 0.f }; // bottom left
+    vertices[1].position = { 1.f, -1.f, 0.f };  // bottom right
+    vertices[2].position = { 1.f, 1.f, 0.f };   // top right
+    vertices[3].position = { -1.f, 1.f, 0.f };  // top left
 
+    // Set texture coordinates to repeat
+    vertices[0].texcoord = { 0.f, 0.f };
+    vertices[1].texcoord = { 10.f, 0.f }; // Adjust the number of repetitions as needed
+    vertices[2].texcoord = { 10.f, 10.f }; // Adjust the number of repetitions as needed
+    vertices[3].texcoord = { 0.f, 10.f }; // Adjust the number of repetitions as needed
+
+    const std::vector<uint16_t> indices = { 0, 1, 2, 2, 3, 0 };
+	meshes[(int)GEOMETRY_BUFFER_ID::DIAMOND].vertices = std::vector<ColoredVertex>{{vertices[0].position, { 0.8, 0.8, 0.8 }},{vertices[1].position, { 0.8, 0.8, 0.8 }},{vertices[2].position, { 0.8, 0.8, 0.8 }},{vertices[3].position, { 0.8, 0.8, 0.8 }}};
+	meshes[(int)GEOMETRY_BUFFER_ID::DIAMOND].vertex_indices = indices;
+
+    bindVBOandIBO(GEOMETRY_BUFFER_ID::BACKGROUND, vertices, indices);
+}
 void RenderSystem::initializeGlTextures()
 {
-    glGenTextures((GLsizei)texture_gl_handles.size(), texture_gl_handles.data());
-
-    for(uint i = 0; i < texture_paths.size(); i++)
+    for (uint i = 0; i < texture_paths.size(); i++)
     {
-		const std::string& path = texture_paths[i];
-		ivec2& dimensions = texture_dimensions[i];
+        int width, height, channels;
+        stbi_uc* data = stbi_load(texture_paths[i].c_str(), &width, &height, &channels, 4);
+        if (data == nullptr)
+        {
+            fprintf(stderr, "Failed to load texture %s\n", texture_paths[i].c_str());
+            return;
+        }
 
-		stbi_uc* data;
-		data = stbi_load(path.c_str(), &dimensions.x, &dimensions.y, NULL, 4);
+        glGenTextures(1, &texture_gl_handles[i]);
+        glBindTexture(GL_TEXTURE_2D, texture_gl_handles[i]);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        gl_has_errors();
 
-		if (data == NULL)
-		{
-			const std::string message = "Could not load the file " + path + ".";
-			fprintf(stderr, "%s", message.c_str());
-			assert(false);
-		}
-		glBindTexture(GL_TEXTURE_2D, texture_gl_handles[i]);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, dimensions.x, dimensions.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		gl_has_errors();
-		stbi_image_free(data);
+        stbi_image_free(data);
     }
-	gl_has_errors();
 }
 
 void RenderSystem::initializeGlEffects()
@@ -209,7 +226,7 @@ void RenderSystem::initializeGlGeometryBuffers()
 
 	// Initialize HUD
 	initializeHUDGeometry();
-
+	initializeBackgroundQuad();
 	// Counterclockwise as it's the default opengl front winding direction.
 	const std::vector<uint16_t> textured_indices = { 0, 3, 1, 1, 3, 2 };
 	bindVBOandIBO(GEOMETRY_BUFFER_ID::SPRITE, textured_vertices, textured_indices);
