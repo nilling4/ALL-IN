@@ -140,16 +140,13 @@ void WorldSystem::init(RenderSystem* renderer_arg) {
 
 // Update our game world
 bool WorldSystem::step(float elapsed_ms_since_last_update, std::string* game_state) {
+	
 	// Updating window title with coin count
 	Motion& p_motion = registry.motions.get(player_protagonist);
 	Player& p_you = registry.players.get(player_protagonist);
 	Wave& wave = registry.waves.get(global_wave);
 
 	float elapsed_time = elapsed_ms_since_last_update * current_speed;
-
-	std::stringstream title_ss;
-	title_ss << "Coins: " << coins << ", Health: " << p_you.health << ", Wave " << wave.wave_num << " state: " << wave.state;
-	glfwSetWindowTitle(window, title_ss.str().c_str());
 
 	// Remove debug info from the last step
 	while (registry.debugComponents.entities.size() > 0)
@@ -398,6 +395,18 @@ if (angle > -M_PI / 4 && angle <= M_PI / 4) {
 		}
 		}
 	return true;
+}
+
+void WorldSystem::update_title(int fps) {
+	Motion& p_motion = registry.motions.get(player_protagonist);
+	Player& p_you = registry.players.get(player_protagonist);
+	Wave& wave = registry.waves.get(global_wave);
+
+	std::stringstream title_ss;
+	title_ss << "Coins: " << coins << ", Health: " << p_you.health
+		<< ", Wave " << wave.wave_num << " state: " << wave.state
+		<< ", FPS: " << fps;
+	glfwSetWindowTitle(window, title_ss.str().c_str());
 }
 
 void WorldSystem::go_to_home(std::string* game_state) {

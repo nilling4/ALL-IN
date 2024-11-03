@@ -31,6 +31,7 @@ public:
 
 	// Steps the game ahead by ms milliseconds
 	bool step(float elapsed_ms, std::string* game_state);
+	void update_title(int fps);
 	void save();
 	void load();
 	// Check for collisions
