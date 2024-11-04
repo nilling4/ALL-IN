@@ -20,7 +20,7 @@ Entity createProtagonist(RenderSystem* renderer, vec2 pos, Player* copy_player) 
 
 		player.health = 100.f;
 		player.armour = 0.f;
-		player.roulette_reload_time = 1514.f;
+		player.card_reload_time = 2000.f;
 	} else {
 		player.health = copy_player->health;
 

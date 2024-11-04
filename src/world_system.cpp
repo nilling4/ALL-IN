@@ -528,7 +528,7 @@ void WorldSystem::next_wave() {
 	// wave.state = "game on"
 	if (wave.wave_num == 1) {
 		your.health += 100;
-		your.card_reload_time = 2521;
+		your.card_reload_time = 2021;
 	} else if (wave.wave_num == 2) {
 		your.health = 200;
 		your.card_reload_time = 1933;
