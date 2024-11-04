@@ -2,7 +2,6 @@
 #include "physics_system.hpp"
 #include "world_init.hpp"
 #include "iostream"
-
 const float COLLECT_DIST = 100.0f;  
 
 // Returns the local bounding coordinates scaled by the current size of the entity
@@ -70,119 +69,49 @@ void PhysicsSystem::step(float elapsed_ms)
 {
 	// Move fish based on how much time has passed, this is to (partially) avoid
 	// having entities move at different speed based on the machine.
-	
 	auto& motion_registry = registry.motions;
 	float step_seconds = elapsed_ms / 1000.f;
 	for (Entity entity : registry.players.entities) {
 		// move this wall collision handling to world_system.handle collision once bounding box is fixed
 		Motion& player_motion = motion_registry.get(entity);
 		Player& your = registry.players.get(entity);
+
+		const int num_blocks = 40;
+		const int wallWidth = num_blocks * WALL_BLOCK_BB_WIDTH * 2;
+		const int wallHeight = num_blocks * WALL_BLOCK_BB_HEIGHT;
+        float roomLeft = window_width_px / 2 - wallWidth / 2 + WALL_BLOCK_BB_WIDTH + 11;   
+        float roomRight = window_width_px / 2 + wallWidth / 2 - WALL_BLOCK_BB_WIDTH - 11; 
+        float roomTop = window_height_px / 2 - wallHeight / 2 + WALL_BLOCK_BB_HEIGHT + 17; 
+        float roomBottom = window_height_px / 2 + wallHeight / 2 - WALL_BLOCK_BB_HEIGHT - 15;
+
+		
+		
         // Update x position
-	   // Calculate the new position
-	           // Calculate the range of grid cells the player previously occupied
-         int prevMinGridX = static_cast<int>(player_motion.previous_position.x - 24) / 24;
-        int prevMaxGridX = static_cast<int>(player_motion.previous_position.x + 24) / 24;
-        int prevMinGridY = static_cast<int>(player_motion.previous_position.y - 36) / 24;
-        int prevMaxGridY = static_cast<int>(player_motion.previous_position.y + 36) / 24;
-
-        // Clear the previous grid cells
-        for (int y = prevMinGridY; y <= prevMaxGridY; ++y) {
-            for (int x = prevMinGridX; x <= prevMaxGridX; ++x) {
-                grid[y][x] = 0;
-            }
-        }
-        vec2 new_position = player_motion.position + (player_motion.velocity + your.push) * step_seconds;
-
-        // Calculate the range of grid cells the player will occupy
-        int minGridX = static_cast<int>(new_position.x - 24) / 24;
-        int maxGridX = static_cast<int>(new_position.x + 24) / 24;
-        int minGridY = static_cast<int>(new_position.y - 36) / 24;
-        int maxGridY = static_cast<int>(new_position.y + 36) / 24;
-        // Clear the previous grid cells
-        for (int y = prevMinGridY; y <= prevMaxGridY; ++y) {
-            for (int x = prevMinGridX; x <= prevMaxGridX; ++x) {
-                grid[y][x] = 0;
-            }
-        }
-
-
-        // Calculate the range of grid cells the player will occupy
-       
-
-        bool canMoveX = true;
-        for (int y = prevMinGridY; y <= prevMaxGridY; ++y) {
-            for (int x = minGridX; x <= maxGridX; ++x) {
-                if (grid[y][x] != 0 && grid[y][x] != 2) {
-                    canMoveX = false;
-                    break;
-                }
-            }
-            if (!canMoveX) break;
-        }
-
-        if (canMoveX) {
-            // Update the player's X position
-            player_motion.position.x = new_position.x;
-
-            // Update the new grid cells for X movement
-            for (int y = minGridY; y <= maxGridY; ++y) {
-                for (int x = minGridX; x <= maxGridX; ++x) {
-                    if (grid[y][x] == 0 || grid[y][x] == 2) {
-                        grid[y][x] = 2;
-                    }
-                }
-            }
+        if ((player_motion.position.x + (player_motion.velocity.x + your.push.x) * step_seconds >= roomLeft) &&
+            (player_motion.position.x + (player_motion.velocity.x + your.push.x) * step_seconds <= roomRight)) {
+            player_motion.position.x += player_motion.velocity.x * step_seconds;
+			player_motion.position.x += your.push.x * step_seconds;
         } else {
-            // Handle collision by stopping the player's X movement
-            player_motion.velocity.x = 0;
-            your.push.x = 0;
-        }
+            if (player_motion.velocity.x + your.push.x > 0) {
+                // player_motion.position.x = roomRight - WALL_BLOCK_BB_WIDTH / 2 - FISH_BB_WIDTH / 2;
+                player_motion.position.x = roomRight;
 
-        // Check if the player can move to the new position
-        bool canMoveY = true;
-        for (int y = minGridY; y <= maxGridY; ++y) {
-            for (int x = prevMinGridX; x <= prevMaxGridX; ++x) {
-                if (grid[y][x] != 0 && grid[y][x] != 2) {
-                    canMoveY = false;
-                    break;
-                }
+            } else if (player_motion.velocity.x + your.push.x < 0){
+                player_motion.position.x = roomLeft;
             }
-            if (!canMoveY) break;
         }
-
-        if (canMoveY) {
-            // Update the player's Y position
-            player_motion.position.y = new_position.y;
-
-            // Update the new grid cells for Y movement
-            for (int y = minGridY; y <= maxGridY; ++y) {
-                for (int x = minGridX; x <= maxGridX; ++x) {
-                    if (grid[y][x] == 0 || grid[y][x] == 2) {
-                        grid[y][x] = 2;
-                    }
-                }
-            }
+        // Update y position
+        if ((player_motion.position.y + (player_motion.velocity.y + your.push.y) * step_seconds >= roomTop) &&
+            (player_motion.position.y + (player_motion.velocity.y + your.push.y) * step_seconds <= roomBottom)) {
+            player_motion.position.y += player_motion.velocity.y * step_seconds;
+			player_motion.position.y += your.push.y * step_seconds;
         } else {
-            // Handle collision by stopping the player's Y movement
-            player_motion.velocity.y = 0;
-            your.push.y = 0;
-        }
-
-        // Update the previous position
-        player_motion.previous_position = player_motion.position;
-
-
-        // Handle eatable entities
-        for (Entity entity : registry.eatables.entities) {
-            Motion& motion = registry.motions.get(entity);
-            float dist = length(player_motion.position - motion.position);
-            if (dist < COLLECT_DIST && dist > 0.f) {
-                motion.velocity = 100.f * (COLLECT_DIST / (dist + COLLECT_DIST)) * normalize(player_motion.position - motion.position);
-            } else {
-                motion.velocity = {0, 0};
+            if (player_motion.velocity.y + your.push.y > 0) {
+                player_motion.position.y = roomBottom;
+            } else if (player_motion.velocity.y + your.push.y < 0){
+                player_motion.position.y = roomTop;
             }
         }
-
 		your.push *= 0.5f;
 
 
@@ -281,6 +210,7 @@ void PhysicsSystem::step(float elapsed_ms)
 			Motion& motion_j = motion_container.components[j];
 			if (collides(motion_i, motion_j))
 			{
+
 				if (motion_i.scale.x != DIAMOND_PROJECTILE_BB_HEIGHT && motion_i.scale.y != DIAMOND_PROJECTILE_BB_HEIGHT && motion_j.scale.x != DIAMOND_PROJECTILE_BB_HEIGHT && motion_j.scale.y != DIAMOND_PROJECTILE_BB_HEIGHT) {
 					// Create a collisions event
 					// We are abusing the ECS system a bit in that we potentially insert muliple collisions for the same entity

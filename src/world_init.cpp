@@ -51,7 +51,7 @@ Entity createWallBlock(RenderSystem* renderer, vec2 pos) {
 	motion.angle = 0.f;
 	motion.velocity = { 0.f, 0.f };
 	motion.scale = vec2({ WALL_BLOCK_BB_WIDTH, WALL_BLOCK_BB_HEIGHT });
-	grid[static_cast<int>(pos.y / 24)][static_cast<int>(pos.x/ 24)] = 1;
+
 	registry.solids.emplace(entity);
 	registry.renderRequests.insert(
 		entity,

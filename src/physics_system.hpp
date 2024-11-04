@@ -5,7 +5,7 @@
 #include "components.hpp"
 #include "tiny_ecs_registry.hpp"
 #include <random>
-#include "grid.hpp"
+
 
 // A simple physics system that moves rigid bodies and checks for collision
 class PhysicsSystem

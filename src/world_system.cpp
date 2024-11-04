@@ -159,15 +159,15 @@ bool WorldSystem::step(float elapsed_ms_since_last_update, std::string* game_sta
 	// Remove entities that leave the screen on the left side
 	// Iterate backwards to be able to remove without unterfering with the next object to visit
 	// (the containers exchange the last element with the current)
-	float left_bound = 36;
-	float right_bound = 1884;
-	float top_bound = 36;
-	float bottom_bound = 924;
+	float left_bound = window_width_px / 2 - wallWidth / 2;
+	float right_bound = window_width_px / 2 + wallWidth / 2;
+	float top_bound = window_height_px / 2 - wallHeight / 2;
+	float bottom_bound = window_height_px / 2 + wallHeight / 2;
 
 for (int i = (int)motions_registry.components.size() - 1; i >= 0; --i) {
     Motion& motion = motions_registry.components[i];
-    if (motion.position.x < left_bound-25 || motion.position.x > right_bound+25 ||
-        motion.position.y < top_bound-25 || motion.position.y > bottom_bound+25) {
+    if (motion.position.x < left_bound || motion.position.x > right_bound ||
+        motion.position.y < top_bound || motion.position.y > bottom_bound) {
         if (!registry.players.has(motions_registry.entities[i])) // don't remove the player
             registry.remove_all_components_of(motions_registry.entities[i]);
     }
@@ -182,14 +182,18 @@ for (int i = (int)motions_registry.components.size() - 1; i >= 0; --i) {
 				wave.progress_king_clubs = 0;
 				wave.num_king_clubs -= 1;
 				
+				float roomLeft = window_width_px / 2 - wallWidth / 2 + WALL_BLOCK_BB_WIDTH;   
+				float roomRight = window_width_px / 2 + wallWidth / 2 - WALL_BLOCK_BB_WIDTH; 
+				float roomTop = window_height_px / 2 - wallHeight / 2 + WALL_BLOCK_BB_HEIGHT; 
+				float roomBottom = window_height_px / 2 + wallHeight / 2 - WALL_BLOCK_BB_HEIGHT;
 
 				vec2 player_position = p_motion.position;
 				float min_distance_from_player = 300.0f; 
 
 				float spawnX, spawnY;
 				do {
-					spawnX = uniform_dist(rng) * (right_bound - left_bound) + left_bound;   
-					spawnY = uniform_dist(rng) * (bottom_bound - top_bound) + top_bound;
+					spawnX = uniform_dist(rng) * (roomRight - roomLeft) + roomLeft;   
+					spawnY = uniform_dist(rng) * (roomBottom - roomTop) + roomTop;
 				} while (sqrt(pow(spawnX - player_position.x, 2) + pow(spawnY - player_position.y, 2)) < min_distance_from_player);
 
 				createKingClubs(renderer, vec2(spawnX, spawnY));
@@ -202,15 +206,18 @@ for (int i = (int)motions_registry.components.size() - 1; i >= 0; --i) {
 				wave.progress_queen_hearts = 0;
 				wave.num_queen_hearts -= 1;
 
-
+				float roomLeft = window_width_px / 2 - wallWidth / 2 + WALL_BLOCK_BB_WIDTH;
+				float roomRight = window_width_px / 2 + wallWidth / 2 - WALL_BLOCK_BB_WIDTH;
+				float roomTop = window_height_px / 2 - wallHeight / 2 + WALL_BLOCK_BB_HEIGHT;
+				float roomBottom = window_height_px / 2 + wallHeight / 2 - WALL_BLOCK_BB_HEIGHT;
 
 				vec2 player_position = p_motion.position;
 				float min_distance_from_player = 300.0f;
 
 				float spawnX, spawnY;
 				do {
-					spawnX = uniform_dist(rng) * (right_bound - left_bound) + left_bound;
-					spawnY = uniform_dist(rng) * (bottom_bound - top_bound) + top_bound;
+					spawnX = uniform_dist(rng) * (roomRight - roomLeft) + roomLeft;
+					spawnY = uniform_dist(rng) * (roomBottom - roomTop) + roomTop;
 				} while (sqrt(pow(spawnX - player_position.x, 2) + pow(spawnY - player_position.y, 2)) < min_distance_from_player);
 
 				createQueenHearts(renderer, vec2(spawnX, spawnY));
@@ -224,14 +231,18 @@ for (int i = (int)motions_registry.components.size() - 1; i >= 0; --i) {
 				wave.num_bird_clubs -= 1;
 
 
+				float roomLeft = window_width_px / 2 - wallWidth / 2 + WALL_BLOCK_BB_WIDTH;   
+				float roomRight = window_width_px / 2 + wallWidth / 2 - WALL_BLOCK_BB_WIDTH; 
+				float roomTop = window_height_px / 2 - wallHeight / 2 + WALL_BLOCK_BB_HEIGHT; 
+				float roomBottom = window_height_px / 2 + wallHeight / 2 - WALL_BLOCK_BB_HEIGHT;
 
 				vec2 player_position = p_motion.position;
 				float min_distance_from_player = 300.0f; 
 
 				float spawnX, spawnY;
 				do {
-					spawnX = uniform_dist(rng) * (right_bound - left_bound) + left_bound;   
-					spawnY = uniform_dist(rng) * (bottom_bound - top_bound) + top_bound;
+					spawnX = uniform_dist(rng) * (roomRight - roomLeft) + roomLeft;   
+					spawnY = uniform_dist(rng) * (roomBottom - roomTop) + roomTop;
 				} while (sqrt(pow(spawnX - player_position.x, 2) + pow(spawnY - player_position.y, 2)) < min_distance_from_player);
 
 				createBirdClubs(renderer, vec2(spawnX, spawnY));
