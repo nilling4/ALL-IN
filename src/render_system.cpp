@@ -226,8 +226,8 @@ void RenderSystem::drawToScreen()
 void RenderSystem::drawBackground() {
     // Set up transformation and projection matrices
     Transform transform;
-    transform.translate(vec2(window_width_px/2, window_height_px/2));
-    transform.scale(vec2(window_width_px*9/12, window_height_px*2/3));
+    transform.translate(vec2(window_width_px/2+320, window_height_px/2+120));
+    transform.scale(vec2(window_width_px*89/120, window_height_px*19/30));
     mat3 projection = createProjectionMatrix();
 
     // Get the shader program

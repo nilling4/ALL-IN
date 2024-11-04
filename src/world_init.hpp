@@ -3,7 +3,7 @@
 #include "common.hpp"
 #include "tiny_ecs.hpp"
 #include "render_system.hpp"
-
+#include "grid.hpp"
 // These are hardcoded to the dimensions of the entity texture
 // BB = bounding box
 const float ROULETTE_BALL_BB_WIDTH = 0.6f * 15.f;
@@ -21,8 +21,8 @@ const float DIAMOND_PROJECTILE_BB_HEIGHT = 0.8f * 40.f;
 const float COIN_BB_WIDTH = 0.6f * 15.f;
 const float COIN_BB_HEIGHT = 0.6f * 15.f;
 
-const float FISH_BB_WIDTH  = 0.6f * 80.f;
-const float FISH_BB_HEIGHT = 0.6f * 100.f;
+const float FISH_BB_WIDTH  = 48.0f;
+const float FISH_BB_HEIGHT = 72.0f;
 const float EEL_BB_WIDTH   = 0.6f * 150.f;	// 1001
 const float EEL_BB_HEIGHT  = 0.6f * 100.f;	// 870
 const float BIRD_CLUB_BB_WIDTH = 0.6f * 40.f;

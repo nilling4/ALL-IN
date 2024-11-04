@@ -125,6 +125,7 @@ struct Eatable
 struct Motion {
 	vec2 position = { 0, 0 };
 	float angle = 0;
+	vec2 previous_position;
 	vec2 velocity = { 0, 0 };
 	vec2 scale = { 10, 10 };
 };
