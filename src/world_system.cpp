@@ -17,6 +17,10 @@ using json = nlohmann::json;
 
 // Game configuration
 const size_t DIAMOND_SPAWN_DELAY = 1000*3;
+// TODO: to control the max number of certain entities alive at once, need to keep track of current number of alive enemies
+// for each type
+// const int MAX_NUM_KINGS = 15;
+// const int MAX_NUM_BIRDS = 10;
 
 // Room configuration
 const int num_blocks = 40;
@@ -164,14 +168,19 @@ bool WorldSystem::step(float elapsed_ms_since_last_update, std::string* game_sta
 	float top_bound = window_height_px / 2 - wallHeight / 2;
 	float bottom_bound = window_height_px / 2 + wallHeight / 2;
 
-for (int i = (int)motions_registry.components.size() - 1; i >= 0; --i) {
-    Motion& motion = motions_registry.components[i];
-    if (motion.position.x < left_bound || motion.position.x > right_bound ||
-        motion.position.y < top_bound || motion.position.y > bottom_bound) {
-        if (!registry.players.has(motions_registry.entities[i])) // don't remove the player
-            registry.remove_all_components_of(motions_registry.entities[i]);
-    }
-}
+	for (int i = (int)motions_registry.components.size() - 1; i >= 0; --i) {
+		Motion& motion = motions_registry.components[i];
+		if (motion.position.x < left_bound || motion.position.x > right_bound ||
+			motion.position.y < top_bound || motion.position.y > bottom_bound) {
+			if (!registry.players.has(motions_registry.entities[i])) // don't remove the player
+				registry.remove_all_components_of(motions_registry.entities[i]);
+		}
+	}
+
+	float roomLeft = window_width_px / 2 - wallWidth / 2 + WALL_BLOCK_BB_WIDTH;   
+	float roomRight = window_width_px / 2 + wallWidth / 2 - WALL_BLOCK_BB_WIDTH; 
+	float roomTop = window_height_px / 2 - wallHeight / 2 + WALL_BLOCK_BB_HEIGHT; 
+	float roomBottom = window_height_px / 2 + wallHeight / 2 - WALL_BLOCK_BB_HEIGHT;
 
 	if (wave.state == "game on") {
 		if (wave.num_king_clubs > 0) {
@@ -181,22 +190,17 @@ for (int i = (int)motions_registry.components.size() - 1; i >= 0; --i) {
 			if (wave.progress_king_clubs > wave.delay_for_all_entities) {
 				wave.progress_king_clubs = 0;
 				wave.num_king_clubs -= 1;
-				
-				float roomLeft = window_width_px / 2 - wallWidth / 2 + WALL_BLOCK_BB_WIDTH;   
-				float roomRight = window_width_px / 2 + wallWidth / 2 - WALL_BLOCK_BB_WIDTH; 
-				float roomTop = window_height_px / 2 - wallHeight / 2 + WALL_BLOCK_BB_HEIGHT; 
-				float roomBottom = window_height_px / 2 + wallHeight / 2 - WALL_BLOCK_BB_HEIGHT;
 
 				vec2 player_position = p_motion.position;
-				float min_distance_from_player = 300.0f; 
+				float min_distance_from_player = 300.0f;
 
 				float spawnX, spawnY;
 				do {
-					spawnX = uniform_dist(rng) * (roomRight - roomLeft) + roomLeft;   
+					spawnX = uniform_dist(rng) * (roomRight - roomLeft) + roomLeft;
 					spawnY = uniform_dist(rng) * (roomBottom - roomTop) + roomTop;
 				} while (sqrt(pow(spawnX - player_position.x, 2) + pow(spawnY - player_position.y, 2)) < min_distance_from_player);
 
-				createKingClubs(renderer, vec2(spawnX, spawnY));
+				createKingClubs(renderer, vec2(spawnX, spawnY), wave.wave_num);
 			}
 		}
 
@@ -220,7 +224,7 @@ for (int i = (int)motions_registry.components.size() - 1; i >= 0; --i) {
 					spawnY = uniform_dist(rng) * (roomBottom - roomTop) + roomTop;
 				} while (sqrt(pow(spawnX - player_position.x, 2) + pow(spawnY - player_position.y, 2)) < min_distance_from_player);
 
-				createQueenHearts(renderer, vec2(spawnX, spawnY));
+				createQueenHearts(renderer, vec2(spawnX, spawnY), wave.wave_num);
 			}
 		}
 
@@ -229,12 +233,6 @@ for (int i = (int)motions_registry.components.size() - 1; i >= 0; --i) {
 			if (wave.progress_bird_clubs > wave.delay_for_all_entities) {
 				wave.progress_bird_clubs = 0;
 				wave.num_bird_clubs -= 1;
-
-
-				float roomLeft = window_width_px / 2 - wallWidth / 2 + WALL_BLOCK_BB_WIDTH;   
-				float roomRight = window_width_px / 2 + wallWidth / 2 - WALL_BLOCK_BB_WIDTH; 
-				float roomTop = window_height_px / 2 - wallHeight / 2 + WALL_BLOCK_BB_HEIGHT; 
-				float roomBottom = window_height_px / 2 + wallHeight / 2 - WALL_BLOCK_BB_HEIGHT;
 
 				vec2 player_position = p_motion.position;
 				float min_distance_from_player = 300.0f; 
@@ -245,7 +243,7 @@ for (int i = (int)motions_registry.components.size() - 1; i >= 0; --i) {
 					spawnY = uniform_dist(rng) * (roomBottom - roomTop) + roomTop;
 				} while (sqrt(pow(spawnX - player_position.x, 2) + pow(spawnY - player_position.y, 2)) < min_distance_from_player);
 
-				createBirdClubs(renderer, vec2(spawnX, spawnY));
+				createBirdClubs(renderer, vec2(spawnX, spawnY), wave.wave_num);
 
 			}
 		}
@@ -261,23 +259,8 @@ for (int i = (int)motions_registry.components.size() - 1; i >= 0; --i) {
 	}
 
 	if (wave.state == "spawn doors") {
-		wave.state = "limbo";
-		wave.wave_num += 1;
-		wave.max_king_clubs = (int) (wave.max_king_clubs * wave.next_wave_multiple);
-		wave.max_bird_clubs = (int) (wave.max_bird_clubs * wave.next_wave_multiple);
-		wave.max_queen_hearts = (int)(wave.max_queen_hearts * wave.next_wave_multiple);
-		wave.num_king_clubs = wave.max_king_clubs;
-		wave.num_bird_clubs = wave.max_bird_clubs;
-		wave.num_queen_hearts = wave.max_queen_hearts;
-
-		if (wave.wave_num == 1) {
-			wave.num_bird_clubs = 0;
-		} else if (wave.wave_num == 2) {
-			wave.num_king_clubs = 0;
-			wave.num_queen_hearts = 0;
-		} 
 		createDoor(renderer, {window_width_px / 2, window_height_px/2});
-
+		wave.state = "limbo";
 	}
 
 
@@ -288,88 +271,93 @@ for (int i = (int)motions_registry.components.size() - 1; i >= 0; --i) {
 	auto& p_render = registry.renderRequests.get(player_protagonist);
 	auto& motion = registry.motions.get(player_protagonist);
 	
-if (angle > -M_PI / 4 && angle <= M_PI / 4) {
-    // Right
-    TEXTURE_ASSET_ID result = static_cast<TEXTURE_ASSET_ID>(static_cast<int>(TEXTURE_ASSET_ID::PROTAGONIST_LEFT) + static_cast<int>(texture_num) % 2);
-    p_render = { result, 
-        EFFECT_ASSET_ID::TEXTURED,
-        GEOMETRY_BUFFER_ID::SPRITE };
-    if (motion.scale.x > 0) {
-        motion.scale.x *= -1;
-    }
-} else if (angle > M_PI / 4 && angle <= 3 * M_PI / 4) {
-    // Up
-    TEXTURE_ASSET_ID result = static_cast<TEXTURE_ASSET_ID>(static_cast<int>(TEXTURE_ASSET_ID::PROTAGONIST_FORWARD) + static_cast<int>(texture_num));
-    p_render = { result, 
-        EFFECT_ASSET_ID::TEXTURED,
-        GEOMETRY_BUFFER_ID::SPRITE };
-} else if (angle > 3 * M_PI / 4 || angle <= -3 * M_PI / 4) {
-    // Left
-    p_render = {static_cast<TEXTURE_ASSET_ID>(static_cast<int>(TEXTURE_ASSET_ID::PROTAGONIST_LEFT) + static_cast<int>(texture_num) % 2), 
-        EFFECT_ASSET_ID::TEXTURED,
-        GEOMETRY_BUFFER_ID::SPRITE };
-    if (motion.scale.x < 0) {
-        motion.scale.x *= -1;
-    }
-} else {
-    // Down
-    p_render = {static_cast<TEXTURE_ASSET_ID>(static_cast<int>(TEXTURE_ASSET_ID::PROTAGONIST_BACK) + static_cast<int>(texture_num)), 
-        EFFECT_ASSET_ID::TEXTURED,
-        GEOMETRY_BUFFER_ID::SPRITE };
-}
-	// spawn roulette balls
-	if (p_you.roulette_reload_time > 0) {
-		p_you.roulette_reload_counter += elapsed_ms_since_last_update * current_speed;
-		if (p_you.roulette_reload_counter >= p_you.roulette_reload_time) {
-			p_you.roulette_reload_counter = 0;
-
-			float speed = 300.f;
-
-			float velocity_x = speed * std::cos(angle);
-			float velocity_y = speed * std::sin(angle);
-
-			createRouletteBall(renderer, vec2(p_motion.position.x, p_motion.position.y), vec2(velocity_x, velocity_y));
+	if (angle > -M_PI / 4 && angle <= M_PI / 4) {
+		// Right
+		TEXTURE_ASSET_ID result = static_cast<TEXTURE_ASSET_ID>(static_cast<int>(TEXTURE_ASSET_ID::PROTAGONIST_LEFT) + static_cast<int>(texture_num) % 2);
+		p_render = { result, 
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE };
+		if (motion.scale.x > 0) {
+			motion.scale.x *= -1;
 		}
+	} else if (angle > M_PI / 4 && angle <= 3 * M_PI / 4) {
+		// Up
+		TEXTURE_ASSET_ID result = static_cast<TEXTURE_ASSET_ID>(static_cast<int>(TEXTURE_ASSET_ID::PROTAGONIST_FORWARD) + static_cast<int>(texture_num));
+		p_render = { result, 
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE };
+	} else if (angle > 3 * M_PI / 4 || angle <= -3 * M_PI / 4) {
+		// Left
+		p_render = {static_cast<TEXTURE_ASSET_ID>(static_cast<int>(TEXTURE_ASSET_ID::PROTAGONIST_LEFT) + static_cast<int>(texture_num) % 2), 
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE };
+		if (motion.scale.x < 0) {
+			motion.scale.x *= -1;
+		}
+	} else {
+		// Down
+		p_render = {static_cast<TEXTURE_ASSET_ID>(static_cast<int>(TEXTURE_ASSET_ID::PROTAGONIST_BACK) + static_cast<int>(texture_num)), 
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE };
 	}
 
-	if (p_you.card_reload_time > 0) {
-		p_you.card_reload_counter += elapsed_ms_since_last_update * current_speed;
-		if (p_you.card_reload_counter >= p_you.card_reload_time) {
-			p_you.card_reload_counter = 0;
+	if (wave.state == "game on") {
+		// spawn roulette balls
+		if (!registry.deathTimers.has(player_protagonist)) {
+			if (p_you.roulette_reload_time > 0) {
+				p_you.roulette_reload_counter += elapsed_ms_since_last_update * current_speed;
+				if (p_you.roulette_reload_counter >= p_you.roulette_reload_time) {
+					p_you.roulette_reload_counter = 0;
 
-			float speed = 400.f;
+					float speed = 300.f;
 
-			float velocity_x = speed * std::cos(angle);
-			float velocity_y = speed * std::sin(angle);
+					float velocity_x = speed * std::cos(angle);
+					float velocity_y = speed * std::sin(angle);
 
-			createCardProjectile(renderer, vec2(p_motion.position.x, p_motion.position.y), vec2(velocity_x, velocity_y));
+					createRouletteBall(renderer, vec2(p_motion.position.x, p_motion.position.y), vec2(velocity_x, velocity_y));
+				}
+			}
+
+			if (p_you.card_reload_time > 0) {
+				p_you.card_reload_counter += elapsed_ms_since_last_update * current_speed;
+				if (p_you.card_reload_counter >= p_you.card_reload_time) {
+					p_you.card_reload_counter = 0;
+
+					float speed = 400.f;
+
+					float velocity_x = speed * std::cos(angle);
+					float velocity_y = speed * std::sin(angle);
+
+					createCardProjectile(renderer, vec2(p_motion.position.x, p_motion.position.y), vec2(velocity_x, velocity_y));
+				}
+			}
+
+			if (p_you.dart_reload_time > 0) {
+				p_you.dart_reload_counter += elapsed_ms_since_last_update * current_speed;
+				if (p_you.dart_reload_counter >= p_you.dart_reload_time) {
+					p_you.dart_reload_counter = 0;
+
+					float speed = 380.f;
+
+					float velocity_x = speed * std::cos(angle);
+					float velocity_y = speed * std::sin(angle);
+
+					createDartProjectile(renderer, vec2(p_motion.position.x, p_motion.position.y), vec2(velocity_x, velocity_y), angle);
+				}
+			}
+
+			next_diamond_spawn -= elapsed_ms_since_last_update * current_speed;
+			if (next_diamond_spawn < 0.f) {
+				next_diamond_spawn = DIAMOND_SPAWN_DELAY;
+
+				float speed = 250.f;
+
+				float velocity_x = speed * std::cos(angle);
+				float velocity_y = speed * std::sin(angle);
+
+				createDiamondProjectile(renderer, vec2(p_motion.position.x, p_motion.position.y), vec2(velocity_x, velocity_y), angle);
+			}
 		}
-	}
-
-	if (p_you.dart_reload_time > 0) {
-		p_you.dart_reload_counter += elapsed_ms_since_last_update * current_speed;
-		if (p_you.dart_reload_counter >= p_you.dart_reload_time) {
-			p_you.dart_reload_counter = 0;
-
-			float speed = 380.f;
-
-			float velocity_x = speed * std::cos(angle);
-			float velocity_y = speed * std::sin(angle);
-
-			createDartProjectile(renderer, vec2(p_motion.position.x, p_motion.position.y), vec2(velocity_x, velocity_y), angle);
-		}
-	}
-
-	next_diamond_spawn -= elapsed_ms_since_last_update * current_speed;
-	if (next_diamond_spawn < 0.f) {
-		next_diamond_spawn = DIAMOND_SPAWN_DELAY;
-
-		float speed = 250.f;
-
-		float velocity_x = speed * std::cos(angle);
-		float velocity_y = speed * std::sin(angle);
-
-		createDiamondProjectile(renderer, vec2(p_motion.position.x, p_motion.position.y), vec2(velocity_x, velocity_y), angle);
 	}
 	// 	next_lerp_spawn -= elapsed_ms_since_last_update * current_speed;
 	// 	if (next_lerp_spawn < 0.f) {
@@ -414,9 +402,9 @@ if (angle > -M_PI / 4 && angle <= M_PI / 4) {
 					createLine({min_x, (min_y+max_y)/2}, {2, max_y - min_y}); 
 					createLine({max_x, (min_y+max_y)/2}, {2, max_y - min_y}); 
 				}
+			}
 		}
-		}
-		}
+	}
 	return true;
 }
 
@@ -432,18 +420,8 @@ void WorldSystem::update_title(int fps) {
 }
 
 void WorldSystem::go_to_home(std::string* game_state) {
-	registry.list_all_components();
-	current_speed = 1.f;
-	printf("Restarting\n");
-	while (registry.motions.entities.size() > 0)
-		registry.remove_all_components_of(registry.motions.entities.back());
 	*game_state = "home";
-	registry.list_all_components();
-	if (registry.players.size() == 0) {
-		player_protagonist = createProtagonist(renderer, { window_width_px / 2, window_height_px / 2 }, nullptr);
-		registry.colors.insert(player_protagonist, { 1, 0.8f, 0.8f });
-	}
-
+	restart_game();
 }
 
 // Reset the world state to its initial state
@@ -456,37 +434,26 @@ void WorldSystem::restart_game() {
 	current_speed = 1.f;
 
 	// Remove all entities that we created
-	// All that have a motion, we could also iterate over all fish, eels, ... but that would be more cumbersome
-	Player* copy_player = nullptr;
-	if (registry.players.size() > 0) {
-		Player& you = registry.players.get(player_protagonist);
-		copy_player = new Player(you); 
-	}
-
-
+	// All that have a motion. Projectiles, enemies, player, walls, HUD, door
 	while (registry.motions.entities.size() > 0)
 		registry.remove_all_components_of(registry.motions.entities.back());
 
+	// remove wave entity
+	registry.remove_all_components_of(global_wave);
 	// Debugging for memory/component leaks
 	registry.list_all_components();
 	load();
 
 	// create a new Protagonist
 	if (registry.players.size() == 0) {
-		player_protagonist = createProtagonist(renderer, { window_width_px / 2, window_height_px / 2 }, copy_player);
+		player_protagonist = createProtagonist(renderer, { window_width_px / 2, window_height_px / 2 }, nullptr);
 		registry.colors.insert(player_protagonist, { 1, 0.8f, 0.8f });
 	}
-	delete copy_player;
-	copy_player = nullptr; 
+	
 
 	if (registry.waves.size() < 1) {
 		global_wave = createWave();
-	} else {
-
-		Wave& wave = registry.waves.get(global_wave);
-		wave.state = "game on";
 	}
-
 	// create a new HUD
 	createHUD(renderer, { window_width_px / 2, window_height_px }, { window_width_px / 4, window_height_px / 2 });
 
@@ -523,6 +490,90 @@ void WorldSystem::restart_game() {
 	}
 }
 
+void WorldSystem::next_wave() {
+	Player& your = registry.players.get(player_protagonist);
+	Wave& wave = registry.waves.get(global_wave);
+	wave.wave_num += 1;
+	// array of length 20, index by wave_num to get number of enemies per round
+	int num_of_enemies[] = {
+		0, 6, 8, 13, 18, 24, 27, 28, 28, 29, 33, 34, 36, 39, 41, 44, 47, 50, 53, 56
+	};
+	if (wave.wave_num < 3) {
+		wave.num_king_clubs = num_of_enemies[wave.wave_num];
+	} else if (wave.wave_num >=3 && wave.wave_num <7) {
+		int total_num_enemies = num_of_enemies[wave.wave_num];
+		int num_birds = ceil(total_num_enemies * 0.25);
+		int num_kings = total_num_enemies - num_birds;
+		wave.num_king_clubs = num_kings;
+		wave.num_bird_clubs = num_birds;
+	} else if (wave.wave_num >= 7 && wave.wave_num < 20) {
+		int total_num_enemies = num_of_enemies[wave.wave_num];
+		int num_birds = ceil(total_num_enemies * 0.25);
+		int num_healers = ceil(total_num_enemies * 0.15);
+		int num_kings = total_num_enemies - num_birds - num_healers;
+		wave.num_king_clubs = num_kings;
+		wave.num_bird_clubs = num_birds;
+		wave.num_queen_hearts = num_healers;
+	} else {
+		// wave 20 and above, use formula
+		int total_num_enemies = ceil(0.09f * wave.wave_num * wave.wave_num - 0.0029f * wave.wave_num + 23.9580f);
+		int num_birds = ceil(total_num_enemies * 0.25);
+		int num_healers = ceil(total_num_enemies * 0.05);
+		int num_kings = total_num_enemies - num_birds - num_healers;
+		wave.num_king_clubs = num_kings;
+		wave.num_bird_clubs = num_birds;
+		wave.num_queen_hearts = num_healers;
+	}
+
+	// wave.state = "game on"
+	if (wave.wave_num == 1) {
+		your.health += 100;
+		your.card_reload_time = 2521;
+		your.roulette_reload_time = 1234;
+	} else if (wave.wave_num == 2) {
+		your.health = 200;
+		your.card_reload_time = 1933;
+		your.roulette_reload_time = 896;
+		your.dart_reload_time = 3756;
+	} else if (wave.wave_num == 3) {
+		your.health = 200;
+		your.card_reload_time = 1672;
+		your.roulette_reload_time = 664;
+		your.dart_reload_time = 3367;
+	} else if (wave.wave_num == 4) {
+		your.health = 300;
+		your.card_reload_time = 1373;
+		your.roulette_reload_time = 326;
+		your.dart_reload_time = 2900;
+	} else if (wave.wave_num == 5) {
+		your.health = 300;
+		your.card_reload_time = 1042;
+		your.roulette_reload_time = 326;
+		your.dart_reload_time = 2500;
+	} else if (wave.wave_num == 6) {
+		your.health = 900;
+		your.card_reload_time = 852;
+		your.roulette_reload_time = 326;
+		your.dart_reload_time = 2200;
+	} else {
+		your.health = 1000;
+		your.card_reload_time = 549;
+		your.roulette_reload_time = 326;
+		your.dart_reload_time = 1700;
+	}
+	// remove all projectiles
+	while (registry.killsEnemys.entities.size() > 0)
+		registry.remove_all_components_of(registry.killsEnemys.entities.back());
+	
+	// remove door
+	while (registry.doors.entities.size() > 0)
+		registry.remove_all_components_of(registry.doors.entities.back());
+
+	registry.list_all_components();
+
+	wave.state = "game on";
+} 
+
 // Compute collisions between entities
 void WorldSystem::handle_collisions() {
 	// Loop over all collisions detected by the physics system
@@ -538,18 +589,20 @@ void WorldSystem::handle_collisions() {
 			Motion& your_motion = registry.motions.get(entity);
 			// Checking Player - Deadly collisions
 			if (registry.deadlys.has(entity_other)) {
-				// initiate death unless already dying
 				Motion& deadly_motion = registry.motions.get(entity_other);
-
-				your.health -= 1;
-				vec2 push = normalize(your_motion.position - deadly_motion.position);
-				your.push += 100.f*push;
-				deadly_motion.velocity += -10.f*push;
+				if (!registry.deathTimers.has(player_protagonist)) {
+					your.health -= 1;
+					vec2 push = normalize(your_motion.position - deadly_motion.position);
+					your.push += 100.f*push;
+					deadly_motion.velocity += -10.f*push;
+				}
 
 				if (your.health <= 0) {
 					if (!registry.deathTimers.has(entity)) {
 						// Scream, reset timer, and make the salmon sink
 						registry.deathTimers.emplace(entity);
+						your_motion.velocity.x = 0.f;
+						your_motion.velocity.y = 0.f;
 						Mix_PlayChannel(-1, salmon_dead_sound, 0);		
 						std::ofstream ofs("save.json", std::ios::trunc);
 						if (ofs.is_open()) {
@@ -566,21 +619,8 @@ void WorldSystem::handle_collisions() {
 				if (!registry.deathTimers.has(entity)) {
 
 					// check if the eatable entity is a coin and increase player's coin count
-					int oldCoinCount = coins;
 					coins++;
-
-					// add coins collected to HUD
-					for (int i = oldCoinCount; i < coins; ++i) {
-						Entity coinEntity = createCoin(renderer, { 50.f + i * 40.f, 50.f }); // + i spaces the coins out
-						Motion& motion = registry.motions.get(coinEntity);
-						motion.scale = { 30.f, 30.f };
-
-						// add to HUD
-						registry.hud.emplace(coinEntity);
-					}
-
-					std::cout << "Coin count: " << coins << std::endl;
-					
+					std::cout << "Coin count: " << coins << std::endl;					
 
 					// chew, count coins, and set the LightUp timer
 					registry.remove_all_components_of(entity_other);
@@ -590,44 +630,8 @@ void WorldSystem::handle_collisions() {
 			else if (registry.solids.has(entity_other)) {
 				// Player - Wall collision handled in physics system for now, move here later.
 			} else if (registry.doors.has(entity_other)) {
-				Wave& wave = registry.waves.get(global_wave);
-				// wave.state = "game on"
-				if (wave.wave_num == 1) {
-					your.health += 100;
-					your.card_reload_time = 2521;
-					your.roulette_reload_time = 1234;
-				} else if (wave.wave_num == 2) {
-					your.health += 200;
-					your.card_reload_time = 1633;
-					your.roulette_reload_time = 896;
-					your.dart_reload_time = 3756;
-				} else if (wave.wave_num == 3) {
-					your.health += 200;
-					your.card_reload_time = 3572;
-					your.roulette_reload_time = 664;
-					your.dart_reload_time = 4567;
-				} else if (wave.wave_num == 4) {
-					your.health = 100;
-					your.card_reload_time = 973;
-					your.roulette_reload_time = 326;
-					your.dart_reload_time = 0;
-				} else if (wave.wave_num == 5) {
-					your.health = 300;
-					your.card_reload_time = 342;
-					your.roulette_reload_time = 0;
-					your.dart_reload_time = 0;
-				} else if (wave.wave_num == 6) {
-					your.health = 900;
-					your.card_reload_time = 1252;
-					your.roulette_reload_time = 0;
-					your.dart_reload_time = 822;
-				} else {
-					your.health = 1000;
-					your.card_reload_time = 549;
-					your.roulette_reload_time = 412;
-					your.dart_reload_time = 2845;
-				}
-				restart_game();
+				// Player touches door, proceed to next wave
+				next_wave();
 			}
 		}
 
@@ -814,14 +818,11 @@ void WorldSystem::load() {
 		coins = j["coin_count"].get<int>();
 	}
 
-	// Update the HUD based on the coin count
-	for (uint i = 0; i < coins; ++i) {
-		Entity coinEntity = createCoin(renderer, { 50.f + i * 40.f, 50.f }); // + i spaces the coins out
-		Motion& motion = registry.motions.get(coinEntity);
-		motion.scale = { 30.f, 30.f };
 
-		registry.hud.emplace(coinEntity);
+	if (j.contains("wave")) {
+		global_wave = loadWave(j["wave"]["wave_num"], j["wave"]["num_king_clubs"], j["wave"]["num_bird_clubs"]);
 	}
+	Wave& wave = registry.waves.get(global_wave);
 
 	// Load player position
 	if (j.contains("player")) {
@@ -834,13 +835,12 @@ void WorldSystem::load() {
 		for (auto& item : j["enemies"].items()) {
 			auto& value = item.value();
 			if (value["enemy_type"] == ENEMIES::KING_CLUBS) {
-				createKingClubs(renderer, vec2(value["position"][0], value["position"][1]));
+				createKingClubs(renderer, vec2(value["position"][0], value["position"][1]), wave.wave_num);
 			} else if (value["enemy_type"] == ENEMIES::BIRD_CLUBS) {
-				createBirdClubs(renderer, vec2(value["position"][0], value["position"][1]));
+				createBirdClubs(renderer, vec2(value["position"][0], value["position"][1]), wave.wave_num);
 			} else if (value["enemy_type"] == ENEMIES::QUEEN_HEARTS) {
-				createQueenHearts(renderer, vec2(value["position"][0], value["position"][1]));
+				createQueenHearts(renderer, vec2(value["position"][0], value["position"][1]), wave.wave_num);
 			}
-			
 		}
 	}
 
@@ -912,11 +912,9 @@ void WorldSystem::save() {
     j["coins"] = json::object();
     for (Entity entity : registry.eatables.entities) {
         if (registry.motions.has(entity)) {
-			if (!registry.hud.has(entity)) {
             j["coins"][std::to_string(entity)] = {
                 {"position", {registry.motions.get(entity).position.x, registry.motions.get(entity).position.y}}
             };
-			}
         }
     }
     // Save projectiles positions
@@ -948,6 +946,13 @@ void WorldSystem::save() {
             };
         }
     }
+
+	Wave& wave = registry.waves.get(global_wave);
+	j["wave"] = {
+		{"wave_num", wave.wave_num},
+		{"num_king_clubs", wave.num_king_clubs},
+		{"num_bird_clubs", wave.num_bird_clubs},
+	};
 	std::ofstream o("save.json");
 	    if (o.is_open()) {
         o << j.dump(4) << std::endl; // Pretty print with 4 spaces
@@ -994,63 +999,9 @@ void WorldSystem::on_key(int key, int, int action, int mod) {
 
 	}
 
+	
 	Motion& motion = registry.motions.get(player_protagonist);
 	Player& your = registry.players.get(player_protagonist);
-
-	motion.velocity.x = 0.0f;
-	motion.velocity.y = 0.0f;
-	static bool want_go_left = false;
-	static bool want_go_right = false;
-	static bool want_go_up = false;
-	static bool want_go_down = false;
-	if (action == GLFW_PRESS || action == GLFW_REPEAT) {
-		if (key == GLFW_KEY_W) {
-			want_go_up = true;
-		} else if (key == GLFW_KEY_A) {
-			want_go_left = true;
-		} else if (key == GLFW_KEY_S) {
-			want_go_down = true;
-		} else if (key == GLFW_KEY_D) {
-			want_go_right = true;
-		}
-
-		// keep running
-		texture_num += 0.5f;
-		if (texture_num > 2.99f)
-			texture_num = 1.0f;
-
-	} 
-	else if (action == GLFW_RELEASE) {
-		if (key == GLFW_KEY_W) {
-			want_go_up = false;
-		} else if (key == GLFW_KEY_A) {
-			want_go_left = false;
-		} else if (key == GLFW_KEY_S) {
-			want_go_down = false;
-		} else if (key == GLFW_KEY_D) {
-			want_go_right = false;
-		}
-		
-	}
-	
-	if (want_go_up && !want_go_down) {
-		
-		motion.velocity.y = -100.f;  
-
-	} else if (want_go_down && !want_go_up) {
-		motion.velocity.y = 100.f;  
-
-	}
-	if (want_go_left && !want_go_right) {
-		motion.velocity.x = -100.f;  
-
-	} else if (want_go_right && !want_go_left) {
-		motion.velocity.x = 100.f;   
-
-	} 
-	if (!want_go_up && !want_go_down && !want_go_left && !want_go_right) {
-			texture_num = 0.5f;
-	}
 
 	if (action == GLFW_PRESS && key == GLFW_KEY_SPACE) {
 		if (length(your.push) < 0.00001f) {
@@ -1069,9 +1020,139 @@ void WorldSystem::on_key(int key, int, int action, int mod) {
 		printf("Current speed = %f\n", current_speed);
 	}
 	current_speed = fmax(0.f, current_speed);
+
+	if (action == GLFW_PRESS || action == GLFW_REPEAT) {
+    	pressed_keys.insert(key);
+		// Doing animation here has an inevitable bug relating to on_key not being called
+		// when two keys are held, then one is released. Moved to handle_movement().
+
+		// if (!registry.deathTimers.has(player_protagonist)) {
+		// 	texture_num += 0.5f;
+		// 	if (texture_num > 2.99f) {
+		// 		texture_num = 1.0f;
+		// 	}
+		// }
+    } else if (action == GLFW_RELEASE) {
+        pressed_keys.erase(key);
+    }
+}
+
+void WorldSystem::handle_movement() {
+	auto& component = registry.motions.get(player_protagonist);
+	if (!registry.deathTimers.has(player_protagonist)) {
+		bool up = pressed_keys.find(GLFW_KEY_W) != pressed_keys.end();
+		bool down = pressed_keys.find(GLFW_KEY_S) != pressed_keys.end();
+		bool right = pressed_keys.find(GLFW_KEY_D) != pressed_keys.end();
+		bool left = pressed_keys.find(GLFW_KEY_A) != pressed_keys.end();
+
+		if (!up && !down && !right && !left) {
+			component.velocity.x = 0.f;
+			component.velocity.y = 0.f;
+			texture_num = 0.5f;
+		}
+		if (up && right && down && left) {
+			component.velocity.x = 0.f;
+			component.velocity.y = 0.f;
+			texture_num = 0.5f;
+		} else if (up && right && down) {
+			component.velocity.x = 100.f;
+			component.velocity.y = 0.f;
+			texture_num += 0.05f;
+			if (texture_num > 2.99f) {
+				texture_num = 1.0f;
+			}
+		} else if (up && right && left) {
+			component.velocity.y = -100.f;
+			component.velocity.x = 0.f;
+			texture_num += 0.05f;
+			if (texture_num > 2.99f) {
+				texture_num = 1.0f;
+			}
+		} else if (up && left && down) {
+			component.velocity.x = -100.f;
+			component.velocity.y = 0.f;
+			texture_num += 0.05f;
+			if (texture_num > 2.99f) {
+				texture_num = 1.0f;
+			}
+		} else if (down && left && right) {
+			component.velocity.y = 100.f;
+			component.velocity.x = 0.f;
+			texture_num += 0.05f;
+			if (texture_num > 2.99f) {
+				texture_num = 1.0f;
+			}
+		} else if (up && right) {
+			component.velocity.x = cos(M_PI / 4) * 100.f;
+			component.velocity.y = -sin(M_PI / 4) * 100.f;
+			texture_num += 0.05f;
+			if (texture_num > 2.99f) {
+				texture_num = 1.0f;
+			}
+		} else if (up && left) {
+			component.velocity.x = -cos(M_PI / 4) * 100.f;
+			component.velocity.y = -sin(M_PI / 4) * 100.f;
+			texture_num += 0.05f;
+			if (texture_num > 2.99f) {
+				texture_num = 1.0f;
+			}
+		} else if (up && down) {
+			component.velocity.x = 0.f;
+			component.velocity.y = 0.f;
+			texture_num = 0.5f;
+		} else if (right && left) {
+			component.velocity.x = 0.f;
+			component.velocity.y = 0.f;
+			texture_num = 0.5f;
+		} else if (right && down) {
+			component.velocity.x = cos(M_PI / 4) * 100.f;
+			component.velocity.y = sin(M_PI / 4) * 100.f;
+			texture_num += 0.05f;
+			if (texture_num > 2.99f) {
+				texture_num = 1.0f;
+			}
+		} else if (down && left) {
+			component.velocity.x = -cos(M_PI / 4) * 100.f;
+			component.velocity.y = sin(M_PI / 4) * 100.f;
+			texture_num += 0.05f;
+			if (texture_num > 2.99f) {
+				texture_num = 1.0f;
+			}
+		} else if (up) {
+			component.velocity.y = -100.f;
+			component.velocity.x = 0.f;
+			texture_num += 0.05f;
+			if (texture_num > 2.99f) {
+				texture_num = 1.0f;
+			}
+		} else if (down) {
+			component.velocity.y = 100.f;
+			component.velocity.x = 0.f;
+			texture_num += 0.05f;
+			if (texture_num > 2.99f) {
+				texture_num = 1.0f;
+			}
+		} else if (right) {
+			component.velocity.x = 100.f;
+			component.velocity.y = 0.f;
+			texture_num += 0.05f;
+			if (texture_num > 2.99f) {
+				texture_num = 1.0f;
+			}
+		} else if (left) {
+			component.velocity.x = -100.f;
+			component.velocity.y = 0.f;
+			texture_num += 0.05f;
+			if (texture_num > 2.99f) {
+				texture_num = 1.0f;
+			}
+		}
+	}
 }
 
 void WorldSystem::on_mouse_move(vec2 mouse_position) {
-	mouse_x = mouse_position.x;
-	mouse_y = mouse_position.y;
+	if (!registry.deathTimers.has(player_protagonist)) {
+		mouse_x = mouse_position.x;
+		mouse_y = mouse_position.y;
+	}
 }

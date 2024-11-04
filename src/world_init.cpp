@@ -86,7 +86,7 @@ Entity createDoor(RenderSystem* renderer, vec2 pos) {
 
 }
 
-Entity createQueenHearts(RenderSystem* renderer, vec2 position)
+Entity createQueenHearts(RenderSystem* renderer, vec2 position, int wave_num)
 {
 	auto entity = Entity();
 
@@ -101,7 +101,14 @@ Entity createQueenHearts(RenderSystem* renderer, vec2 position)
 	motion.scale = vec2({ FISH_BB_WIDTH, FISH_BB_HEIGHT });
 	registry.healers.emplace(entity);
 	auto& deadly = registry.deadlys.emplace(entity);
-	deadly.health = 25.f;
+	if (wave_num >= 1 && wave_num <= 9) {
+        deadly.health = 80 + 60 * (wave_num - 1);
+    } else {
+        deadly.health = 80 + 60 * (8);
+        for (int r = 10; r <= wave_num; r++) {
+            deadly.health *= 1.1f;
+        }
+    }
 	deadly.enemy_type = ENEMIES::QUEEN_HEARTS;
 	registry.renderRequests.insert(
 		entity,
@@ -110,11 +117,10 @@ Entity createQueenHearts(RenderSystem* renderer, vec2 position)
 			EFFECT_ASSET_ID::TEXTURED,
 			GEOMETRY_BUFFER_ID::SPRITE
 		});
-
 	return entity;
 }
 
-Entity createKingClubs(RenderSystem* renderer, vec2 position)
+Entity createKingClubs(RenderSystem* renderer, vec2 position, int wave_num)
 {
 	auto entity = Entity();
 
@@ -130,8 +136,15 @@ Entity createKingClubs(RenderSystem* renderer, vec2 position)
 
 	registry.melees.emplace(entity);
 	auto& deadly = registry.deadlys.emplace(entity);
-	deadly.health = 50.f;
-	deadly.armour = 1.f;
+	if (wave_num >= 1 && wave_num <= 9) {
+        deadly.health = 150 + 100 * (wave_num - 1);
+    } else {
+        deadly.health = 150 + 100 * (8);
+        for (int r = 10; r <= wave_num; r++) {
+            deadly.health *= 1.1f;
+        }
+    }
+	deadly.armour = 0;
 	deadly.enemy_type = ENEMIES::KING_CLUBS;
 	registry.renderRequests.insert(
 		entity,
@@ -144,7 +157,7 @@ Entity createKingClubs(RenderSystem* renderer, vec2 position)
 	return entity;
 }
 
-Entity createBirdClubs(RenderSystem* renderer, vec2 position)
+Entity createBirdClubs(RenderSystem* renderer, vec2 position, int wave_num)
 {
 	auto entity = Entity();
 
@@ -155,13 +168,18 @@ Entity createBirdClubs(RenderSystem* renderer, vec2 position)
 	motion.angle = 0.f;
 	motion.velocity = { 0, 0 };
 	motion.position = position;
-
 	motion.scale = vec2({ BIRD_CLUB_BB_WIDTH, BIRD_CLUB_BB_HEIGHT });
-
 	registry.boids.emplace(entity);
-	auto& deadly = registry.deadlys.emplace(entity);
 
-	deadly.health = 6.f;
+	auto& deadly = registry.deadlys.emplace(entity);
+	if (wave_num >= 1 && wave_num <= 9) {
+        deadly.health = 60 + 40 * (wave_num - 1);
+    } else {
+        deadly.health = 60 + 40 * (8);
+        for (int r = 10; r <= wave_num; r++) {
+            deadly.health *= 1.1f;
+        }
+    }
 	deadly.armour = 0.f;
 
 	deadly.enemy_type = ENEMIES::BIRD_CLUBS;
@@ -176,7 +194,7 @@ Entity createBirdClubs(RenderSystem* renderer, vec2 position)
 	return entity;
 }
 
-Entity createHeartProjectile(RenderSystem* renderer, vec2 position, vec2 velocity, Entity* target_entity) {
+Entity createHeartProjectile(RenderSystem* renderer, vec2 position, vec2 velocity, Entity* target_entity, int wave_num) {
 	auto entity = Entity();
 
 	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
@@ -189,7 +207,15 @@ Entity createHeartProjectile(RenderSystem* renderer, vec2 position, vec2 velocit
 	motion.scale = vec2({ CARD_PROJECTILE_BB_WIDTH, CARD_PROJECTILE_BB_HEIGHT });
 
 	auto& heals = registry.healsEnemies.emplace(entity);
-	heals.health = 5.f;
+	if (wave_num >= 1 && wave_num <= 9) {
+        heals.health = (150 + 100 * (wave_num - 1)) * 0.15; // 15% of kings health, change 0.15 if want to adjust healing %
+    } else {
+        int kings_health = 150 + 100 * (8);
+        for (int r = 10; r <= wave_num; r++) {
+            kings_health *= 1.1f;
+        }
+		heals.health = kings_health * 0.15; // change 0.15 here as well for changing healing %
+    }
 	heals.target_entity = target_entity;
 
 	registry.renderRequests.insert(
@@ -220,7 +246,7 @@ Entity createRouletteBall(RenderSystem* renderer, vec2 position, vec2 velocity)
 	motion.scale = mesh.original_size * 60.f;
 
 	auto& kills = registry.killsEnemys.emplace(entity);
-	kills.damage = 10.f;
+	kills.damage = 150.f;
 	kills.bounce_left = 2;
 	kills.type = "ball";
 	registry.renderRequests.insert(
@@ -248,7 +274,7 @@ Entity createCardProjectile(RenderSystem* renderer, vec2 position, vec2 velocity
 	motion.scale = vec2({ CARD_PROJECTILE_BB_WIDTH, CARD_PROJECTILE_BB_HEIGHT });
 
 	auto& kills = registry.killsEnemys.emplace(entity);
-	kills.damage = 5.f;
+	kills.damage = 100.f;
 	kills.pierce_left = 2;
 	kills.type = "card";
 	registry.renderRequests.insert(
@@ -277,7 +303,7 @@ Entity createDartProjectile(RenderSystem* renderer, vec2 position, vec2 velocity
 	motion.scale = vec2({ DART_PROJECTILE_BB_WIDTH, DART_PROJECTILE_BB_HEIGHT });
 
 	auto& kills = registry.killsEnemys.emplace(entity);
-	kills.damage = 50.f;
+	kills.damage = 300.f;
 	kills.type = "dart";
 	registry.renderRequests.insert(
 		entity,
@@ -305,7 +331,7 @@ Entity createDiamondProjectile(RenderSystem* renderer, vec2 position, vec2 veloc
 	motion.scale = vec2({ DIAMOND_PROJECTILE_BB_HEIGHT, DIAMOND_PROJECTILE_BB_HEIGHT });
 
 	auto& kills = registry.killsEnemys.emplace(entity);
-	kills.damage = 50.f;
+	kills.damage = 200.f;
 	registry.renderRequests.insert(
 		entity,
 		{
@@ -480,10 +506,15 @@ Entity createTutScreen(RenderSystem* renderer, vec2 position)
 
 Entity createWave() {
 	auto entity = Entity();
+	registry.waves.emplace(entity);
+	return entity;
+}
 
-
+Entity loadWave(int wave_num, int num_king_clubs, int num_bird_clubs) {
+	auto entity = Entity();
 	Wave& wave = registry.waves.emplace(entity);
-
-
+	wave.wave_num = wave_num;
+	wave.num_king_clubs = num_king_clubs;
+	wave.num_bird_clubs = num_bird_clubs;
 	return entity;
 }

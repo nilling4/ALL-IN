@@ -37,6 +37,9 @@ public:
 	// Check for collisions
 	void handle_collisions();
 	void go_to_home(std::string* game_state);
+	
+	// Handle movement
+    void handle_movement();
 
 	// Should the game be over ?
 	bool is_over()const;
@@ -47,6 +50,9 @@ private:
 
 	// restart level
 	void restart_game();
+
+	// start next wave
+	void next_wave();
 
 	// OpenGL window handle
 	GLFWwindow* window;
@@ -64,6 +70,9 @@ private:
 
 	float mouse_x;
 	float mouse_y;
+
+	// Key press state
+	std::set<int> pressed_keys;
 
 	// music references
 	Mix_Music* background_music;

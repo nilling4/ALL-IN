@@ -70,7 +70,7 @@ int main()
 			
 			t = now;
 			world.step(elapsed_ms, &game_state);
-
+			world.handle_movement();
 			ai.step(elapsed_ms);
 			physics.step(elapsed_ms);
 			physics.lerp(elapsed_ms, 1000);

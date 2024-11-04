@@ -155,6 +155,7 @@ void PhysicsSystem::step(float elapsed_ms)
 				if (kills.bounce_left <= 0) {
 					registry.remove_all_components_of(entity);
 				} else {
+					kills.bounce_left -= 1;
 					motion.position.y = bottomWallY - motion.scale.y/2;
 					motion.velocity.y *= -1;
 				}
@@ -163,6 +164,7 @@ void PhysicsSystem::step(float elapsed_ms)
 				if (kills.bounce_left <= 0) {
 					registry.remove_all_components_of(entity);
 				} else {
+					kills.bounce_left -= 1;
 					motion.position.x = rightWallX - motion.scale.x/2;
 					motion.velocity.x *= -1;
 				}
@@ -171,6 +173,45 @@ void PhysicsSystem::step(float elapsed_ms)
 				if (kills.bounce_left <= 0) {
 					registry.remove_all_components_of(entity);
 				} else {
+					kills.bounce_left -= 1;
+					motion.position.x = leftWallX + motion.scale.x/2;
+					motion.velocity.x *= -1;
+				}
+			}
+		}
+		if (kills.type == "ball") {
+			if (motion.position.y - motion.scale.y/2 < topWallY) {
+				if (kills.bounce_left <= 0) {
+					registry.remove_all_components_of(entity);
+				} else {
+					kills.bounce_left -= 1;
+					motion.position.y = topWallY + motion.scale.y/2;
+					motion.velocity.y *= -1;
+				}
+			}
+			if (motion.position.y + motion.scale.y/2 > bottomWallY) {
+				if (kills.bounce_left <= 0) {
+					registry.remove_all_components_of(entity);
+				} else {
+					kills.bounce_left -= 1;
+					motion.position.y = bottomWallY - motion.scale.y/2;
+					motion.velocity.y *= -1;
+				}
+			}
+			if (motion.position.x + motion.scale.x/2 > rightWallX) {
+				if (kills.bounce_left <= 0) {
+					registry.remove_all_components_of(entity);
+				} else {
+					kills.bounce_left -= 1;
+					motion.position.x = rightWallX - motion.scale.x/2;
+					motion.velocity.x *= -1;
+				}
+			}
+			if (motion.position.x - motion.scale.x/2 < leftWallX) {
+				if (kills.bounce_left <= 0) {
+					registry.remove_all_components_of(entity);
+				} else {
+					kills.bounce_left -= 1;
 					motion.position.x = leftWallX + motion.scale.x/2;
 					motion.velocity.x *= -1;
 				}

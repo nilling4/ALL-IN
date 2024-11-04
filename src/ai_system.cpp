@@ -34,6 +34,10 @@ void AISystem::step(float elapsed_ms)
 {
 
 	Motion* player_motion;
+    Wave* wave;
+    for (Entity entity : registry.waves.entities) {
+        wave = &registry.waves.get(entity);
+    }
 	for (Entity entity : registry.players.entities) {
 		player_motion = &registry.motions.get(entity);	
 	}
@@ -160,7 +164,7 @@ void AISystem::step(float elapsed_ms)
                         float angle = atan2(target_motion.position.x - motion.position.x, target_motion.position.y - motion.position.y);
                         float heart_velocity_x = sin(angle) * 100;
                         float heart_velocity_y = cos(angle) * 100;
-                        createHeartProjectile(renderer, motion.position, glm::vec2({ heart_velocity_x, heart_velocity_y }), closest_enemy);
+                        createHeartProjectile(renderer, motion.position, glm::vec2({ heart_velocity_x, heart_velocity_y }), closest_enemy, wave->wave_num);
                     }
                     else {
                         next_hearts_spawn -= elapsed_ms;
@@ -223,7 +227,6 @@ void AISystem::step(float elapsed_ms)
         Motion& heart_motion = registry.motions.get(heart_entity);
         HealsEnemy& heart = registry.healsEnemies.get(heart_entity);
         if (heart.target_entity != nullptr && registry.deadlys.has(*heart.target_entity)) {
-            Deadly& deadly = registry.deadlys.get(*heart.target_entity);
             Motion& deadly_motion = registry.motions.get(*heart.target_entity);
             float angle = atan2(deadly_motion.position.x - heart_motion.position.x, deadly_motion.position.y - heart_motion.position.y);
             float heart_velocity_x = sin(angle) * 100;

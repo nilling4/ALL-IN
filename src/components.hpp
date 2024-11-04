@@ -17,19 +17,16 @@ struct Player
 	float roulette_reload_time = 0;
 	float roulette_dmg = 0;
 	float roulette_bounce = 0;
-	float roulette_health = 0;
 
 	float card_reload_counter = 0;
 	float card_reload_time = 0;
 	float card_dmg = 0;
 	float card_pierce = 0;
-	float card_health = 0;
 
 	float dart_reload_counter = 0;
 	float dart_reload_time = 0;
 	float dart_dmg = 0;
 	float dart_pierce = 0;
-	float dart_health = 0;
 };
 
 struct Door {
@@ -37,26 +34,16 @@ struct Door {
 };
 
 struct Wave {
-	int wave_num = 0;
-	float next_wave_multiple = 1.5;
-
-	int num_enemy_types = 1;
+	int wave_num = 1;
 	float delay_for_all_entities = 1000;
 
-	int max_king_clubs = 7;
-	int num_king_clubs = 3;
+	int num_king_clubs = 6;
 	float progress_king_clubs = 0;
-
-	int max_bird_clubs = 10;
 	int num_bird_clubs = 0;
 	float progress_bird_clubs = 0;
-
-	int max_queen_hearts = 2;
 	int num_queen_hearts = 0;
 	float progress_queen_hearts = 0;
-
 	std::string state = "game on"; // "game on", "spawn doors", "limbo"
-
 };
 
 enum class ENEMIES {
