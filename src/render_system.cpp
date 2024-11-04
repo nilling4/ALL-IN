@@ -3,6 +3,7 @@
 #include <SDL.h>
 #include <iostream>
 
+#include "components.hpp"
 #include "tiny_ecs_registry.hpp"
 
 void RenderSystem::drawTexturedMesh(Entity entity,
@@ -335,11 +336,11 @@ void RenderSystem::draw(std::string what)
 		}
 
 
-		// draw the hud at the end so it stays on top and use a separate projection matrix to lock it to screen
-		mat3 hud_projection = createHUDProjectionMatrix();
-		for (Entity hud_entity : registry.hud.entities) {
-			drawTexturedMesh(hud_entity, hud_projection);
-		}
+		//// draw the hud at the end so it stays on top and use a separate projection matrix to lock it to screen
+		//mat3 hud_projection = createHUDProjectionMatrix();
+		//for (Entity hud_entity : registry.hud.entities) {
+		//	drawTexturedMesh(hud_entity, hud_projection);
+		//}
 
 	} else if (what == "the home screen duh" || what == "the tuts") {
 		mat3 projection_2D = createStaticProjectionMatrix();
@@ -350,11 +351,11 @@ void RenderSystem::draw(std::string what)
 			} else {
 				auto& screen = registry.homeAndTuts.get(entity);
 				if (what == "the home screen duh") {
-					if (screen.type != "home") {
+					if (screen.type != HomeAndTutType::HOME) {
 						continue;
 					}
 				} else if (what == "the tuts") {
-					if (screen.type != "tut") {
+					if (screen.type != HomeAndTutType::TUT) {
 						continue;
 					}
 				}

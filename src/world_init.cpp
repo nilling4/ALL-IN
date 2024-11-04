@@ -248,7 +248,7 @@ Entity createRouletteBall(RenderSystem* renderer, vec2 position, vec2 velocity)
 	auto& kills = registry.killsEnemys.emplace(entity);
 	kills.damage = 150.f;
 	kills.bounce_left = 2;
-	kills.type = "ball";
+	kills.type = PROJECTILE::ROULETTE_BALL;
 	registry.renderRequests.insert(
 		entity,
 		{ TEXTURE_ASSET_ID::TEXTURE_COUNT, 
@@ -276,7 +276,7 @@ Entity createCardProjectile(RenderSystem* renderer, vec2 position, vec2 velocity
 	auto& kills = registry.killsEnemys.emplace(entity);
 	kills.damage = 100.f;
 	kills.pierce_left = 2;
-	kills.type = "card";
+	kills.type = PROJECTILE::CARD_PROJECTILE;
 	registry.renderRequests.insert(
 		entity,
 		{
@@ -304,7 +304,7 @@ Entity createDartProjectile(RenderSystem* renderer, vec2 position, vec2 velocity
 
 	auto& kills = registry.killsEnemys.emplace(entity);
 	kills.damage = 300.f;
-	kills.type = "dart";
+	kills.type = PROJECTILE::DART_PROJECTILE;
 	registry.renderRequests.insert(
 		entity,
 		{
@@ -463,7 +463,7 @@ Entity createHomeScreen(RenderSystem* renderer, vec2 position)
 
 	motion.scale = vec2({ window_width_px, window_height_px });
 	auto& screen = registry.homeAndTuts.emplace(entity);
-	screen.type = "home";
+	screen.type = HomeAndTutType::HOME;
 
 	registry.renderRequests.insert(
 		entity,
@@ -490,7 +490,7 @@ Entity createTutScreen(RenderSystem* renderer, vec2 position)
 
 	motion.scale = vec2({ window_width_px, window_height_px });
 	auto& screen = registry.homeAndTuts.emplace(entity);
-	screen.type = "tut";
+	screen.type = HomeAndTutType::TUT;
 
 
 	registry.renderRequests.insert(

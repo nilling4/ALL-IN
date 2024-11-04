@@ -87,6 +87,10 @@ GLFWwindow* WorldSystem::create_window() {
 	glfwWindowHint(GLFW_RESIZABLE, 0);
 
 	// Create the main window (for rendering, keyboard, and mouse input)
+	GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+	const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+
+	//window = glfwCreateWindow(mode->width, mode->height, "Salmon Game Assignment", monitor, nullptr);
 	window = glfwCreateWindow(window_width_px, window_height_px, "Salmon Game Assignment", nullptr, nullptr);
 	if (window == nullptr) {
 		fprintf(stderr, "Failed to glfwCreateWindow");
@@ -642,15 +646,15 @@ void WorldSystem::handle_collisions() {
 				if (kills.last_touched != &deadly) {
 					deadly.health -= (kills.damage - deadly.armour);
 					kills.last_touched = &deadly;
-					if (kills.type == "dart") {
+					if (kills.type == PROJECTILE::DART_PROJECTILE) {
 						registry.remove_all_components_of(entity);
-					} else if (kills.type == "card") {
+					} else if (kills.type == PROJECTILE::CARD_PROJECTILE) {
 						if (kills.pierce_left <= 0) {
 							registry.remove_all_components_of(entity);
 						} else {
 							kills.pierce_left -= 1;
 						}
-					} else if (kills.type == "ball") {
+					} else if (kills.type == PROJECTILE::ROULETTE_BALL) {
 						// currently handled in physics_system as workaround for issue
 						// where if it hits two wall blocks at once, cant control which collision to handle first
 						// and it may not bounce as it forces it to push up into second block instead of out.
@@ -712,7 +716,7 @@ void WorldSystem::handle_collisions() {
 				Solid& solid = registry.solids.get(entity_other);
 				if (kills.last_touched != &solid) {
 					kills.last_touched = &solid;
-					if (kills.type == "ball") {
+					if (kills.type == PROJECTILE::ROULETTE_BALL) {
 						if (kills.bounce_left <= 0) {
 							registry.remove_all_components_of(entity);
 						} else {

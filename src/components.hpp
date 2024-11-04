@@ -79,12 +79,24 @@ struct Healer
 
 };
 
+enum class HomeAndTutType {
+	HOME = 0,
+	TUT = HOME + 1
+};
+
 struct HomeAndTut {
-	std::string type = "";
+	HomeAndTutType type;
 };
 
 struct Boid {
 	
+};
+
+enum class PROJECTILE {
+	ROULETTE_BALL = 0,
+	CARD_PROJECTILE = ROULETTE_BALL + 1,
+	DART_PROJECTILE = CARD_PROJECTILE + 1,
+	PROJECTILE_COUNT = DART_PROJECTILE + 1
 };
 
 // anything that is deadly to the enemies (like projecties player shoots)
@@ -92,7 +104,7 @@ struct KillsEnemy {
 	float damage = 0;
 	unsigned int pierce_left = 0;
 	unsigned int bounce_left = 0;
-	std::string type = "";
+	PROJECTILE type;
 	void* last_touched = nullptr;
 };
 

@@ -141,7 +141,7 @@ void PhysicsSystem::step(float elapsed_ms)
 			motion.angle += 2.0f * step_seconds;
 		}
 		motion.position += motion.velocity * step_seconds;
-		if (kills.type == "ball") {
+		if (kills.type == PROJECTILE::ROULETTE_BALL) {
 			if (motion.position.y - motion.scale.y/2 < topWallY) {
 				if (kills.bounce_left <= 0) {
 					registry.remove_all_components_of(entity);
@@ -179,7 +179,7 @@ void PhysicsSystem::step(float elapsed_ms)
 				}
 			}
 		}
-		if (kills.type == "ball") {
+		if (kills.type == PROJECTILE::ROULETTE_BALL) {
 			if (motion.position.y - motion.scale.y/2 < topWallY) {
 				if (kills.bounce_left <= 0) {
 					registry.remove_all_components_of(entity);
