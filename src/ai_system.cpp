@@ -3,6 +3,7 @@
 #include <iostream>
 
 #include <cmath>
+#include "world_init.hpp"
 
 
 
@@ -15,6 +16,11 @@ const float MAX_SPEED = 200.0f;
 const float MAX_PUSH = 50.0f;
 const float RANDOM_FORCE = 10.0f;
 const float UPDATE_VELO_PROPORTION = 0.1f;
+static float next_hearts_spawn = 5000.0f;
+
+void AISystem::init(RenderSystem* renderer_arg) {
+    this->renderer = renderer_arg;
+}   
 
 vec2 cap_velocity(vec2 v, float maxLength) {
     float len = length(v);
@@ -121,9 +127,57 @@ void AISystem::step(float elapsed_ms)
 	for (Entity entity : registry.deadlys.entities) {
 		Motion& motion = registry.motions.get(entity);
 		Deadly& deadly = registry.deadlys.get(entity);
-		if (deadly.type != "king_clubs") {
-			continue;
-		}
+        if (deadly.enemy_type == ENEMIES::QUEEN_HEARTS) {
+            const float healing_radius = 1000.0f;
+            const float min_follow_distance = 200.0f;
+
+            Entity* closest_enemy = nullptr;
+            float min_dist = healing_radius;
+
+            // Decision tree for Queen of Hearts
+            for (Entity enemy : registry.melees.entities) {
+                Deadly& heal_deadly = registry.deadlys.get(enemy);
+                Motion& enemy_motion = registry.motions.get(enemy);
+
+                if (heal_deadly.enemy_type == ENEMIES::KING_CLUBS && heal_deadly.health < 25.f) {
+                    float dist = glm::distance(motion.position, enemy_motion.position);
+
+                    if (dist < min_dist) {
+                        min_dist = dist;
+                        closest_enemy = &enemy;
+                    }
+                }
+            }
+
+            if (closest_enemy) {
+                Motion& target_motion = registry.motions.get(*closest_enemy);
+                float dist_to_target = glm::distance(motion.position, target_motion.position);
+
+                if (dist_to_target > min_follow_distance) {
+                    glm::vec2 direction = glm::normalize(target_motion.position - motion.position);
+                    motion.velocity = direction * 50.f;
+                }
+                else {
+                    motion.velocity = { 0, 0 };
+                }
+                if (next_hearts_spawn <= 0) {
+                    next_hearts_spawn = 5000.0f;
+                    float angle = atan2(target_motion.position.x - motion.position.x, target_motion.position.y - motion.position.y);
+                    float heart_velocity_x = sin(angle) * 100;
+                    float heart_velocity_y = cos(angle) * 100;
+                    createHeartProjectile(renderer, motion.position, glm::vec2({ heart_velocity_x, heart_velocity_y }), closest_enemy);
+                }
+                else {
+                    next_hearts_spawn -= elapsed_ms;
+                }
+            }
+            else {
+                motion.velocity = { 0, 0 };
+            }
+            continue;
+        } else if (deadly.enemy_type != ENEMIES::KING_CLUBS) {
+            continue;
+        }
 
         vec2 separation_force = {0.f, 0.f};
         int separation_count = 0;
@@ -131,7 +185,7 @@ void AISystem::step(float elapsed_ms)
         for (Entity other : registry.deadlys.entities) {
 		    Deadly& deadly_other = registry.deadlys.get(entity);
 
-            if (deadly_other.type != "king_clubs") {
+            if (deadly_other.enemy_type != ENEMIES::KING_CLUBS) {
                 continue;
             }
             if (other == entity) {
@@ -166,4 +220,17 @@ void AISystem::step(float elapsed_ms)
 			motion.scale.y *= -1;
 		}
 	}
+
+    for (Entity heart_entity : registry.healsEnemies.entities) {
+        Motion& heart_motion = registry.motions.get(heart_entity);
+        HealsEnemy& heart = registry.healsEnemies.get(heart_entity);
+        if (heart.target_entity != nullptr && registry.deadlys.has(*heart.target_entity)) {
+            Deadly& deadly = registry.deadlys.get(*heart.target_entity);
+            Motion& deadly_motion = registry.motions.get(*heart.target_entity);
+            float angle = atan2(deadly_motion.position.x - heart_motion.position.x, deadly_motion.position.y - heart_motion.position.y);
+            float heart_velocity_x = sin(angle) * 100;
+            float heart_velocity_y = cos(angle) * 100;
+            heart_motion.velocity = { heart_velocity_x, heart_velocity_y };
+        }
+    }
 }

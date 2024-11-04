@@ -40,6 +40,7 @@ int main()
 	// initialize the main systems
 	renderer.init(window);
 	world.init(&renderer);
+	ai.init(&renderer);
 
 	std::string game_state = "home";
 

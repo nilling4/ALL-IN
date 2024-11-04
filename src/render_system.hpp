@@ -52,7 +52,9 @@ class RenderSystem {
 			textures_path("home_screen.png"),
 			textures_path("tutorial_screen.png"),
 			textures_path("diamond.png"),
-      textures_path("door.png")
+			textures_path("door.png"),
+			textures_path("queenOfHearts.png"),
+			textures_path("heart.png")
 	};
 
 	std::array<GLuint, effect_count> effects;

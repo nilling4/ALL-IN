@@ -1,6 +1,7 @@
 #include "world_init.hpp"
 #include "tiny_ecs_registry.hpp"
 #include <iostream>
+#include "components.hpp"
 
 Entity createProtagonist(RenderSystem* renderer, vec2 pos, Player* copy_player) {
 	auto entity = Entity();
@@ -85,6 +86,34 @@ Entity createDoor(RenderSystem* renderer, vec2 pos) {
 
 }
 
+Entity createQueenHearts(RenderSystem* renderer, vec2 position)
+{
+	auto entity = Entity();
+
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+	Motion& motion = registry.motions.emplace(entity);
+
+	motion.angle = 0.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2({ FISH_BB_WIDTH, FISH_BB_HEIGHT });
+	registry.healers.emplace(entity);
+	auto& deadly = registry.deadlys.emplace(entity);
+	deadly.health = 25.f;
+	deadly.enemy_type = ENEMIES::QUEEN_HEARTS;
+	registry.renderRequests.insert(
+		entity,
+		{
+			TEXTURE_ASSET_ID::QUEEN_HEARTS,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE
+		});
+
+	return entity;
+}
+
 Entity createKingClubs(RenderSystem* renderer, vec2 position)
 {
 	auto entity = Entity();
@@ -99,10 +128,11 @@ Entity createKingClubs(RenderSystem* renderer, vec2 position)
 
 	motion.scale = vec2({ FISH_BB_WIDTH, FISH_BB_HEIGHT });
 
+	registry.melees.emplace(entity);
 	auto& deadly = registry.deadlys.emplace(entity);
 	deadly.health = 50.f;
 	deadly.armour = 1.f;
-	deadly.type = "king_clubs";
+	deadly.enemy_type = ENEMIES::KING_CLUBS;
 	registry.renderRequests.insert(
 		entity,
 		{
@@ -134,7 +164,7 @@ Entity createBirdClubs(RenderSystem* renderer, vec2 position)
 	deadly.health = 6.f;
 	deadly.armour = 0.f;
 
-	deadly.type = "bird_clubs";
+	deadly.enemy_type = ENEMIES::BIRD_CLUBS;
 	registry.renderRequests.insert(
 		entity,
 		{
@@ -142,6 +172,34 @@ Entity createBirdClubs(RenderSystem* renderer, vec2 position)
 			EFFECT_ASSET_ID::TEXTURED,
 			GEOMETRY_BUFFER_ID::SPRITE
 		});
+
+	return entity;
+}
+
+Entity createHeartProjectile(RenderSystem* renderer, vec2 position, vec2 velocity, Entity* target_entity) {
+	auto entity = Entity();
+
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 0.f;
+	motion.velocity = velocity;
+	motion.position = position;
+	motion.scale = vec2({ CARD_PROJECTILE_BB_WIDTH, CARD_PROJECTILE_BB_HEIGHT });
+
+	auto& heals = registry.healsEnemies.emplace(entity);
+	heals.health = 5.f;
+	heals.target_entity = target_entity;
+
+	registry.renderRequests.insert(
+		entity,
+		{
+			TEXTURE_ASSET_ID::HEART,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE
+		}
+	);
 
 	return entity;
 }

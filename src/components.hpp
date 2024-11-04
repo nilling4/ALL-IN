@@ -51,8 +51,19 @@ struct Wave {
 	int num_bird_clubs = 0;
 	float progress_bird_clubs = 0;
 
+	int max_queen_hearts = 2;
+	int num_queen_hearts = 0;
+	float progress_queen_hearts = 0;
+
 	std::string state = "game on"; // "game on", "spawn doors", "limbo"
 
+};
+
+enum class ENEMIES {
+	KING_CLUBS = 0,
+	BIRD_CLUBS = KING_CLUBS + 1,
+	QUEEN_HEARTS = BIRD_CLUBS + 1,
+	ENEMY_COUNT = QUEEN_HEARTS + 1
 };
 
 // anything that is deadly to the player
@@ -60,8 +71,25 @@ struct Deadly
 {
 	float health = 0;
 	float armour = 0;
-	std::string type = "";
+	ENEMIES enemy_type;
 	// float melee damage
+};
+
+struct Melee
+{
+
+};
+
+struct HealsEnemy
+{
+	float health = 0;
+	void* last_touched = nullptr;
+	Entity* target_entity;
+};
+
+struct Healer
+{
+
 };
 
 struct HomeAndTut {
@@ -218,7 +246,9 @@ enum class TEXTURE_ASSET_ID {
 	TUT_SCREEN = HOME_SCREEN + 1, 
   	DIAMOND_PROJECTILE = TUT_SCREEN + 1,
   	DOOR = DIAMOND_PROJECTILE + 1,
-	TEXTURE_COUNT = DOOR + 1
+	QUEEN_HEARTS = DOOR + 1,
+	HEART = QUEEN_HEARTS + 1,
+	TEXTURE_COUNT = HEART + 1
 };
 const int texture_count = (int)TEXTURE_ASSET_ID::TEXTURE_COUNT;
 

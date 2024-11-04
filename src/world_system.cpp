@@ -11,6 +11,7 @@
 #include <fstream>
 #include "nlohmann/json.hpp"
 #include <cmath> 
+#include "components.hpp"
 
 using json = nlohmann::json;
 
@@ -199,6 +200,30 @@ for (int i = (int)motions_registry.components.size() - 1; i >= 0; --i) {
 			}
 		}
 
+		if (wave.num_queen_hearts > 0) {
+			wave.progress_queen_hearts += elapsed_time;
+			if (wave.progress_queen_hearts > wave.delay_for_all_entities) {
+				wave.progress_queen_hearts = 0;
+				wave.num_queen_hearts -= 1;
+
+				float roomLeft = window_width_px / 2 - wallWidth / 2 + WALL_BLOCK_BB_WIDTH;
+				float roomRight = window_width_px / 2 + wallWidth / 2 - WALL_BLOCK_BB_WIDTH;
+				float roomTop = window_height_px / 2 - wallHeight / 2 + WALL_BLOCK_BB_HEIGHT;
+				float roomBottom = window_height_px / 2 + wallHeight / 2 - WALL_BLOCK_BB_HEIGHT;
+
+				vec2 player_position = p_motion.position;
+				float min_distance_from_player = 300.0f;
+
+				float spawnX, spawnY;
+				do {
+					spawnX = uniform_dist(rng) * (roomRight - roomLeft) + roomLeft;
+					spawnY = uniform_dist(rng) * (roomBottom - roomTop) + roomTop;
+				} while (sqrt(pow(spawnX - player_position.x, 2) + pow(spawnY - player_position.y, 2)) < min_distance_from_player);
+
+				createQueenHearts(renderer, vec2(spawnX, spawnY));
+			}
+		}
+
 		if (wave.num_bird_clubs > 0) {
 			wave.progress_bird_clubs += elapsed_time;
 			if (wave.progress_bird_clubs > wave.delay_for_all_entities) {
@@ -240,13 +265,16 @@ for (int i = (int)motions_registry.components.size() - 1; i >= 0; --i) {
 		wave.wave_num += 1;
 		wave.max_king_clubs = (int) (wave.max_king_clubs * wave.next_wave_multiple);
 		wave.max_bird_clubs = (int) (wave.max_bird_clubs * wave.next_wave_multiple);
+		wave.max_queen_hearts = (int)(wave.max_queen_hearts * wave.next_wave_multiple);
 		wave.num_king_clubs = wave.max_king_clubs;
 		wave.num_bird_clubs = wave.max_bird_clubs;
+		wave.num_queen_hearts = wave.max_queen_hearts;
 
 		if (wave.wave_num == 1) {
 			wave.num_bird_clubs = 0;
 		} else if (wave.wave_num == 2) {
 			wave.num_king_clubs = 0;
+			wave.num_queen_hearts = 0;
 		} 
 		createDoor(renderer, {window_width_px / 2, window_height_px/2});
 
@@ -343,15 +371,11 @@ if (angle > -M_PI / 4 && angle <= M_PI / 4) {
 
 		createDiamondProjectile(renderer, vec2(p_motion.position.x, p_motion.position.y), vec2(velocity_x, velocity_y), angle);
 	}
-// 	next_lerp_spawn -= elapsed_ms_since_last_update * current_speed;
-// 	if (next_lerp_spawn < 0.f) {
-// 		next_lerp_spawn = LERP_SPAWN_DELAY;
+	// 	next_lerp_spawn -= elapsed_ms_since_last_update * current_speed;
+	// 	if (next_lerp_spawn < 0.f) {
+	// 		next_lerp_spawn = LERP_SPAWN_DELAY;
 	// 	createLerpProjectile(renderer, vec2(p_motion.position.x, p_motion.position.y),vec2(p_motion.position.x, p_motion.position.y), vec2(p_motion.position.x+400*cos(angle), p_motion.position.y+400*sin(angle)),0,0);
-
 	// }
-
-
-
 
 	assert(registry.screenStates.components.size() <= 1);
     ScreenState &screen = registry.screenStates.components[0];
@@ -508,7 +532,7 @@ void WorldSystem::handle_collisions() {
 		Entity entity = collisionsRegistry.entities[i];
 		Entity entity_other = collisionsRegistry.components[i].other;
 
-		// for now, we are only interested in collisions that involve the player
+		// player collisions
 		if (registry.players.has(entity)) {
 			Player& your = registry.players.get(entity);
 			Motion& your_motion = registry.motions.get(entity);
@@ -634,7 +658,7 @@ void WorldSystem::handle_collisions() {
 							kills.bounce_left -= 1;
 							Motion& kills_motion = registry.motions.get(entity);
 							Motion& deadly_motion = registry.motions.get(entity_other);
-							if (deadly.type == "king_clubs") {
+							if (deadly.enemy_type == ENEMIES::KING_CLUBS) {
 								unsigned int dist_from_top = abs((deadly_motion.position.y - deadly_motion.scale.y/2) - kills_motion.position.y);
 								unsigned int dist_from_bottom = abs((deadly_motion.position.y + deadly_motion.scale.y/2) - kills_motion.position.y);
 								unsigned int dist_from_right = abs((deadly_motion.position.x + deadly_motion.scale.x/2) - kills_motion.position.x);
@@ -732,6 +756,25 @@ void WorldSystem::handle_collisions() {
 				}
 			}
 		}
+
+		// collision between heart and melee
+		if (registry.healsEnemies.has(entity)) {
+			if (registry.deadlys.has(entity_other)) {
+				Deadly& deadly = registry.deadlys.get(entity_other);
+				if (deadly.enemy_type == ENEMIES::KING_CLUBS) {
+					HealsEnemy& heals = registry.healsEnemies.get(entity);
+					if (heals.last_touched != &deadly) {
+						deadly.health += heals.health;
+						if (deadly.health > 50.f) {
+							deadly.health = 50.f;
+						}
+						heals.last_touched = &deadly;
+						registry.remove_all_components_of(entity);
+					}
+				}
+			}
+		}
+
 		if (registry.killsEnemyLerpyDerps.has(entity)) {
 			if (registry.deadlys.has(entity_other)) {
 				registry.remove_all_components_of(entity);
@@ -790,10 +833,12 @@ void WorldSystem::load() {
 	if (j.contains("enemies")) {
 		for (auto& item : j["enemies"].items()) {
 			auto& value = item.value();
-			if (value["type"] == "king_clubs") {
+			if (value["enemy_type"] == ENEMIES::KING_CLUBS) {
 				createKingClubs(renderer, vec2(value["position"][0], value["position"][1]));
-			} else if (value["type"] == "bird_clubs") {
+			} else if (value["enemy_type"] == ENEMIES::BIRD_CLUBS) {
 				createBirdClubs(renderer, vec2(value["position"][0], value["position"][1]));
+			} else if (value["enemy_type"] == ENEMIES::QUEEN_HEARTS) {
+				createQueenHearts(renderer, vec2(value["position"][0], value["position"][1]));
 			}
 			
 		}
@@ -860,7 +905,7 @@ void WorldSystem::save() {
         if (registry.motions.has(entity)) {
             j["enemies"][std::to_string(entity)] = {
                 {"position", {registry.motions.get(entity).position.x, registry.motions.get(entity).position.y}},
-				{"type", registry.deadlys.get(entity).type}
+				{"enemy_type", registry.deadlys.get(entity).enemy_type}
             };
         }
     }

@@ -142,9 +142,6 @@ void PhysicsSystem::step(float elapsed_ms)
 		}
 		motion.position += motion.velocity * step_seconds;
 		if (kills.type == "ball") {
-			std::cout<< "ball position: " << motion.position.x << ", " << motion.position.y << std::endl;
-			std::cout << "rightwall: " << rightWallX << std::endl;
-			std::cout << "leftWall: " << leftWallX << std::endl;
 			if (motion.position.y - motion.scale.y/2 < topWallY) {
 				if (kills.bounce_left <= 0) {
 					registry.remove_all_components_of(entity);
@@ -194,11 +191,11 @@ void PhysicsSystem::step(float elapsed_ms)
 		Motion& motion = motion_registry.get(entity);
 		motion.position += motion.velocity * step_seconds;
 	}
-	
-	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	// TODO A2: HANDLE EGG UPDATES HERE
-	// DON'T WORRY ABOUT THIS UNTIL ASSIGNMENT 2
-	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+	for (Entity entity : registry.healsEnemies.entities) {
+		Motion& motion = motion_registry.get(entity);
+		motion.position += motion.velocity * step_seconds;
+	}
 
 	// Check for collisions between all moving entities
     ComponentContainer<Motion> &motion_container = registry.motions;
@@ -233,9 +230,4 @@ void PhysicsSystem::step(float elapsed_ms)
 			}
 		}
 	}
-
-	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	// TODO A2: HANDLE EGG collisions HERE
-	// DON'T WORRY ABOUT THIS UNTIL ASSIGNMENT 2
-	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 }

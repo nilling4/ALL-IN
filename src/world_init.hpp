@@ -30,20 +30,15 @@ const float BIRD_CLUB_BB_HEIGHT = 0.6f * 40.f;
 
 const float WALL_BLOCK_BB_WIDTH = 24.0f;
 const float WALL_BLOCK_BB_HEIGHT = 24.0f;
-// the player
-Entity createSalmon(RenderSystem* renderer, vec2 pos);
 
 // the new player
 Entity createProtagonist(RenderSystem* renderer, vec2 pos, Player* copy_player);
 
-// the prey
-Entity createFish(RenderSystem* renderer, vec2 position);
-
-// the enemy
-Entity createEel(RenderSystem* renderer, vec2 position);
-
+Entity createQueenHearts(RenderSystem* renderer, vec2 position);
 Entity createKingClubs(RenderSystem* renderer, vec2 position);
 Entity createBirdClubs(RenderSystem* renderer, vec2 position);
+
+Entity createHeartProjectile(RenderSystem* renderer, vec2 position, vec2 velocity, Entity* target_entity);
 
 Entity createRouletteBall(RenderSystem* renderer, vec2 position, vec2 velocity);
 

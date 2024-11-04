@@ -20,8 +20,11 @@ public:
 	ComponentContainer<RenderRequest> renderRequests;
 	ComponentContainer<ScreenState> screenStates;
 	ComponentContainer<Eatable> eatables;
+	ComponentContainer<Melee> melees;
 	ComponentContainer<KillsEnemy> killsEnemys;
-	ComponentContainer<KillsEnemyLerpyDerp> killsEnemyLerpyDerps; 
+	ComponentContainer<HealsEnemy> healsEnemies;
+	ComponentContainer<Healer> healers;
+	ComponentContainer<KillsEnemyLerpyDerp> killsEnemyLerpyDerps;
 	ComponentContainer<Deadly> deadlys;
 	ComponentContainer<Boid> boids;
 	ComponentContainer<DebugComponent> debugComponents;
@@ -46,7 +49,10 @@ public:
 		registry_list.push_back(&renderRequests);
 		registry_list.push_back(&screenStates);
 		registry_list.push_back(&eatables);
+		registry_list.push_back(&melees);
 		registry_list.push_back(&killsEnemys);
+		registry_list.push_back(&healsEnemies);
+		registry_list.push_back(&healers);
 		registry_list.push_back(&killsEnemyLerpyDerps);
 		registry_list.push_back(&deadlys);
 		registry_list.push_back(&boids);
