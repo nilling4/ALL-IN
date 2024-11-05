@@ -37,7 +37,7 @@ struct Wave {
 	int wave_num = 1;
 	float delay_for_all_entities = 1000;
 
-	int num_king_clubs = 6;
+	int num_king_clubs = 1;
 	float progress_king_clubs = 0;
 	int num_bird_clubs = 0;
 	float progress_bird_clubs = 0;
@@ -96,7 +96,8 @@ enum class PROJECTILE {
 	ROULETTE_BALL = 0,
 	CARD_PROJECTILE = ROULETTE_BALL + 1,
 	DART_PROJECTILE = CARD_PROJECTILE + 1,
-	PROJECTILE_COUNT = DART_PROJECTILE + 1
+	DIAMOND_STAR_PROJECTILE = DART_PROJECTILE + 1,
+	PROJECTILE_COUNT = DIAMOND_STAR_PROJECTILE + 1
 };
 
 // anything that is deadly to the enemies (like projecties player shoots)
@@ -124,6 +125,7 @@ struct Eatable
 struct Motion {
 	vec2 position = { 0, 0 };
 	float angle = 0;
+	vec2 previous_position;
 	vec2 velocity = { 0, 0 };
 	vec2 scale = { 10, 10 };
 };

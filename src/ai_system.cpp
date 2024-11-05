@@ -4,9 +4,10 @@
 
 #include <cmath>
 #include "world_init.hpp"
-
-
-
+#include <iostream>
+#include <queue>
+#include <utility>
+using namespace std;
 const float SEPARATION_DIST = 50.0f;  
 const float ALIGNMENT_DIST = 400.0f;  
 const float COHESION_DIST = 500.0f;   
@@ -21,6 +22,91 @@ static float next_hearts_spawn = 5000.0f;
 void AISystem::init(RenderSystem* renderer_arg) {
     this->renderer = renderer_arg;
 }   
+
+const int dRow[] = {-1, 1, 0, 0, -1, -1, 1, 1}; // Up, Down, Left, Right, Up-Left, Up-Right, Down-Left, Down-Right
+const int dCol[] = {0, 0, -1, 1, -1, 1, -1, 1}; // Up, Down, Left, Right, Up-Left, Up-Right, Down-Left, Down-Right
+
+
+bool isValid(bool vis[40][80], int row, int col) {
+    // If cell lies out of bounds
+    if (row < 0 || col < 0 || row >= 40 || col >= 80)
+        return false;
+
+    // If cell is already visited or is a wall or goal
+    if (vis[row][col] || grid[row][col] == 1||grid[row][col] == 3)
+        return false;
+
+    return true;
+}
+ 
+void BFS(int row, int col, Motion* motion, Motion* player_motion) {
+    // Initialize visited array
+    bool vis[40][80] = {{false}};
+
+    // Stores indices of the matrix cells
+    queue<pair<int, int>> q;
+    vector<vector<pair<int, int>>> parent(40, vector<pair<int, int>>(80, {-1, -1}));
+    vector<pair<int, int>> path;
+
+    // Mark the starting cell as visited and push it into the queue
+    q.push({row, col});
+    vis[row][col] = true;
+
+    // Iterate while the queue is not empty
+    while (!q.empty()) {
+        pair<int, int> cell = q.front();
+        int y = cell.first;
+        int x = cell.second;
+        q.pop();
+
+        // Check if we've reached the goal
+        if (y == static_cast<int>(player_motion->position.y / 24) && x == static_cast<int>(player_motion->position.x / 24)) {
+            // Reconstruct the path to get the next position
+            pair<int, int> next_position = {y, x};
+            while (parent[next_position.first][next_position.second] != make_pair(row, col)) {
+                path.push_back(next_position);
+                next_position = parent[next_position.first][next_position.second];
+                // Safety check to prevent infinite loop
+                if (next_position.first == -1 && next_position.second == -1) {
+                    break;
+                }
+            }
+            path.push_back({row, col});
+            reverse(path.begin(), path.end());
+            // Calculate the direction based on the next step in the path
+            if (path.size() > 1) {
+                int next_y = path[1].first; // The second element is the next step
+                int next_x = path[1].second;
+                int dx = next_x - col;
+                int dy = next_y - row;
+
+                // Set the velocity based on the direction
+                motion->velocity.x = (dx > 0) ? 50 : (dx < 0) ? -50 : 0;
+                motion->velocity.y = (dy > 0) ? 50 : (dy < 0) ? -50 : 0;
+            }
+
+            return;
+        }
+
+        // Explore all 8 adjacent cells
+        for (int i = 0; i < 8; i++) {
+            int adjx = x + dCol[i];
+            int adjy = y + dRow[i];
+
+            // Ensure adjx and adjy are within bounds before accessing arrays
+            if (isValid(vis, adjy, adjx)) {
+                q.push({adjy, adjx});
+                vis[adjy][adjx] = true;
+                parent[adjy][adjx] = {y, x};
+            }
+        }
+    }
+
+    // If no path is found
+    // cout << "No path found" << endl;
+    motion->velocity = {0, 0}; // Return an invalid velocity if the target is not found
+}
+
 
 vec2 cap_velocity(vec2 v, float maxLength) {
     float len = length(v);
@@ -210,12 +296,13 @@ void AISystem::step(float elapsed_ms)
                 separation_force *= 69420.f;
                 separation_force = cap_velocity(separation_force, 0.5 * MAX_PUSH * (1 + 0.05 * separation_count));
             }
-
-            float angle = atan2(player_motion->position.x - motion.position.x, player_motion->position.y - motion.position.y);
-            vec2 velocity = { sin(angle) * 50, cos(angle) * 50 };
-            motion.velocity = cap_velocity(velocity + separation_force, 50);
-
-
+ 
+                int startRow = static_cast<int>(motion.position.y)/24;
+                int startCol = static_cast<int>(motion.position.x)/24;
+                
+                BFS(startRow, startCol, &motion,player_motion);
+            
+            
             if ((motion.position.x > player_motion->position.x && motion.scale.y < 0) ||
                 (motion.position.x < player_motion->position.x && motion.scale.y > 0)) {
                 motion.scale.y *= -1;

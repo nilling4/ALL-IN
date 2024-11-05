@@ -52,6 +52,26 @@ Entity createWallBlock(RenderSystem* renderer, vec2 pos) {
 	motion.velocity = { 0.f, 0.f };
 	motion.scale = vec2({ WALL_BLOCK_BB_WIDTH, WALL_BLOCK_BB_HEIGHT });
 
+	// Calculate grid indices
+	int grid_x = static_cast<int>(pos.x / 24);
+	int grid_y = static_cast<int>(pos.y / 24);
+
+	// Set the central grid block to 1
+	grid[grid_y][grid_x] = 1;
+	for (int dy = -2; dy <= 2; dy++) {
+		for (int dx = -2; dx <= 2; dx++) {
+			// Skip the central block
+			if (dy == 0 && dx == 0) continue;
+			
+			int new_y = grid_y + dy;
+			int new_x = grid_x + dx;
+			
+			// Ensure indices are within grid boundaries
+			if (new_y >= 0 && new_y < GRID_HEIGHT && new_x >= 0 && new_x < GRID_WIDTH && grid[new_y][new_x] == 0) {
+				grid[new_y][new_x] = 3;
+			}
+		}
+	}
 	registry.solids.emplace(entity);
 	registry.renderRequests.insert(
 		entity,
@@ -332,6 +352,7 @@ Entity createDiamondProjectile(RenderSystem* renderer, vec2 position, vec2 veloc
 
 	auto& kills = registry.killsEnemys.emplace(entity);
 	kills.damage = 200.f;
+	kills.type = PROJECTILE::DIAMOND_STAR_PROJECTILE;
 	registry.renderRequests.insert(
 		entity,
 		{

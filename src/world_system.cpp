@@ -24,8 +24,8 @@ const size_t DIAMOND_SPAWN_DELAY = 1000*3;
 
 // Room configuration
 const int num_blocks = 40;
-const int wallWidth = num_blocks * WALL_BLOCK_BB_WIDTH * 2;
-const int wallHeight = num_blocks * WALL_BLOCK_BB_HEIGHT;
+// const int wallWidth = num_blocks * WALL_BLOCK_BB_WIDTH * 2;
+// const int wallHeight = num_blocks * WALL_BLOCK_BB_HEIGHT;
 
 // create the casino
 WorldSystem::WorldSystem()
@@ -87,8 +87,8 @@ GLFWwindow* WorldSystem::create_window() {
 	glfwWindowHint(GLFW_RESIZABLE, 0);
 
 	// Create the main window (for rendering, keyboard, and mouse input)
-	GLFWmonitor* monitor = glfwGetPrimaryMonitor();
-	const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+	// GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+	// const GLFWvidmode* mode = glfwGetVideoMode(monitor);
 
 	//window = glfwCreateWindow(mode->width, mode->height, "Salmon Game Assignment", monitor, nullptr);
 	window = glfwCreateWindow(window_width_px, window_height_px, "Salmon Game Assignment", nullptr, nullptr);
@@ -167,24 +167,23 @@ bool WorldSystem::step(float elapsed_ms_since_last_update, std::string* game_sta
 	// Remove entities that leave the screen on the left side
 	// Iterate backwards to be able to remove without unterfering with the next object to visit
 	// (the containers exchange the last element with the current)
-	float left_bound = window_width_px / 2 - wallWidth / 2;
-	float right_bound = window_width_px / 2 + wallWidth / 2;
-	float top_bound = window_height_px / 2 - wallHeight / 2;
-	float bottom_bound = window_height_px / 2 + wallHeight / 2;
+	float left_bound = 48;
+
+	float right_bound = 1872;
+
+	float top_bound = 48;
+
+	float bottom_bound = 912;
 
 	for (int i = (int)motions_registry.components.size() - 1; i >= 0; --i) {
 		Motion& motion = motions_registry.components[i];
-		if (motion.position.x < left_bound || motion.position.x > right_bound ||
-			motion.position.y < top_bound || motion.position.y > bottom_bound) {
+		if (motion.position.x < left_bound-36 || motion.position.x > right_bound +36||
+			motion.position.y < top_bound-36 || motion.position.y > bottom_bound+36) {
 			if (!registry.players.has(motions_registry.entities[i])) // don't remove the player
 				registry.remove_all_components_of(motions_registry.entities[i]);
 		}
 	}
 
-	float roomLeft = window_width_px / 2 - wallWidth / 2 + WALL_BLOCK_BB_WIDTH;   
-	float roomRight = window_width_px / 2 + wallWidth / 2 - WALL_BLOCK_BB_WIDTH; 
-	float roomTop = window_height_px / 2 - wallHeight / 2 + WALL_BLOCK_BB_HEIGHT; 
-	float roomBottom = window_height_px / 2 + wallHeight / 2 - WALL_BLOCK_BB_HEIGHT;
 
 	if (wave.state == "game on") {
 		if (wave.num_king_clubs > 0) {
@@ -199,11 +198,32 @@ bool WorldSystem::step(float elapsed_ms_since_last_update, std::string* game_sta
 				float min_distance_from_player = 300.0f;
 
 				float spawnX, spawnY;
-				do {
-					spawnX = uniform_dist(rng) * (roomRight - roomLeft) + roomLeft;
-					spawnY = uniform_dist(rng) * (roomBottom - roomTop) + roomTop;
-				} while (sqrt(pow(spawnX - player_position.x, 2) + pow(spawnY - player_position.y, 2)) < min_distance_from_player);
+            bool valid_spawn;
+            do {
+                spawnX = uniform_dist(rng) * (right_bound - left_bound) + left_bound;
+                spawnY = uniform_dist(rng) * (bottom_bound - top_bound) + top_bound;
+                valid_spawn = true;
 
+                // Check distance from player
+                if (sqrt(pow(spawnX - player_position.x, 2) + pow(spawnY - player_position.y, 2)) < min_distance_from_player) {
+                    valid_spawn = false;
+                }
+
+                // Check distance from walls
+                int grid_x = static_cast<int>(spawnX / 24);
+                int grid_y = static_cast<int>(spawnY / 24);
+                for (int dy = -3; dy <= 3 && valid_spawn; ++dy) {
+                    for (int dx = -3; dx <= 3 && valid_spawn; ++dx) {
+                        int check_x = grid_x + dx;
+                        int check_y = grid_y + dy;
+                        if (check_x >= 0 && check_x < GRID_WIDTH && check_y >= 0 && check_y < GRID_HEIGHT) {
+                            if (grid[check_y][check_x] == 1) {
+                                valid_spawn = false;
+                            }
+                        }
+                    }
+                }
+            } while (!valid_spawn);
 				createKingClubs(renderer, vec2(spawnX, spawnY), wave.wave_num);
 			}
 		}
@@ -214,20 +234,37 @@ bool WorldSystem::step(float elapsed_ms_since_last_update, std::string* game_sta
 				wave.progress_queen_hearts = 0;
 				wave.num_queen_hearts -= 1;
 
-				float roomLeft = window_width_px / 2 - wallWidth / 2 + WALL_BLOCK_BB_WIDTH;
-				float roomRight = window_width_px / 2 + wallWidth / 2 - WALL_BLOCK_BB_WIDTH;
-				float roomTop = window_height_px / 2 - wallHeight / 2 + WALL_BLOCK_BB_HEIGHT;
-				float roomBottom = window_height_px / 2 + wallHeight / 2 - WALL_BLOCK_BB_HEIGHT;
 
 				vec2 player_position = p_motion.position;
 				float min_distance_from_player = 300.0f;
 
 				float spawnX, spawnY;
-				do {
-					spawnX = uniform_dist(rng) * (roomRight - roomLeft) + roomLeft;
-					spawnY = uniform_dist(rng) * (roomBottom - roomTop) + roomTop;
-				} while (sqrt(pow(spawnX - player_position.x, 2) + pow(spawnY - player_position.y, 2)) < min_distance_from_player);
+            bool valid_spawn;
+            do {
+                spawnX = uniform_dist(rng) * (right_bound - left_bound) + left_bound;
+                spawnY = uniform_dist(rng) * (bottom_bound - top_bound) + top_bound;
+                valid_spawn = true;
 
+                // Check distance from player
+                if (sqrt(pow(spawnX - player_position.x, 2) + pow(spawnY - player_position.y, 2)) < min_distance_from_player) {
+                    valid_spawn = false;
+                }
+
+                // Check distance from walls
+                int grid_x = static_cast<int>(spawnX / 24);
+                int grid_y = static_cast<int>(spawnY / 24);
+                for (int dy = -3; dy <= 3 && valid_spawn; ++dy) {
+                    for (int dx = -3; dx <= 3 && valid_spawn; ++dx) {
+                        int check_x = grid_x + dx;
+                        int check_y = grid_y + dy;
+                        if (check_x >= 0 && check_x < GRID_WIDTH && check_y >= 0 && check_y < GRID_HEIGHT) {
+                            if (grid[check_y][check_x] == 1) {
+                                valid_spawn = false;
+                            }
+                        }
+                    }
+                }
+            } while (!valid_spawn);
 				createQueenHearts(renderer, vec2(spawnX, spawnY), wave.wave_num);
 			}
 		}
@@ -242,11 +279,32 @@ bool WorldSystem::step(float elapsed_ms_since_last_update, std::string* game_sta
 				float min_distance_from_player = 300.0f; 
 
 				float spawnX, spawnY;
-				do {
-					spawnX = uniform_dist(rng) * (roomRight - roomLeft) + roomLeft;   
-					spawnY = uniform_dist(rng) * (roomBottom - roomTop) + roomTop;
-				} while (sqrt(pow(spawnX - player_position.x, 2) + pow(spawnY - player_position.y, 2)) < min_distance_from_player);
+            bool valid_spawn;
+            do {
+                spawnX = uniform_dist(rng) * (right_bound - left_bound) + left_bound;
+                spawnY = uniform_dist(rng) * (bottom_bound - top_bound) + top_bound;
+                valid_spawn = true;
 
+                // Check distance from player
+                if (sqrt(pow(spawnX - player_position.x, 2) + pow(spawnY - player_position.y, 2)) < min_distance_from_player) {
+                    valid_spawn = false;
+                }
+
+                // Check distance from walls
+                int grid_x = static_cast<int>(spawnX / 24);
+                int grid_y = static_cast<int>(spawnY / 24);
+                for (int dy = -3; dy <= 3 && valid_spawn; ++dy) {
+                    for (int dx = -3; dx <= 3 && valid_spawn; ++dx) {
+                        int check_x = grid_x + dx;
+                        int check_y = grid_y + dy;
+                        if (check_x >= 0 && check_x < GRID_WIDTH && check_y >= 0 && check_y < GRID_HEIGHT) {
+                            if (grid[check_y][check_x] == 1) {
+                                valid_spawn = false;
+                            }
+                        }
+                    }
+                }
+            } while (!valid_spawn);
 				createBirdClubs(renderer, vec2(spawnX, spawnY), wave.wave_num);
 
 			}
@@ -263,7 +321,7 @@ bool WorldSystem::step(float elapsed_ms_since_last_update, std::string* game_sta
 	}
 
 	if (wave.state == "spawn doors") {
-		createDoor(renderer, {window_width_px / 2, window_height_px/2});
+		createDoor(renderer, {912, 432});
 		wave.state = "limbo";
 	}
 
@@ -392,23 +450,6 @@ bool WorldSystem::step(float elapsed_ms_since_last_update, std::string* game_sta
 	}
 	// reduce window brightness if the player is dying
 	screen.darken_screen_factor = 1 - min_counter_ms / 3000;
-	if (debugging.in_debug_mode){
-		for (Entity entity : motions_registry.entities) {
-			if (registry.motions.has(entity)) {
-				Motion &motion = registry.motions.get(entity);
-				if (registry.players.has(entity)||!registry.collisions.has(entity)||registry.eatables.has(entity)||registry.deadlys.has(entity)) {
-					float min_x = motion.position.x - motion.scale.x / 2;
-					float max_x = motion.position.x + motion.scale.x / 2;
-					float min_y = motion.position.y - motion.scale.y / 2;
-					float max_y = motion.position.y + motion.scale.y / 2;
-					createLine({(min_x+max_x)/2, min_y}, {max_x - min_x, 2}); 
-					createLine({(min_x+max_x)/2, max_y}, {max_x - min_x, 2}); 
-					createLine({min_x, (min_y+max_y)/2}, {2, max_y - min_y}); 
-					createLine({max_x, (min_y+max_y)/2}, {2, max_y - min_y}); 
-				}
-			}
-		}
-	}
 	return true;
 }
 
@@ -437,6 +478,13 @@ void WorldSystem::restart_game() {
 	// Reset the game speed
 	current_speed = 1.f;
 
+	for (int i=1;i<39;i++){
+		for (int j=1;j<79;j++){
+			if (grid[i][j] == 2){
+				grid[i][j] = 0;
+			}
+		}
+	}
 	// Remove all entities that we created
 	// All that have a motion. Projectiles, enemies, player, walls, HUD, door
 	while (registry.motions.entities.size() > 0)
@@ -450,7 +498,7 @@ void WorldSystem::restart_game() {
 
 	// create a new Protagonist
 	if (registry.players.size() == 0) {
-		player_protagonist = createProtagonist(renderer, { window_width_px / 2, window_height_px / 2 }, nullptr);
+		player_protagonist = createProtagonist(renderer, { window_width_px / 2+320, window_height_px / 2 }, nullptr);
 		registry.colors.insert(player_protagonist, { 1, 0.8f, 0.8f });
 	}
 	
@@ -462,35 +510,23 @@ void WorldSystem::restart_game() {
 	createHUD(renderer, { window_width_px / 2, window_height_px }, { window_width_px / 4, window_height_px / 2 });
 
 	// Top Wall
-	for (int i = 0; i < num_blocks * 2; i++) {
-		createWallBlock(renderer, {
-			window_width_px / 2 - wallWidth / 2 + i * WALL_BLOCK_BB_WIDTH,
-			window_height_px / 2 - wallHeight / 2
-			});
-	}
-
+	
+		createWallBlock(renderer, {84,108});
+		// Top Wall
+		for (int i = 0; i < num_blocks * 2; i++) {
+			createWallBlock(renderer, {i * WALL_BLOCK_BB_WIDTH+12,12});
+			createWallBlock(renderer, {12 + i * WALL_BLOCK_BB_WIDTH,948});
+		}
 	// Right Wall
 	for (int i = 0; i < num_blocks; i++) {
-		createWallBlock(renderer, {
-			window_width_px / 2 + wallWidth / 2,
-			window_height_px / 2 - wallHeight / 2 + i * WALL_BLOCK_BB_HEIGHT
-			});
+		createWallBlock(renderer, {1920-12,12 + i * WALL_BLOCK_BB_HEIGHT});
+		createWallBlock(renderer, {12,12 + i * WALL_BLOCK_BB_HEIGHT});
 	}
 
-	// Bottom Wall
-	for (int i = 0; i < num_blocks * 2; i++) {
-		createWallBlock(renderer, {
-			window_width_px / 2 + wallWidth / 2 - i * WALL_BLOCK_BB_WIDTH,
-			window_height_px / 2 + wallHeight / 2
-			});
-	}
-
-	// Left Wall
-	for (int i = 0; i < num_blocks; i++) {
-		createWallBlock(renderer, {
-			window_width_px / 2 - wallWidth / 2,
-			window_height_px / 2 - wallHeight / 2 + (num_blocks - i) * WALL_BLOCK_BB_HEIGHT
-			});
+	for (int i = 0; i < num_blocks/4; i++) {
+		createWallBlock(renderer, {804,324 + i * WALL_BLOCK_BB_HEIGHT});
+		createWallBlock(renderer, {1044,564 - i * WALL_BLOCK_BB_HEIGHT});
+		createWallBlock(renderer, {1044-i * WALL_BLOCK_BB_HEIGHT,564});
 	}
 }
 
@@ -758,6 +794,12 @@ void WorldSystem::handle_collisions() {
 							}
 							Mix_PlayChannel(-1, roulette_hit_sound, 0);
 						}
+					} else if (kills.type == PROJECTILE::CARD_PROJECTILE) {
+						registry.remove_all_components_of(entity);
+					} else if (kills.type == PROJECTILE::DART_PROJECTILE) {
+						registry.remove_all_components_of(entity);
+					} else if (kills.type == PROJECTILE::DIAMOND_STAR_PROJECTILE) {
+						registry.remove_all_components_of(entity);
 					}
 				}
 			}

@@ -2,6 +2,8 @@
 #include "physics_system.hpp"
 #include "world_init.hpp"
 #include "iostream"
+
+using namespace std;
 const float COLLECT_DIST = 100.0f;  
 
 // Returns the local bounding coordinates scaled by the current size of the entity
@@ -75,41 +77,99 @@ void PhysicsSystem::step(float elapsed_ms)
 		// move this wall collision handling to world_system.handle collision once bounding box is fixed
 		Motion& player_motion = motion_registry.get(entity);
 		Player& your = registry.players.get(entity);
-
-		const int num_blocks = 40;
-		const int wallWidth = num_blocks * WALL_BLOCK_BB_WIDTH * 2;
-		const int wallHeight = num_blocks * WALL_BLOCK_BB_HEIGHT;
-        float roomLeft = window_width_px / 2 - wallWidth / 2 + WALL_BLOCK_BB_WIDTH + 11;   
-        float roomRight = window_width_px / 2 + wallWidth / 2 - WALL_BLOCK_BB_WIDTH - 11; 
-        float roomTop = window_height_px / 2 - wallHeight / 2 + WALL_BLOCK_BB_HEIGHT + 17; 
-        float roomBottom = window_height_px / 2 + wallHeight / 2 - WALL_BLOCK_BB_HEIGHT - 15;
-
-		
-		
         // Update x position
-        if ((player_motion.position.x + (player_motion.velocity.x + your.push.x) * step_seconds >= roomLeft) &&
-            (player_motion.position.x + (player_motion.velocity.x + your.push.x) * step_seconds <= roomRight)) {
-            player_motion.position.x += player_motion.velocity.x * step_seconds;
-			player_motion.position.x += your.push.x * step_seconds;
-        } else {
-            if (player_motion.velocity.x + your.push.x > 0) {
-                // player_motion.position.x = roomRight - WALL_BLOCK_BB_WIDTH / 2 - FISH_BB_WIDTH / 2;
-                player_motion.position.x = roomRight;
-
-            } else if (player_motion.velocity.x + your.push.x < 0){
-                player_motion.position.x = roomLeft;
+	   // Calculate the new position
+	           // Calculate the range of grid cells the player previously occupied
+         int prevMinGridX = static_cast<int>(player_motion.previous_position.x - 23) / 24;
+        int prevMaxGridX = static_cast<int>(player_motion.previous_position.x + 23) / 24;
+        int prevMinGridY = static_cast<int>(player_motion.previous_position.y - 35) / 24;
+        int prevMaxGridY = static_cast<int>(player_motion.previous_position.y + 35) / 24;
+        // Clear the previous grid cells
+        for (int y = prevMinGridY; y <= prevMaxGridY; ++y) {
+            for (int x = prevMinGridX; x <= prevMaxGridX; ++x) {
+				if (grid[y][x] == 4) {
+					grid[y][x] = 3; // Turn 4 into 3
+				} else if (grid[y][x] == 2) {
+                grid[y][x] = 0;
+				}
             }
         }
-        // Update y position
-        if ((player_motion.position.y + (player_motion.velocity.y + your.push.y) * step_seconds >= roomTop) &&
-            (player_motion.position.y + (player_motion.velocity.y + your.push.y) * step_seconds <= roomBottom)) {
-            player_motion.position.y += player_motion.velocity.y * step_seconds;
-			player_motion.position.y += your.push.y * step_seconds;
+        vec2 new_position = player_motion.position + (player_motion.velocity + your.push) * step_seconds;
+        // Calculate the range of grid cells the player will occupy
+        int minGridX = static_cast<int>(new_position.x - 23) / 24;
+        int maxGridX = static_cast<int>(new_position.x + 23) / 24;
+        int minGridY = static_cast<int>(new_position.y - 35) / 24;
+        int maxGridY = static_cast<int>(new_position.y + 35) / 24;
+        // Clear the previous grid cells
+        // Calculate the range of grid cells the player will occupy
+        bool canMoveX = true;
+        for (int y = prevMinGridY; y <= prevMaxGridY; ++y) {
+            for (int x = minGridX; x <= maxGridX; ++x) {
+                if (grid[y][x] == 1) {
+                    canMoveX = false;
+                    break;
+                }
+            }
+            if (!canMoveX) break;
+        }
+		
+        if (canMoveX) {
+            // Update the player's X position
+            player_motion.position.x = new_position.x;
+            // Update the new grid cells for X movement
+            for (int y = minGridY; y <= maxGridY; ++y) {
+                for (int x = minGridX; x <= maxGridX; ++x) {
+					if (grid[y][x] == 3) {
+						grid[y][x] = 4; // Turn 3 into 4
+					} else if (grid[y][x] == 0 || grid[y][x] == 2) {
+                        grid[y][x] = 2;
+                    }
+                }
+            }
         } else {
-            if (player_motion.velocity.y + your.push.y > 0) {
-                player_motion.position.y = roomBottom;
-            } else if (player_motion.velocity.y + your.push.y < 0){
-                player_motion.position.y = roomTop;
+            // Handle collision by stopping the player's X movement
+            player_motion.velocity.x = 0;
+            your.push.x = 0;
+        }
+        // Check if the player can move to the new position
+        bool canMoveY = true;
+        for (int y = minGridY; y <= maxGridY; ++y) {
+            for (int x = prevMinGridX; x <= prevMaxGridX; ++x) {
+                if (grid[y][x] == 1) {
+                    canMoveY = false;
+                    break;
+                }
+            }
+            if (!canMoveY) break;
+        }
+        if (canMoveY) {
+            // Update the player's Y position
+            player_motion.position.y = new_position.y;
+            // Update the new grid cells for Y movement
+            for (int y = minGridY; y <= maxGridY; ++y) {
+                for (int x = minGridX; x <= maxGridX; ++x) {
+					if (grid[y][x] == 3) {
+						grid[y][x] = 4; // Turn 3 into 4
+					} else if (grid[y][x] == 0 || grid[y][x] == 2) {
+                        grid[y][x] = 2;
+                    }
+                }
+            }
+        } else {
+            // Handle collision by stopping the player's Y movement
+            player_motion.velocity.y = 0;
+            your.push.y = 0;
+        }
+        // Update the previous position
+        player_motion.previous_position = player_motion.position;
+        // Handle eatable entities
+        for (Entity entity : registry.eatables.entities) {
+            Motion& motion = registry.motions.get(entity);
+            float dist = length(player_motion.position - motion.position);
+            if (dist < COLLECT_DIST && dist > 0.f) {
+                motion.velocity = 100.f * (COLLECT_DIST / (dist + COLLECT_DIST)) * normalize(player_motion.position - motion.position);
+            } else {
+                motion.velocity = {0, 0};
             }
         }
 		your.push *= 0.5f;
@@ -127,95 +187,67 @@ void PhysicsSystem::step(float elapsed_ms)
 	}
 	
 	for(Entity entity : registry.killsEnemys.entities){ {
-		const int num_blocks = 40;
-		const int wallWidth = num_blocks * WALL_BLOCK_BB_WIDTH * 2;
-		const int wallHeight = num_blocks * WALL_BLOCK_BB_HEIGHT;
-
-		int topWallY = window_height_px / 2 - wallHeight / 2 + WALL_BLOCK_BB_HEIGHT / 2;
-		int bottomWallY = window_height_px / 2 + wallHeight / 2 - WALL_BLOCK_BB_HEIGHT / 2;
-		int rightWallX = window_width_px / 2 + wallWidth / 2 - WALL_BLOCK_BB_WIDTH / 2;
-		int leftWallX = window_width_px / 2 - wallWidth / 2 + WALL_BLOCK_BB_WIDTH / 2;
 		Motion& motion = motion_registry.get(entity);
 		KillsEnemy& kills = registry.killsEnemys.get(entity);
 		if(motion.scale.x == DIAMOND_PROJECTILE_BB_HEIGHT && motion.scale.y == DIAMOND_PROJECTILE_BB_HEIGHT){
 			motion.angle += 2.0f * step_seconds;
 		}
-		motion.position += motion.velocity * step_seconds;
+		
+		vec2 new_position = motion.position + motion.velocity * step_seconds;
+
+// Determine the half dimensions
+		float half_width = motion.velocity.x>0?abs(motion.scale.x):-abs(motion.scale.x);
+		float half_height = motion.velocity.y>0?abs(motion.scale.y):-abs(motion.scale.y);
+
+		// Calculate the grid indices
+		int grid_x = static_cast<int>((new_position.x + half_width) / 24);
+		int grid_y = static_cast<int>((new_position.y + half_height) / 24);
 		if (kills.type == PROJECTILE::ROULETTE_BALL) {
-			if (motion.position.y - motion.scale.y/2 < topWallY) {
+			if (grid[grid_y][grid_x] == 1) {
 				if (kills.bounce_left <= 0) {
 					registry.remove_all_components_of(entity);
 				} else {
 					kills.bounce_left -= 1;
-					motion.position.y = topWallY + motion.scale.y/2;
-					motion.velocity.y *= -1;
+
+					// Calculate the center of the collided block
+					float block_center_x = (grid_x * 24) + 12;
+					float block_center_y = (grid_y * 24) + 12;
+
+					// Calculate the difference vector between the ball and the block center
+					float diff_x = motion.position.x - block_center_x;
+					float diff_y = motion.position.y - block_center_y;
+
+					// Calculate the angle of collision
+					float angle = atan2(-diff_y, diff_x);
+
+					// Determine the side of collision based on the angle
+				if (angle > M_PI / 4 && angle <= 3 * M_PI / 4) {
+						// Collision from the top
+
+						motion.velocity.y *= -1;
+					} else if (angle > -3 * M_PI / 4 && angle <= -M_PI / 4) {
+						// Collision from the bottom
+
+						motion.velocity.y *= -1;
+					} else  {
+						// Collision from the left or right
+
+						motion.velocity.x *= -1;
+					}
+
+
+
 				}
+			} else {
+				// No collision; update the position normally
+				motion.position += motion.velocity * step_seconds;	
 			}
-			if (motion.position.y + motion.scale.y/2 > bottomWallY) {
-				if (kills.bounce_left <= 0) {
+		} else{
+				if (grid[static_cast<int>((motion.position.y+half_height/2)/24)][static_cast<int>((motion.position.x+half_width/2)/24)] == 1) {
 					registry.remove_all_components_of(entity);
-				} else {
-					kills.bounce_left -= 1;
-					motion.position.y = bottomWallY - motion.scale.y/2;
-					motion.velocity.y *= -1;
+				} else{
+					motion.position += motion.velocity * step_seconds;
 				}
-			}
-			if (motion.position.x + motion.scale.x/2 > rightWallX) {
-				if (kills.bounce_left <= 0) {
-					registry.remove_all_components_of(entity);
-				} else {
-					kills.bounce_left -= 1;
-					motion.position.x = rightWallX - motion.scale.x/2;
-					motion.velocity.x *= -1;
-				}
-			}
-			if (motion.position.x - motion.scale.x/2 < leftWallX) {
-				if (kills.bounce_left <= 0) {
-					registry.remove_all_components_of(entity);
-				} else {
-					kills.bounce_left -= 1;
-					motion.position.x = leftWallX + motion.scale.x/2;
-					motion.velocity.x *= -1;
-				}
-			}
-		}
-		if (kills.type == PROJECTILE::ROULETTE_BALL) {
-			if (motion.position.y - motion.scale.y/2 < topWallY) {
-				if (kills.bounce_left <= 0) {
-					registry.remove_all_components_of(entity);
-				} else {
-					kills.bounce_left -= 1;
-					motion.position.y = topWallY + motion.scale.y/2;
-					motion.velocity.y *= -1;
-				}
-			}
-			if (motion.position.y + motion.scale.y/2 > bottomWallY) {
-				if (kills.bounce_left <= 0) {
-					registry.remove_all_components_of(entity);
-				} else {
-					kills.bounce_left -= 1;
-					motion.position.y = bottomWallY - motion.scale.y/2;
-					motion.velocity.y *= -1;
-				}
-			}
-			if (motion.position.x + motion.scale.x/2 > rightWallX) {
-				if (kills.bounce_left <= 0) {
-					registry.remove_all_components_of(entity);
-				} else {
-					kills.bounce_left -= 1;
-					motion.position.x = rightWallX - motion.scale.x/2;
-					motion.velocity.x *= -1;
-				}
-			}
-			if (motion.position.x - motion.scale.x/2 < leftWallX) {
-				if (kills.bounce_left <= 0) {
-					registry.remove_all_components_of(entity);
-				} else {
-					kills.bounce_left -= 1;
-					motion.position.x = leftWallX + motion.scale.x/2;
-					motion.velocity.x *= -1;
-				}
-			}
 		}
 	}
 	for (Entity entity : registry.killsEnemyLerpyDerps.entities) {
@@ -225,7 +257,14 @@ void PhysicsSystem::step(float elapsed_ms)
 	}
 	for (Entity entity : registry.deadlys.entities) {
 		Motion& motion = motion_registry.get(entity);
-		motion.position += motion.velocity * step_seconds;
+		vec2 new_position = motion.position + motion.velocity * step_seconds;
+		float width = motion.velocity.x>0?abs(motion.scale.x/2):-abs(motion.scale.x/2);
+		float height = motion.velocity.y>0?abs(motion.scale.y/2):-abs(motion.scale.y/2);
+		if (grid[(int)(new_position.y+height)/24][(int)(new_position.x+width)/24] == 1) {
+			registry.remove_all_components_of(entity);
+		} else {
+			motion.position += motion.velocity * step_seconds;
+		}
 	}
 
 	for (Entity entity : registry.eatables.entities) {
@@ -237,7 +276,23 @@ void PhysicsSystem::step(float elapsed_ms)
 		Motion& motion = motion_registry.get(entity);
 		motion.position += motion.velocity * step_seconds;
 	}
-
+	if (debugging.in_debug_mode){
+		for (Entity entity : registry.motions.entities) {
+			if (registry.motions.has(entity)) {
+				Motion &motion = registry.motions.get(entity);
+				if (registry.players.has(entity)||!registry.collisions.has(entity)||registry.eatables.has(entity)||registry.deadlys.has(entity)) {
+					float min_x = motion.position.x - motion.scale.x / 2;
+					float max_x = motion.position.x + motion.scale.x / 2;
+					float min_y = motion.position.y - motion.scale.y / 2;
+					float max_y = motion.position.y + motion.scale.y / 2;
+					createLine({(min_x+max_x)/2, min_y}, {max_x - min_x, 2}); 
+					createLine({(min_x+max_x)/2, max_y}, {max_x - min_x, 2}); 
+					createLine({min_x, (min_y+max_y)/2}, {2, max_y - min_y}); 
+					createLine({max_x, (min_y+max_y)/2}, {2, max_y - min_y}); 
+				}
+			}
+		}
+	}
 	// Check for collisions between all moving entities
     ComponentContainer<Motion> &motion_container = registry.motions;
 	for(uint i = 0; i<motion_container.components.size(); i++)
