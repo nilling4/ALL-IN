@@ -761,49 +761,7 @@ void WorldSystem::handle_collisions() {
 				Solid& solid = registry.solids.get(entity_other);
 				if (kills.last_touched != &solid) {
 					kills.last_touched = &solid;
-					if (kills.type == PROJECTILE::ROULETTE_BALL) {
-						if (kills.bounce_left <= 0) {
-							registry.remove_all_components_of(entity);
-						} else {
-							kills.bounce_left -= 1;
-							Motion& solid_motion = registry.motions.get(entity_other);
-							unsigned int dist_from_top = abs((solid_motion.position.y - solid_motion.scale.y/2) - kills_motion.position.y);
-							unsigned int dist_from_bottom = abs((solid_motion.position.y + solid_motion.scale.y/2) - kills_motion.position.y);
-							unsigned int dist_from_right = abs((solid_motion.position.x + solid_motion.scale.x/2) - kills_motion.position.x);
-							unsigned int dist_from_left = abs((solid_motion.position.x - solid_motion.scale.x/2) - kills_motion.position.x);
-							unsigned int min_distance = std::min({dist_from_top, dist_from_bottom, dist_from_right, dist_from_left});
-							if (min_distance == dist_from_top) {
-								if (min_distance == dist_from_right) {
-									kills_motion.velocity.x *= -1;
-									kills_motion.velocity.y *= -1;
-								} else if (min_distance == dist_from_left) {
-									kills_motion.velocity.x *= -1;
-									kills_motion.velocity.y *= -1;
-								} else {
-									kills_motion.velocity.y *= -1;
-									kills_motion.position.y = solid_motion.position.y - solid_motion.scale.y/2 - kills_motion.scale.y/2;
-								}
-							} else if (min_distance == dist_from_bottom) {
-								if (min_distance == dist_from_right) {
-									kills_motion.velocity.x *= -1;
-									kills_motion.velocity.y *= -1;
-								} else if (min_distance == dist_from_left) {
-									kills_motion.velocity.x *= -1;
-									kills_motion.velocity.y *= -1;
-								} else {
-									kills_motion.velocity.y *= -1;
-									kills_motion.position.y = solid_motion.position.y + solid_motion.scale.y/2 + kills_motion.scale.y/2;
-								}
-							} else if (min_distance == dist_from_right) {
-								kills_motion.velocity.x *= -1;
-								kills_motion.position.x = solid_motion.position.x + solid_motion.scale.x/2 + kills_motion.scale.x/2;
-							} else if (min_distance == dist_from_left) {
-								kills_motion.velocity.x *= -1;
-								kills_motion.position.x = solid_motion.position.x - solid_motion.scale.x/2 - kills_motion.scale.x/2;
-							}
-							Mix_PlayChannel(-1, roulette_hit_sound, 0);
-						}
-					} else if (kills.type == PROJECTILE::CARD_PROJECTILE) {
+					 if (kills.type == PROJECTILE::CARD_PROJECTILE) {
 						registry.remove_all_components_of(entity);
 					} else if (kills.type == PROJECTILE::DART_PROJECTILE) {
 						registry.remove_all_components_of(entity);

@@ -219,30 +219,46 @@ void PhysicsSystem::step(float elapsed_ms)
 
 					// Calculate the center of the collided block
 
-					float block_center_x = (grid_x * 12) + 12;
-					float block_center_y = (grid_y * 12) + 12;
+					float block_center_x = (grid_x * 12)+6 ;
+					float block_center_y = (grid_y * 12)+6 ;
 
 					// Calculate the difference vector between the ball and the block center
-					float diff_x = block_center_x - motion.position.x;
-					float diff_y = block_center_y -motion.position.y;
-
-
+					float diff_x = block_center_x - new_position.x;
+					float diff_y = block_center_y -new_position.y;
 					// Calculate the angle of collision
 					float angle = atan2(-diff_y, diff_x);
-
 					// Determine the side of collision based on the angle
 
 					// Determine the side of collision based on the angle
 					if (angle > M_PI / 4 && angle <= 3 * M_PI / 4) {
 						// Collision from the top
-						motion.velocity.y *= -1;
+						if (grid[grid_y+1][grid_x] == 1){
+							motion.velocity.x *= -1;
+						} else{
+							motion.velocity.y *= -1;
+						}	
 					} else if (angle > -3 * M_PI / 4 && angle <= -M_PI / 4) {
 						// Collision from the bottom
-						motion.velocity.y *= -1;
+						if (grid[grid_y-1][grid_x] == 1){
+							motion.velocity.x *= -1;
+						} else{
+							motion.velocity.y *= -1;
+						}	
+					} else if (angle > 3 * M_PI / 4 || angle <= -3 * M_PI / 4) {
+						// Collision from the right
+						if (grid[grid_y][grid_x+1] == 1){
+							motion.velocity.y *= -1;
+						} else{
+							motion.velocity.x *= -1;
+						}	
+						
 					} else {
-						// Collision from the sides
-
-						motion.velocity.x *= -1;
+						// Collision from the left
+						if (grid[grid_y][grid_x-1] == 1){
+							motion.velocity.y *= -1;
+						} else{
+							motion.velocity.x *= -1;
+						}	
 					}
 
 
