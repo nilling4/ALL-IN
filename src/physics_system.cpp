@@ -80,26 +80,32 @@ void PhysicsSystem::step(float elapsed_ms)
         // Update x position
 	   // Calculate the new position
 	           // Calculate the range of grid cells the player previously occupied
-         int prevMinGridX = static_cast<int>(player_motion.previous_position.x - 23) / 24;
-        int prevMaxGridX = static_cast<int>(player_motion.previous_position.x + 23) / 24;
-        int prevMinGridY = static_cast<int>(player_motion.previous_position.y - 35) / 24;
-        int prevMaxGridY = static_cast<int>(player_motion.previous_position.y + 35) / 24;
+
+        int prevMinGridX = static_cast<int>(player_motion.previous_position.x - 23) / 12;
+        int prevMaxGridX = static_cast<int>(player_motion.previous_position.x + 23) / 12;
+        int prevMinGridY = static_cast<int>(player_motion.previous_position.y - 35) / 12;
+        int prevMaxGridY = static_cast<int>(player_motion.previous_position.y + 35) / 12;
+
         // Clear the previous grid cells
         for (int y = prevMinGridY; y <= prevMaxGridY; ++y) {
             for (int x = prevMinGridX; x <= prevMaxGridX; ++x) {
 				if (grid[y][x] == 4) {
 					grid[y][x] = 3; // Turn 4 into 3
 				} else if (grid[y][x] == 2) {
-                grid[y][x] = 0;
+
+               		grid[y][x] = 0;
+
 				}
             }
         }
         vec2 new_position = player_motion.position + (player_motion.velocity + your.push) * step_seconds;
         // Calculate the range of grid cells the player will occupy
-        int minGridX = static_cast<int>(new_position.x - 23) / 24;
-        int maxGridX = static_cast<int>(new_position.x + 23) / 24;
-        int minGridY = static_cast<int>(new_position.y - 35) / 24;
-        int maxGridY = static_cast<int>(new_position.y + 35) / 24;
+
+        int minGridX = static_cast<int>(new_position.x - 23) / 12;
+        int maxGridX = static_cast<int>(new_position.x + 23) / 12;
+        int minGridY = static_cast<int>(new_position.y - 35) / 12;
+        int maxGridY = static_cast<int>(new_position.y + 35) / 12;
+
         // Clear the previous grid cells
         // Calculate the range of grid cells the player will occupy
         bool canMoveX = true;
@@ -200,8 +206,10 @@ void PhysicsSystem::step(float elapsed_ms)
 		float half_height = motion.velocity.y>0?abs(motion.scale.y):-abs(motion.scale.y);
 
 		// Calculate the grid indices
-		int grid_x = static_cast<int>((new_position.x + half_width) / 24);
-		int grid_y = static_cast<int>((new_position.y + half_height) / 24);
+
+		int grid_x = static_cast<int>((new_position.x + half_width) / 12);
+		int grid_y = static_cast<int>((new_position.y + half_height) / 12);
+
 		if (kills.type == PROJECTILE::ROULETTE_BALL) {
 			if (grid[grid_y][grid_x] == 1) {
 				if (kills.bounce_left <= 0) {
@@ -210,27 +218,29 @@ void PhysicsSystem::step(float elapsed_ms)
 					kills.bounce_left -= 1;
 
 					// Calculate the center of the collided block
-					float block_center_x = (grid_x * 24) + 12;
-					float block_center_y = (grid_y * 24) + 12;
+
+					float block_center_x = (grid_x * 12) + 12;
+					float block_center_y = (grid_y * 12) + 12;
 
 					// Calculate the difference vector between the ball and the block center
-					float diff_x = motion.position.x - block_center_x;
-					float diff_y = motion.position.y - block_center_y;
+					float diff_x = block_center_x - motion.position.x;
+					float diff_y = block_center_y -motion.position.y;
+
 
 					// Calculate the angle of collision
 					float angle = atan2(-diff_y, diff_x);
 
 					// Determine the side of collision based on the angle
-				if (angle > M_PI / 4 && angle <= 3 * M_PI / 4) {
-						// Collision from the top
 
+					// Determine the side of collision based on the angle
+					if (angle > M_PI / 4 && angle <= 3 * M_PI / 4) {
+						// Collision from the top
 						motion.velocity.y *= -1;
 					} else if (angle > -3 * M_PI / 4 && angle <= -M_PI / 4) {
 						// Collision from the bottom
-
 						motion.velocity.y *= -1;
-					} else  {
-						// Collision from the left or right
+					} else {
+						// Collision from the sides
 
 						motion.velocity.x *= -1;
 					}
@@ -243,7 +253,9 @@ void PhysicsSystem::step(float elapsed_ms)
 				motion.position += motion.velocity * step_seconds;	
 			}
 		} else{
-				if (grid[static_cast<int>((motion.position.y+half_height/2)/24)][static_cast<int>((motion.position.x+half_width/2)/24)] == 1) {
+
+				if (grid[static_cast<int>((motion.position.y+half_height/2)/12)][static_cast<int>((motion.position.x+half_width/2)/12)] == 1) {
+
 					registry.remove_all_components_of(entity);
 				} else{
 					motion.position += motion.velocity * step_seconds;
@@ -260,7 +272,9 @@ void PhysicsSystem::step(float elapsed_ms)
 		vec2 new_position = motion.position + motion.velocity * step_seconds;
 		float width = motion.velocity.x>0?abs(motion.scale.x/2):-abs(motion.scale.x/2);
 		float height = motion.velocity.y>0?abs(motion.scale.y/2):-abs(motion.scale.y/2);
-		if (grid[(int)(new_position.y+height)/24][(int)(new_position.x+width)/24] == 1) {
+
+		if (grid[(int)(new_position.y+height)/12][(int)(new_position.x+width)/12] == 1) {
+
 			registry.remove_all_components_of(entity);
 		} else {
 			motion.position += motion.velocity * step_seconds;

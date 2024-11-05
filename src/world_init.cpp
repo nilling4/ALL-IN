@@ -53,15 +53,22 @@ Entity createWallBlock(RenderSystem* renderer, vec2 pos) {
 	motion.scale = vec2({ WALL_BLOCK_BB_WIDTH, WALL_BLOCK_BB_HEIGHT });
 
 	// Calculate grid indices
-	int grid_x = static_cast<int>(pos.x / 24);
-	int grid_y = static_cast<int>(pos.y / 24);
+
+	int grid_x = static_cast<int>(pos.x / 12);
+	int grid_y = static_cast<int>(pos.y / 12);
 
 	// Set the central grid block to 1
 	grid[grid_y][grid_x] = 1;
-	for (int dy = -2; dy <= 2; dy++) {
-		for (int dx = -2; dx <= 2; dx++) {
+	grid[grid_y][grid_x-1] = 1;
+	grid[grid_y-1][grid_x] = 1;
+	grid[grid_y-1][grid_x-1] = 1;
+
+
+	for (int dy = -4; dy <= 3; dy++) {
+		for (int dx = -3; dx <= 2; dx++) {
 			// Skip the central block
-			if (dy == 0 && dx == 0) continue;
+			if (dy == 0 && dx == 0&&dy == 1 && dx == 1) continue;
+
 			
 			int new_y = grid_y + dy;
 			int new_x = grid_x + dx;

@@ -210,10 +210,12 @@ bool WorldSystem::step(float elapsed_ms_since_last_update, std::string* game_sta
                 }
 
                 // Check distance from walls
-                int grid_x = static_cast<int>(spawnX / 24);
-                int grid_y = static_cast<int>(spawnY / 24);
+
+                int grid_x = static_cast<int>(spawnX / 12);
+                int grid_y = static_cast<int>(spawnY / 12);
                 for (int dy = -3; dy <= 3 && valid_spawn; ++dy) {
-                    for (int dx = -3; dx <= 3 && valid_spawn; ++dx) {
+                    for (int dx = -2; dx <= 2 && valid_spawn; ++dx) {
+
                         int check_x = grid_x + dx;
                         int check_y = grid_y + dy;
                         if (check_x >= 0 && check_x < GRID_WIDTH && check_y >= 0 && check_y < GRID_HEIGHT) {
@@ -251,10 +253,12 @@ bool WorldSystem::step(float elapsed_ms_since_last_update, std::string* game_sta
                 }
 
                 // Check distance from walls
-                int grid_x = static_cast<int>(spawnX / 24);
-                int grid_y = static_cast<int>(spawnY / 24);
+
+                int grid_x = static_cast<int>(spawnX / 12);
+                int grid_y = static_cast<int>(spawnY / 12);
                 for (int dy = -3; dy <= 3 && valid_spawn; ++dy) {
-                    for (int dx = -3; dx <= 3 && valid_spawn; ++dx) {
+                    for (int dx = -2; dx <= 2 && valid_spawn; ++dx) {
+
                         int check_x = grid_x + dx;
                         int check_y = grid_y + dy;
                         if (check_x >= 0 && check_x < GRID_WIDTH && check_y >= 0 && check_y < GRID_HEIGHT) {
@@ -291,10 +295,12 @@ bool WorldSystem::step(float elapsed_ms_since_last_update, std::string* game_sta
                 }
 
                 // Check distance from walls
-                int grid_x = static_cast<int>(spawnX / 24);
-                int grid_y = static_cast<int>(spawnY / 24);
+
+                int grid_x = static_cast<int>(spawnX / 12);
+                int grid_y = static_cast<int>(spawnY / 12);
                 for (int dy = -3; dy <= 3 && valid_spawn; ++dy) {
-                    for (int dx = -3; dx <= 3 && valid_spawn; ++dx) {
+                    for (int dx = -2; dx <= 2 && valid_spawn; ++dx) {
+
                         int check_x = grid_x + dx;
                         int check_y = grid_y + dy;
                         if (check_x >= 0 && check_x < GRID_WIDTH && check_y >= 0 && check_y < GRID_HEIGHT) {
@@ -482,6 +488,10 @@ void WorldSystem::restart_game() {
 		for (int j=1;j<79;j++){
 			if (grid[i][j] == 2){
 				grid[i][j] = 0;
+
+			} else if (grid[i][j] == 4){
+				grid[i][j] = 3;
+
 			}
 		}
 	}
@@ -657,8 +667,7 @@ void WorldSystem::handle_collisions() {
 				if (!registry.deathTimers.has(entity)) {
 
 					// check if the eatable entity is a coin and increase player's coin count
-					coins++;
-					std::cout << "Coin count: " << coins << std::endl;					
+					coins++;					
 
 					// chew, count coins, and set the LightUp timer
 					registry.remove_all_components_of(entity_other);

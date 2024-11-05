@@ -27,9 +27,10 @@ const int dRow[] = {-1, 1, 0, 0, -1, -1, 1, 1}; // Up, Down, Left, Right, Up-Lef
 const int dCol[] = {0, 0, -1, 1, -1, 1, -1, 1}; // Up, Down, Left, Right, Up-Left, Up-Right, Down-Left, Down-Right
 
 
-bool isValid(bool vis[40][80], int row, int col) {
+
+bool isValid(bool vis[80][160], int row, int col) {
     // If cell lies out of bounds
-    if (row < 0 || col < 0 || row >= 40 || col >= 80)
+    if (row < 0 || col < 0 || row >= 80 || col >= 160)
         return false;
 
     // If cell is already visited or is a wall or goal
@@ -41,11 +42,13 @@ bool isValid(bool vis[40][80], int row, int col) {
  
 void BFS(int row, int col, Motion* motion, Motion* player_motion) {
     // Initialize visited array
-    bool vis[40][80] = {{false}};
+
+    bool vis[80][160] = {{false}};
 
     // Stores indices of the matrix cells
     queue<pair<int, int>> q;
-    vector<vector<pair<int, int>>> parent(40, vector<pair<int, int>>(80, {-1, -1}));
+    vector<vector<pair<int, int>>> parent(80, vector<pair<int, int>>(160, {-1, -1}));
+
     vector<pair<int, int>> path;
 
     // Mark the starting cell as visited and push it into the queue
@@ -60,7 +63,9 @@ void BFS(int row, int col, Motion* motion, Motion* player_motion) {
         q.pop();
 
         // Check if we've reached the goal
-        if (y == static_cast<int>(player_motion->position.y / 24) && x == static_cast<int>(player_motion->position.x / 24)) {
+
+        if (y == static_cast<int>(player_motion->position.y / 12) && x == static_cast<int>(player_motion->position.x / 12)) {
+
             // Reconstruct the path to get the next position
             pair<int, int> next_position = {y, x};
             while (parent[next_position.first][next_position.second] != make_pair(row, col)) {
@@ -71,6 +76,22 @@ void BFS(int row, int col, Motion* motion, Motion* player_motion) {
                     break;
                 }
             }
+
+            // for (int i = 0; i<80;i++){
+            //     for (int j = 0; j<160;j++){
+            //         if (grid[i][j] == 0){
+            //             cout << ".";
+            //         } else if (i==static_cast<int>(player_motion->position.y / 12) && j==static_cast<int>(player_motion->position.x / 12)){
+            //             cout << "P";
+            //         } else if (i==row && j==col){
+            //             cout << "S";
+            //         } else {
+            //             cout << grid[i][j];
+            //         }
+            //     }
+            //     cout << endl;
+            // }
+
             path.push_back({row, col});
             reverse(path.begin(), path.end());
             // Calculate the direction based on the next step in the path
@@ -297,9 +318,10 @@ void AISystem::step(float elapsed_ms)
                 separation_force = cap_velocity(separation_force, 0.5 * MAX_PUSH * (1 + 0.05 * separation_count));
             }
  
-                int startRow = static_cast<int>(motion.position.y)/24;
-                int startCol = static_cast<int>(motion.position.x)/24;
-                
+
+                int startRow = static_cast<int>(motion.position.y)/12;
+                int startCol = static_cast<int>(motion.position.x)/12;
+
                 BFS(startRow, startCol, &motion,player_motion);
             
             
