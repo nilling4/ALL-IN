@@ -54,7 +54,21 @@ void BFS(int row, int col, Motion* motion, Motion* player_motion) {
     // Mark the starting cell as visited and push it into the queue
     q.push({row, col});
     vis[row][col] = true;
-
+    
+    // for (int i = 0; i<80;i++){
+    //     for (int j = 0; j<160;j++){
+    //         if (grid[i][j] == 0){
+    //             cout << ".";
+    //         } else if (i==static_cast<int>(player_motion->position.y / 12) && j==static_cast<int>(player_motion->position.x / 12)){
+    //             cout << "P";
+    //         } else if (i==row && j==col){
+    //             cout << "S";
+    //         } else {
+    //             cout << grid[i][j];
+    //         }
+    //     }
+    //     cout << endl;
+    // }
     // Iterate while the queue is not empty
     while (!q.empty()) {
         pair<int, int> cell = q.front();
@@ -77,20 +91,6 @@ void BFS(int row, int col, Motion* motion, Motion* player_motion) {
                 }
             }
 
-            // for (int i = 0; i<80;i++){
-            //     for (int j = 0; j<160;j++){
-            //         if (grid[i][j] == 0){
-            //             cout << ".";
-            //         } else if (i==static_cast<int>(player_motion->position.y / 12) && j==static_cast<int>(player_motion->position.x / 12)){
-            //             cout << "P";
-            //         } else if (i==row && j==col){
-            //             cout << "S";
-            //         } else {
-            //             cout << grid[i][j];
-            //         }
-            //     }
-            //     cout << endl;
-            // }
 
             path.push_back({row, col});
             reverse(path.begin(), path.end());
@@ -323,7 +323,7 @@ void AISystem::step(float elapsed_ms)
                 int startCol = static_cast<int>(motion.position.x)/12;
 
                 BFS(startRow, startCol, &motion,player_motion);
-            
+                motion.velocity = cap_velocity(motion.velocity + separation_force, 50);
             
             if ((motion.position.x > player_motion->position.x && motion.scale.y < 0) ||
                 (motion.position.x < player_motion->position.x && motion.scale.y > 0)) {

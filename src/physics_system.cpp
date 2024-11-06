@@ -87,17 +87,7 @@ void PhysicsSystem::step(float elapsed_ms)
         int prevMaxGridY = static_cast<int>(player_motion.previous_position.y + 35) / 12;
 
         // Clear the previous grid cells
-        for (int y = prevMinGridY; y <= prevMaxGridY; ++y) {
-            for (int x = prevMinGridX; x <= prevMaxGridX; ++x) {
-				if (grid[y][x] == 4) {
-					grid[y][x] = 3; // Turn 4 into 3
-				} else if (grid[y][x] == 2) {
 
-               		grid[y][x] = 0;
-
-				}
-            }
-        }
         vec2 new_position = player_motion.position + (player_motion.velocity + your.push) * step_seconds;
         // Calculate the range of grid cells the player will occupy
 
@@ -118,7 +108,30 @@ void PhysicsSystem::step(float elapsed_ms)
             }
             if (!canMoveX) break;
         }
-		
+		        bool canMoveY = true;
+        for (int y = minGridY; y <= maxGridY; ++y) {
+            for (int x = prevMinGridX; x <= prevMaxGridX; ++x) {
+                if (grid[y][x] == 1) {
+                    canMoveY = false;
+                    break;
+                }
+            }
+            if (!canMoveY) break;
+        }
+		for (int y = prevMinGridY; y <= prevMaxGridY; ++y) {
+            for (int x = prevMinGridX; x <= prevMaxGridX; ++x) {
+				if (canMoveX||canMoveY){
+					if (grid[y][x] == 4) {
+						grid[y][x] = 3; // Turn 4 into 3
+					} else if (grid[y][x] == 2) {
+
+						grid[y][x] = 0;
+
+					}
+				}
+
+            }
+        }
         if (canMoveX) {
             // Update the player's X position
             player_motion.position.x = new_position.x;
@@ -138,16 +151,7 @@ void PhysicsSystem::step(float elapsed_ms)
             your.push.x = 0;
         }
         // Check if the player can move to the new position
-        bool canMoveY = true;
-        for (int y = minGridY; y <= maxGridY; ++y) {
-            for (int x = prevMinGridX; x <= prevMaxGridX; ++x) {
-                if (grid[y][x] == 1) {
-                    canMoveY = false;
-                    break;
-                }
-            }
-            if (!canMoveY) break;
-        }
+
         if (canMoveY) {
             // Update the player's Y position
             player_motion.position.y = new_position.y;
@@ -166,6 +170,7 @@ void PhysicsSystem::step(float elapsed_ms)
             player_motion.velocity.y = 0;
             your.push.y = 0;
         }
+
         // Update the previous position
         player_motion.previous_position = player_motion.position;
         // Handle eatable entities
@@ -289,7 +294,7 @@ void PhysicsSystem::step(float elapsed_ms)
 		float width = motion.velocity.x>0?abs(motion.scale.x/2):-abs(motion.scale.x/2);
 		float height = motion.velocity.y>0?abs(motion.scale.y/2):-abs(motion.scale.y/2);
 
-		if (grid[(int)(new_position.y+height)/12][(int)(new_position.x+width)/12] == 1) {
+		if (grid[(int)(new_position.y+height)/12][(int)(new_position.x+width)/12] == 1 && registry.boids.has(entity)) {
 
 			registry.remove_all_components_of(entity);
 		} else {
