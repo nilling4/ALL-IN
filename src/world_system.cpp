@@ -534,7 +534,7 @@ void WorldSystem::restart_game() {
 	}
 
 	for (int i = 0; i < num_blocks/4; i++) {
-		createWallBlock(renderer, {804,324 + i * WALL_BLOCK_BB_HEIGHT});
+		createWallBlock(renderer, {804,348 + i * WALL_BLOCK_BB_HEIGHT});
 		createWallBlock(renderer, {1044,564 - i * WALL_BLOCK_BB_HEIGHT});
 		createWallBlock(renderer, {1044-i * WALL_BLOCK_BB_HEIGHT,564});
 	}
@@ -685,7 +685,6 @@ void WorldSystem::handle_collisions() {
 		// Collisions involving projectiles
 		if (registry.killsEnemys.has(entity)) {
 			KillsEnemy& kills = registry.killsEnemys.get(entity);
-			Motion& kills_motion = registry.motions.get(entity);
 			if (registry.deadlys.has(entity_other)) {
 				Deadly& deadly = registry.deadlys.get(entity_other);
 				if (kills.last_touched != &deadly) {
@@ -995,6 +994,7 @@ void WorldSystem::on_key(int key, int, int action, int mod) {
 		if (debugging.in_debug_mode ){
 			std::cout<<("Now in normal mode")<<std::endl;
 			debugging.in_debug_mode = false;
+			
 		}
 			
 		else{
@@ -1005,6 +1005,25 @@ void WorldSystem::on_key(int key, int, int action, int mod) {
 	}
 	// Close game
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
+		Motion* player_motion = &registry.motions.get(player_protagonist);
+		for (int i = 0; i<80;i++){
+			for (int j = 0; j<160;j++){
+				if (i==static_cast<int>(player_motion->position.y / 12)&&j==static_cast<int>(player_motion->position.x / 12)){
+				std::cout << "K";
+				} else if (grid[i][j]==2){
+					std::cout << "P";
+				} else if (grid[i][j]==1){
+					std::cout << "1";
+				}else if (grid[i][j]==3){
+					std::cout << "3";
+				}  else if (grid[i][j]==0){
+					std::cout <<  ".";
+				} else {
+					std::cout << grid[i][j];
+				}
+			}
+			std::cout << std::endl;
+		}
 		save();
 		glfwSetWindowShouldClose(window, GL_TRUE);
 

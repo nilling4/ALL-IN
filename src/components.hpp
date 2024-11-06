@@ -37,7 +37,7 @@ struct Wave {
 	int wave_num = 1;
 	float delay_for_all_entities = 1000;
 
-	int num_king_clubs = 1;
+	int num_king_clubs = 6;
 	float progress_king_clubs = 0;
 	int num_bird_clubs = 0;
 	float progress_bird_clubs = 0;

@@ -123,11 +123,9 @@ void PhysicsSystem::step(float elapsed_ms)
 				if (canMoveX||canMoveY){
 					if (grid[y][x] == 4) {
 						grid[y][x] = 3; // Turn 4 into 3
-					} else if (grid[y][x] == 2) {
 
-						grid[y][x] = 0;
+					} 
 
-					}
 				}
 
             }
@@ -140,9 +138,7 @@ void PhysicsSystem::step(float elapsed_ms)
                 for (int x = minGridX; x <= maxGridX; ++x) {
 					if (grid[y][x] == 3) {
 						grid[y][x] = 4; // Turn 3 into 4
-					} else if (grid[y][x] == 0 || grid[y][x] == 2) {
-                        grid[y][x] = 2;
-                    }
+					} 
                 }
             }
         } else {
@@ -160,9 +156,7 @@ void PhysicsSystem::step(float elapsed_ms)
                 for (int x = minGridX; x <= maxGridX; ++x) {
 					if (grid[y][x] == 3) {
 						grid[y][x] = 4; // Turn 3 into 4
-					} else if (grid[y][x] == 0 || grid[y][x] == 2) {
-                        grid[y][x] = 2;
-                    }
+					}
                 }
             }
         } else {

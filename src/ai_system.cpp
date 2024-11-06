@@ -7,6 +7,7 @@
 #include <iostream>
 #include <queue>
 #include <utility>
+#include <algorithm>
 using namespace std;
 const float SEPARATION_DIST = 50.0f;  
 const float ALIGNMENT_DIST = 400.0f;  
@@ -28,48 +29,38 @@ const int dCol[] = {0, 0, -1, 1, -1, 1, -1, 1}; // Up, Down, Left, Right, Up-Lef
 
 
 
-bool isValid(bool vis[80][160], int row, int col) {
+bool isValid(int row, int col) {
     // If cell lies out of bounds
     if (row < 0 || col < 0 || row >= 80 || col >= 160)
         return false;
 
     // If cell is already visited or is a wall or goal
-    if (vis[row][col] || grid[row][col] == 1||grid[row][col] == 3)
+    if (vis[row][col]== 1 || grid[row][col] == 1 || grid[row][col] == 3)
         return false;
 
     return true;
 }
- 
-void BFS(int row, int col, Motion* motion, Motion* player_motion) {
-    // Initialize visited array
 
-    bool vis[80][160] = {{false}};
+vec2 BFS(int row, int col, Motion* motion,Motion* player_motion) {
+    // Initialize visited array
+    for (int i = 0; i < 80; i++) {
+        for (int j = 0; j < 160; j++) {
+            if (vis[i][j] == 1) {
+                vis[i][j] = 0;
+            }
+        }
+    }
 
     // Stores indices of the matrix cells
     queue<pair<int, int>> q;
     vector<vector<pair<int, int>>> parent(80, vector<pair<int, int>>(160, {-1, -1}));
-
     vector<pair<int, int>> path;
 
     // Mark the starting cell as visited and push it into the queue
     q.push({row, col});
-    vis[row][col] = true;
-    
-    // for (int i = 0; i<80;i++){
-    //     for (int j = 0; j<160;j++){
-    //         if (grid[i][j] == 0){
-    //             cout << ".";
-    //         } else if (i==static_cast<int>(player_motion->position.y / 12) && j==static_cast<int>(player_motion->position.x / 12)){
-    //             cout << "P";
-    //         } else if (i==row && j==col){
-    //             cout << "S";
-    //         } else {
-    //             cout << grid[i][j];
-    //         }
-    //     }
-    //     cout << endl;
-    // }
-    // Iterate while the queue is not empty
+
+    vis[row][col] = 1;
+
     while (!q.empty()) {
         pair<int, int> cell = q.front();
         int y = cell.first;
@@ -77,55 +68,70 @@ void BFS(int row, int col, Motion* motion, Motion* player_motion) {
         q.pop();
 
         // Check if we've reached the goal
-
-        if (y == static_cast<int>(player_motion->position.y / 12) && x == static_cast<int>(player_motion->position.x / 12)) {
-
-            // Reconstruct the path to get the next position
+        if (grid[y][x] == 2||grid[y][x] == 4) {            // Reconstruct the path to get the next position
             pair<int, int> next_position = {y, x};
             while (parent[next_position.first][next_position.second] != make_pair(row, col)) {
+                
                 path.push_back(next_position);
                 next_position = parent[next_position.first][next_position.second];
+                grid[next_position.first][next_position.second] = grid[next_position.first][next_position.second]==3||grid[next_position.first][next_position.second]==4?4:2;
                 // Safety check to prevent infinite loop
                 if (next_position.first == -1 && next_position.second == -1) {
                     break;
                 }
             }
 
-
-            path.push_back({row, col});
             reverse(path.begin(), path.end());
+
             // Calculate the direction based on the next step in the path
             if (path.size() > 1) {
-                int next_y = path[1].first; // The second element is the next step
-                int next_x = path[1].second;
+                int next_y = path[0].first; // The second element is the next step
+                int next_x = path[0].second;
                 int dx = next_x - col;
                 int dy = next_y - row;
 
                 // Set the velocity based on the direction
                 motion->velocity.x = (dx > 0) ? 50 : (dx < 0) ? -50 : 0;
                 motion->velocity.y = (dy > 0) ? 50 : (dy < 0) ? -50 : 0;
+                
+                if (dx > 0 && dy > 0) {
+                    return {1, 1};
+                } else if (dx > 0 && dy < 0) {
+                    return {1, -1};
+                } else if (dx < 0 && dy > 0) {
+                    return {-1, 1};
+                } else if (dx < 0 && dy < 0) {
+                    return {-1, -1};
+                } else if (dx == 0 && dy > 0) {
+                    return {0, sqrt(2)};
+                } else if (dx == 0 && dy < 0) {
+                    return {0, -sqrt(2)};
+                } else if (dx > 0 && dy == 0) {
+                    return {sqrt(2), 0};
+                } else if (dx < 0 && dy == 0) {
+                    return {-sqrt(2), 0};
+                } else {
+                    return {motion->velocity.x/motion->velocity.x, motion->velocity.y/motion->velocity.y}; // Handle the case where dx == 0 and dy == 0
+                }
             }
-
-            return;
         }
-
+ 
         // Explore all 8 adjacent cells
         for (int i = 0; i < 8; i++) {
             int adjx = x + dCol[i];
             int adjy = y + dRow[i];
 
             // Ensure adjx and adjy are within bounds before accessing arrays
-            if (isValid(vis, adjy, adjx)) {
+            if (isValid(adjy, adjx)) {
                 q.push({adjy, adjx});
-                vis[adjy][adjx] = true;
+                vis[adjy][adjx] = 1;
                 parent[adjy][adjx] = {y, x};
             }
         }
     }
 
     // If no path is found
-    // cout << "No path found" << endl;
-    motion->velocity = {0, 0}; // Return an invalid velocity if the target is not found
+    return {0, 0}; // Return an invalid velocity if the target is not found
 }
 
 
@@ -234,7 +240,79 @@ void AISystem::step(float elapsed_ms)
         motion.velocity.y = new_velocity.y;
         motion.angle = atan2(new_velocity.y, new_velocity.x) + 0.5 * M_PI;
     }
+    for (int i = 0; i<80;i++){
+        for (int j = 0; j<160;j++){
+            if (grid[i][j]==2){
+                grid[i][j] = 0;
+            } else if (grid[i][j]==4){
+                grid[i][j] = 3;
+            }
+        }
+    }
+    grid[static_cast<int>(player_motion->position.y / 12)][static_cast<int>(player_motion->position.x / 12)] = grid[static_cast<int>(player_motion->position.y / 12)][static_cast<int>(player_motion->position.x / 12)]==4||grid[static_cast<int>(player_motion->position.y / 12)][static_cast<int>(player_motion->position.x / 12)]==3?4:2;
+    
 
+    // Collect KING_CLUBS entities
+    std::vector<Entity> king_clubs;
+    for (Entity entity : registry.deadlys.entities) {
+        Deadly& deadly = registry.deadlys.get(entity);
+        if (deadly.enemy_type == ENEMIES::KING_CLUBS) {
+            king_clubs.push_back(entity);
+        }
+    }
+
+    // Sort KING_CLUBS by distance to player
+    std::sort(king_clubs.begin(), king_clubs.end(), [&](const Entity a, const Entity b) {
+        Motion& motion_a = registry.motions.get(a);
+        Motion& motion_b = registry.motions.get(b);
+        float dist_a = glm::distance(motion_a.position, player_motion->position);
+        float dist_b = glm::distance(motion_b.position, player_motion->position);
+        return dist_a < dist_b;
+    });
+
+    // Process sorted KING_CLUBS
+    for (Entity entity : king_clubs) {
+        Motion& motion = registry.motions.get(entity);
+
+        vec2 separation_force = { 0.f, 0.f };
+        int separation_count = 0;
+
+        for (Entity other : registry.deadlys.entities) {
+            Deadly& deadly_other = registry.deadlys.get(other);
+
+            if (deadly_other.enemy_type != ENEMIES::KING_CLUBS || other == entity) {
+                continue;
+            }
+
+            Motion& other_motion = registry.motions.get(other);
+            vec2 other_position = { other_motion.position.x, other_motion.position.y };
+            float dist = length(other_position - motion.position);
+
+            if (dist < SEPARATION_DIST && dist > 0) {
+                vec2 diff = normalize(motion.position - other_position) / dist;
+                separation_force += diff;
+                separation_count++;
+            }
+        }
+
+        if (separation_count > 0) {
+            separation_force /= static_cast<float>(separation_count);
+            separation_force *= 69420.f;
+            separation_force = cap_velocity(separation_force, 0.5f * MAX_PUSH * (1 + 0.05f * separation_count));
+        }
+
+        int startRow = static_cast<int>(motion.position.y) / 12;
+        int startCol = static_cast<int>(motion.position.x) / 12;
+
+        motion.velocity = BFS(startRow, startCol, &motion, player_motion);
+        motion.velocity *= 50;
+        // motion.velocity = cap_velocity(motion.velocity + separation_force, 50);
+
+        if ((motion.position.x > player_motion->position.x && motion.scale.y < 0) ||
+            (motion.position.x < player_motion->position.x && motion.scale.y > 0)) {
+            motion.scale.y *= -1;
+        }
+    }
 	for (Entity entity : registry.deadlys.entities) { // root of decision tree
 		Motion& motion = registry.motions.get(entity);
 		Deadly& deadly = registry.deadlys.get(entity);
@@ -286,51 +364,9 @@ void AISystem::step(float elapsed_ms)
             }
             continue;
 		}
-		else if (deadly.enemy_type == ENEMIES::KING_CLUBS) {
-            vec2 separation_force = { 0.f, 0.f };
-            int separation_count = 0;
 
-            for (Entity other : registry.deadlys.entities) {
-                Deadly& deadly_other = registry.deadlys.get(entity);
+    }
 
-                if (deadly_other.enemy_type != ENEMIES::KING_CLUBS) {
-                    continue;
-                }
-                if (other == entity) {
-                    continue;
-                }
-
-                Motion& other_motion = registry.motions.get(other);
-                vec2 other_position = { other_motion.position.x, other_motion.position.y };
-
-                float dist = length(other_position - motion.position);
-
-                if (dist < SEPARATION_DIST && dist > 0) {
-                    vec2 diff = normalize(motion.position - other_position) / dist;
-                    separation_force += diff;
-                    separation_count++;
-                }
-            }
-
-            if (separation_count > 0) {
-                separation_force /= (float)separation_count;
-                separation_force *= 69420.f;
-                separation_force = cap_velocity(separation_force, 0.5 * MAX_PUSH * (1 + 0.05 * separation_count));
-            }
- 
-
-                int startRow = static_cast<int>(motion.position.y)/12;
-                int startCol = static_cast<int>(motion.position.x)/12;
-
-                BFS(startRow, startCol, &motion,player_motion);
-                motion.velocity = cap_velocity(motion.velocity + separation_force, 50);
-            
-            if ((motion.position.x > player_motion->position.x && motion.scale.y < 0) ||
-                (motion.position.x < player_motion->position.x && motion.scale.y > 0)) {
-                motion.scale.y *= -1;
-            }
-        }        
-	}
 
     for (Entity heart_entity : registry.healsEnemies.entities) {
         Motion& heart_motion = registry.motions.get(heart_entity);

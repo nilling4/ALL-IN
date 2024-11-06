@@ -308,7 +308,7 @@ void RenderSystem::draw(std::string what)
 	if (what == "the game bruh") {
 		// First render to the custom framebuffer
 		glDepthRange(0.00001, 10);
-		glClearColor(0.5, 0.4, 0.3, 1.0);
+		glClearColor(0.0, 0.0, 0., 1.0);
 		glClearDepth(10.f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glEnable(GL_BLEND);

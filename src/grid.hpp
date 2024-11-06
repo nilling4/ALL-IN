@@ -8,3 +8,4 @@ const int GRID_HEIGHT = 80;
 
 // Declare the grid
 extern int grid[GRID_HEIGHT][GRID_WIDTH];
+extern int vis[GRID_HEIGHT][GRID_WIDTH];
