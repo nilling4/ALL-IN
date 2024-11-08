@@ -13,6 +13,15 @@
 #include <iostream>
 #include <sstream>
 
+// matrices
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+// fonts
+#include <ft2build.h>
+#include FT_FREETYPE_H
+
 // World initialization
 bool RenderSystem::init(GLFWwindow* window_arg)
 {
@@ -59,6 +68,20 @@ bool RenderSystem::init(GLFWwindow* window_arg)
 
 	initializeGlEffects();
 	initializeGlGeometryBuffers();
+
+	std::cout << "Initializing fonts." << std::endl;
+
+	// setup fonts
+	std::string font_filename = PROJECT_SOURCE_DIR + std::string("data/fonts/Kenney_Pixel_Square.ttf");
+	unsigned int font_default_size = 48;
+	if (!fontInit(window, font_filename, font_default_size)) {
+		std::cerr << "ERROR::RENDER_SYSTEM: Font initialization failed." << std::endl;
+		return false;
+	}
+
+	glBindVertexArray(vao);
+
+	std::cout << "Render System Initialized." << std::endl;
 
 	return true;
 }
@@ -313,6 +336,112 @@ void RenderSystem::initializeHUDGeometry()
 	bindVBOandIBO(GEOMETRY_BUFFER_ID::HUD, hud_vertices, hud_indices);
 }
 
+bool RenderSystem::fontInit(GLFWwindow* window, const std::string& font_filename, unsigned int font_default_size) {
+	// Load shaders using the existing loadEffectFromFile function
+	std::string vertexShaderPath = PROJECT_SOURCE_DIR + std::string("shaders/font.vs.glsl");
+	std::string fragmentShaderPath = PROJECT_SOURCE_DIR + std::string("shaders/font.fs.glsl");
+
+	if (!loadEffectFromFile(vertexShaderPath, fragmentShaderPath, m_font_shaderProgram)) {
+		std::cerr << "ERROR::RENDER_SYSTEM: Font shader loading failed." << std::endl;
+		return false;
+	}
+
+	// Set up orthographic projection for font rendering
+	glUseProgram(m_font_shaderProgram);
+	glm::mat4 projection = glm::ortho(0.0f, static_cast<float>(window_width_px), 0.0f, static_cast<float>(window_height_px));
+	GLint project_location = glGetUniformLocation(m_font_shaderProgram, "projection");
+	if (project_location == -1) {
+		std::cerr << "ERROR::RENDER_SYSTEM: Failed to locate 'projection' uniform." << std::endl;
+		return false;
+	}
+	glUniformMatrix4fv(project_location, 1, GL_FALSE, glm::value_ptr(projection));
+
+	// Enable blending for text rendering
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	// Initialize FreeType and load the font
+	FT_Library ft;
+	if (FT_Init_FreeType(&ft)) {
+		std::cerr << "ERROR::FREETYPE: Could not init FreeType Library" << std::endl;
+		return false;
+	}
+
+	FT_Face face;
+	if (FT_New_Face(ft, font_filename.c_str(), 0, &face)) {
+		std::cerr << "ERROR::FREETYPE: Failed to load font: " << font_filename << std::endl;
+		FT_Done_FreeType(ft);
+		return false;
+	}
+	FT_Set_Pixel_Sizes(face, 0, font_default_size);
+
+	// Generate VAO and VBO for font rendering
+	glGenVertexArrays(1, &m_font_VAO);
+	glGenBuffers(1, &m_font_VBO);
+	glBindVertexArray(m_font_VAO);
+	glBindBuffer(GL_ARRAY_BUFFER, m_font_VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 4, NULL, GL_DYNAMIC_DRAW);
+
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+
+	// Load characters into texture map
+	if (!loadCharacters(face)) {
+		std::cerr << "ERROR::FREETYPE: Failed to load characters into texture map." << std::endl;
+		FT_Done_Face(face);
+		FT_Done_FreeType(ft);
+		return false;
+	}
+
+	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
+	gl_has_errors();
+	/////////////////////////////////////////////////////////
+
+		// Clean up FreeType objects
+	FT_Done_Face(face);
+	FT_Done_FreeType(ft);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+
+	return true;
+}
+
+bool RenderSystem::loadCharacters(FT_Face face) {
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // Disable byte-alignment restriction
+
+	// Load each character's glyph into a texture
+	for (unsigned char c = 0; c < 128; c++) {
+		if (FT_Load_Char(face, c, FT_LOAD_RENDER)) {
+			std::cerr << "ERROR::FREETYPE: Failed to load Glyph for character " << c << std::endl;
+			continue;
+		}
+
+		// Generate texture for each character glyph
+		unsigned int texture;
+		glGenTextures(1, &texture);
+		glBindTexture(GL_TEXTURE_2D, texture);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, face->glyph->bitmap.width, face->glyph->bitmap.rows, 0, GL_RED, GL_UNSIGNED_BYTE, face->glyph->bitmap.buffer);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+		// Store character and its properties for later use
+		Character character = {
+			texture,
+			glm::ivec2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
+			glm::ivec2(face->glyph->bitmap_left, face->glyph->bitmap_top),
+			static_cast<unsigned int>(face->glyph->advance.x)
+		};
+		m_ftCharacters.insert(std::pair<char, Character>(c, character));
+	}
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+	return true;
+}
 
 RenderSystem::~RenderSystem()
 {

@@ -7,6 +7,20 @@
 #include "components.hpp"
 #include "tiny_ecs.hpp"
 
+#include "ft2build.h"
+#include FT_FREETYPE_H
+
+#include <map>
+
+// font character structure
+struct Character {
+	unsigned int TextureID;  // ID handle of the glyph texture
+	glm::ivec2   Size;       // Size of glyph
+	glm::ivec2   Bearing;    // Offset from baseline to left/top of glyph
+	unsigned int Advance;    // Offset to advance to next glyph
+	char character;
+};
+
 // System responsible for setting up OpenGL and for rendering all the
 // visual entities in the game
 class RenderSystem {
@@ -21,6 +35,15 @@ class RenderSystem {
 	std::array<ivec2, texture_count> texture_dimensions;
 	GLuint m_diamond_texture;
 	GLuint vao;
+
+	// font elements
+	std::map<char, Character> m_ftCharacters;
+	GLuint m_font_shaderProgram;
+	GLuint m_font_VAO;
+	GLuint m_font_VBO;
+
+	//GLuint vao;
+
 	// Make sure these paths remain in sync with the associated enumerators.
 	// Associated id with .obj path
 	const std::vector < std::pair<GEOMETRY_BUFFER_ID, std::string>> mesh_paths =
@@ -97,12 +120,18 @@ public:
 	// Draw all entities
 	void draw(std::string what);
 
+	void renderText(const std::string& text, float x, float y, float scale, const glm::vec3& color, const glm::mat4& trans);
+
 	mat3 createProjectionMatrix();
 	mat3 createStaticProjectionMatrix();
 	mat3 createHUDProjectionMatrix();
 
 	// initialize the HUD geometry
 	void initializeHUDGeometry();
+
+	bool fontInit(GLFWwindow* window, const std::string& font_filename, unsigned int font_default_size);
+
+	bool loadCharacters(FT_Face face);
 
 private:
 	// Internal drawing functions for each entity type
