@@ -106,6 +106,10 @@ elseif (IS_OS_WINDOWS)
 	set(SDL2MIXER_DLL "${CMAKE_CURRENT_SOURCE_DIR}/ext/sdl/lib/SDL2_mixer-x86.dll")
     endif()
 
+    # FreeType - Windows-specific (x64 only)
+    set (FREETYPE_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/ext/freetype/include")
+    set (FREETYPE_LIBRARY "${CMAKE_CURRENT_SOURCE_DIR}/ext/freetype/release static/vs2015-2022/win64/freetype.lib")
+
     # Copy and rename dlls
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
@@ -145,6 +149,30 @@ if (NOT GLFW_FOUND OR NOT SDL2_FOUND)
    else ()
       message(FATAL_ERROR "Can't find SDL2." )
    endif()
+endif()
+
+find_package(Freetype)
+
+if(TARGET Freetype::Freetype)
+    target_link_libraries(${PROJECT_NAME} PUBLIC Freetype::Freetype)
+elseif(TARGET freetype)
+    add_library(Freetype::Freetype ALIAS freetype)
+    target_link_libraries(${PROJECT_NAME} PUBLIC Freetype::Freetype)
+elseif(TARGET Freetype)
+    add_library(Freetype::Freetype ALIAS Freetype)
+    target_link_libraries(${PROJECT_NAME} PUBLIC Freetype::Freetype)
+else()
+    if(IS_OS_WINDOWS AND EXISTS "${FREETYPE_INCLUDE_DIRS}" AND EXISTS "${FREETYPE_LIBRARY}")
+        message(STATUS "Using manually specified FreeType paths")
+        target_include_directories(${PROJECT_NAME} PUBLIC ${FREETYPE_INCLUDE_DIRS})
+        target_link_libraries(${PROJECT_NAME} PUBLIC ${FREETYPE_LIBRARY})
+    elseif(IS_OS_MAC)
+        message(FATAL_ERROR "Can't find FreeType. Please install FreeType with 'brew install freetype' and try again.")
+    elseif(IS_OS_LINUX)
+        message(FATAL_ERROR "Can't find FreeType. Please install FreeType with 'sudo apt-get install libfreetype6-dev' or equivalent and try again.")
+    else()
+        message(FATAL_ERROR "Can't find FreeType (fonts). Please check your paths or install FreeType.")
+    endif()
 endif()
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${GLFW_INCLUDE_DIRS})

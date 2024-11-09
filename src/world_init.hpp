@@ -57,6 +57,7 @@ Entity createDoor(RenderSystem* renderer, vec2 position);
 Entity createHUD(RenderSystem* renderer, vec2 position, vec2 size);
 
 Entity createCoin(RenderSystem* renderer, vec2 position);
+Entity createHUDCoin(RenderSystem* renderer, vec2 position);
 
 // a red line for debugging purposes
 Entity createLine(vec2 position, vec2 size);

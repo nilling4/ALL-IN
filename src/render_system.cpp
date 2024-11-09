@@ -6,6 +6,9 @@
 #include "components.hpp"
 #include "tiny_ecs_registry.hpp"
 
+// matrices
+#include <glm/gtc/type_ptr.hpp>
+
 void RenderSystem::drawTexturedMesh(Entity entity,
 									const mat3 &projection)
 {
@@ -19,6 +22,8 @@ void RenderSystem::drawTexturedMesh(Entity entity,
 	transform.scale(motion.scale);
 	// !!! TODO A1: add rotation to the chain of transformations, mind the order
 	// of transformations
+
+	glBindVertexArray(vao);
 
 	assert(registry.renderRequests.has(entity));
 	const RenderRequest &render_request = registry.renderRequests.get(entity);
@@ -171,6 +176,7 @@ void RenderSystem::drawTexturedMesh(Entity entity,
 // water
 void RenderSystem::drawToScreen()
 {
+	glBindVertexArray(vao);
 	// Setting shaders
 	// get the water texture, sprite mesh, and program
 	glUseProgram(effects[(GLuint)EFFECT_ASSET_ID::WATER]);
@@ -230,6 +236,8 @@ void RenderSystem::drawBackground() {
 	transform.translate(vec2(window_width_px/2+320, window_height_px/2+120));
     transform.scale(vec2(window_width_px*89/120, window_height_px*19/30));
     mat3 projection = createProjectionMatrix();
+
+	glBindVertexArray(vao);
 
     // Get the shader program
     const GLuint program = effects[(GLuint)EFFECT_ASSET_ID::TEXTURED];
@@ -335,12 +343,19 @@ void RenderSystem::draw(std::string what)
 			drawTexturedMesh(entity, projection_2D);
 		}
 
+		glm::vec3 font_color = glm::vec3(1.0, 1.0, 1.0);
+		glm::mat4 font_trans = glm::mat4(1.0f);
+
+		// transformation matrix
+		glm::mat4 trans = glm::mat4(1.0f);
+
+		renderText(num_coins, window_width_px * 0.05, window_height_px * 0.90, 1.0f, font_color, font_trans);
 
 		//// draw the hud at the end so it stays on top and use a separate projection matrix to lock it to screen
-		//mat3 hud_projection = createHUDProjectionMatrix();
-		//for (Entity hud_entity : registry.hud.entities) {
-		//	drawTexturedMesh(hud_entity, hud_projection);
-		//}
+		mat3 hud_projection = createHUDProjectionMatrix();
+		for (Entity hud_entity : registry.hud.entities) {
+			drawTexturedMesh(hud_entity, hud_projection);
+		}
 
 	} else if (what == "the home screen duh" || what == "the tuts") {
 		mat3 projection_2D = createStaticProjectionMatrix();
@@ -372,6 +387,90 @@ void RenderSystem::draw(std::string what)
 
 	// flicker-free display with a double buffer
 	glfwSwapBuffers(window);
+	gl_has_errors();
+}
+
+void RenderSystem::updateCoinNum(std::string coins) {
+	num_coins = coins;
+}
+
+void RenderSystem::renderText(const std::string& text, float x, float y, float scale, const glm::vec3& color, const glm::mat4& trans) {
+
+	glBindVertexArray(m_font_VAO);
+	gl_has_errors();
+
+	// activate the shader program
+	glUseProgram(m_font_shaderProgram);
+	gl_has_errors();
+
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	gl_has_errors();
+
+	// get shader uniforms
+	GLint textColor_location = glGetUniformLocation(m_font_shaderProgram, "textColor");
+	//std::cout << "textColor_location: " << textColor_location << std::endl;
+	glUniform3f(textColor_location, color.x, color.y, color.z);
+
+	gl_has_errors();
+
+	GLint transformLoc = glGetUniformLocation(m_font_shaderProgram, "transform");
+	//std::cout << "transformLoc: " << transformLoc << std::endl;
+	glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
+
+	gl_has_errors();
+
+	// iterate through all characters
+	std::string::const_iterator c;
+	for (c = text.begin(); c != text.end(); c++)
+	{
+		Character ch = m_ftCharacters[*c];
+
+		if (ch.TextureID == 0) {
+			std::cerr << "Warning: TextureID for character '" << *c << "' is 0." << std::endl;
+			continue;
+		}
+		else {
+			//std::cout << "TextureID for character '" << *c << "': " << ch.TextureID << std::endl;  // Debugging line
+		}
+
+		float xpos = x + ch.Bearing.x * scale;
+		float ypos = y - (ch.Size.y - ch.Bearing.y) * scale;
+
+		float w = ch.Size.x * scale;
+		float h = ch.Size.y * scale;
+		// update VBO for each character
+		float vertices[6][4] = {
+			{ xpos,     ypos + h,   0.0f, 0.0f },
+			{ xpos,     ypos,       0.0f, 1.0f },
+			{ xpos + w, ypos,       1.0f, 1.0f },
+
+			{ xpos,     ypos + h,   0.0f, 0.0f },
+			{ xpos + w, ypos,       1.0f, 1.0f },
+			{ xpos + w, ypos + h,   1.0f, 0.0f }
+		};
+
+		// render glyph texture over quad
+		//glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, ch.TextureID);
+		gl_has_errors();
+
+
+		// update content of VBO memory
+		glBindBuffer(GL_ARRAY_BUFFER, m_font_VBO);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		gl_has_errors();
+
+		// render quad
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+		// now advance cursors for next glyph (note that advance is number of 1/64 pixels)
+		x += (ch.Advance >> 6) * scale; // bitshift by 6 to get value in pixels (2^6 = 64)
+		gl_has_errors();
+	}
+
+	glBindVertexArray(0);
+	glBindTexture(GL_TEXTURE_2D, 0);
 	gl_has_errors();
 }
 
