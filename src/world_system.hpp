@@ -58,7 +58,7 @@ private:
 	GLFWwindow* window;
 
 	// Number of coins collected
-	unsigned int coins;
+	unsigned int coins = 0;
 	float texture_num;
 	// Game state
 	RenderSystem* renderer;

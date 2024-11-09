@@ -42,8 +42,6 @@ class RenderSystem {
 	GLuint m_font_VAO;
 	GLuint m_font_VBO;
 
-	//GLuint vao;
-
 	// Make sure these paths remain in sync with the associated enumerators.
 	// Associated id with .obj path
 	const std::vector < std::pair<GEOMETRY_BUFFER_ID, std::string>> mesh_paths =
@@ -133,6 +131,8 @@ public:
 
 	bool loadCharacters(FT_Face face);
 
+	void updateCoinNum(std::string coins);
+
 private:
 	// Internal drawing functions for each entity type
 	void drawTexturedMesh(Entity entity, const mat3& projection);
@@ -147,6 +147,8 @@ private:
 	GLuint off_screen_render_buffer_depth;
 
 	Entity screen_state_entity;
+
+	std::string num_coins = "0";
 };
 
 bool loadEffectFromFile(

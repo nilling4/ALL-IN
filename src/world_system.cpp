@@ -506,6 +506,9 @@ void WorldSystem::restart_game() {
 	registry.list_all_components();
 	load();
 
+	createHUDCoin(renderer, { window_width_px * 0.03, window_height_px * 0.07 });
+	renderer->updateCoinNum(std::to_string(coins));
+
 	// create a new Protagonist
 	if (registry.players.size() == 0) {
 		player_protagonist = createProtagonist(renderer, { window_width_px / 2+320, window_height_px / 2 }, nullptr);
@@ -517,7 +520,7 @@ void WorldSystem::restart_game() {
 		global_wave = createWave();
 	}
 	// create a new HUD
-	createHUD(renderer, { window_width_px / 2, window_height_px }, { window_width_px / 4, window_height_px / 2 });
+	//createHUD(renderer, { window_width_px / 2, window_height_px }, { window_width_px / 4, window_height_px / 2 });
 
 	// Top Wall
 	
@@ -667,7 +670,8 @@ void WorldSystem::handle_collisions() {
 				if (!registry.deathTimers.has(entity)) {
 
 					// check if the eatable entity is a coin and increase player's coin count
-					coins++;					
+					coins++;		
+					renderer->updateCoinNum(std::to_string(coins));
 
 					// chew, count coins, and set the LightUp timer
 					registry.remove_all_components_of(entity_other);

@@ -308,6 +308,11 @@ void PhysicsSystem::step(float elapsed_ms)
 	if (debugging.in_debug_mode){
 		for (Entity entity : registry.motions.entities) {
 			if (registry.motions.has(entity)) {
+
+				if (registry.hud.has(entity)) {
+					continue;
+				}
+
 				Motion &motion = registry.motions.get(entity);
 				if (registry.players.has(entity)||!registry.collisions.has(entity)||registry.eatables.has(entity)||registry.deadlys.has(entity)) {
 					float min_x = motion.position.x - motion.scale.x / 2;

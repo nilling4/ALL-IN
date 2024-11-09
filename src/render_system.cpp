@@ -343,12 +343,19 @@ void RenderSystem::draw(std::string what)
 			drawTexturedMesh(entity, projection_2D);
 		}
 
+		glm::vec3 font_color = glm::vec3(1.0, 1.0, 1.0);
+		glm::mat4 font_trans = glm::mat4(1.0f);
+
+		// transformation matrix
+		glm::mat4 trans = glm::mat4(1.0f);
+
+		renderText(num_coins, window_width_px * 0.05, window_height_px * 0.90, 1.0f, font_color, font_trans);
 
 		//// draw the hud at the end so it stays on top and use a separate projection matrix to lock it to screen
-		//mat3 hud_projection = createHUDProjectionMatrix();
-		//for (Entity hud_entity : registry.hud.entities) {
-		//	drawTexturedMesh(hud_entity, hud_projection);
-		//}
+		mat3 hud_projection = createHUDProjectionMatrix();
+		for (Entity hud_entity : registry.hud.entities) {
+			drawTexturedMesh(hud_entity, hud_projection);
+		}
 
 	} else if (what == "the home screen duh" || what == "the tuts") {
 		mat3 projection_2D = createStaticProjectionMatrix();
@@ -378,17 +385,13 @@ void RenderSystem::draw(std::string what)
 	// Truely render to the screen
 	drawToScreen();
 
-	glm::vec3 font_color = glm::vec3(0.0, 0.0, 1.0);
-	glm::mat4 font_trans = glm::mat4(1.0f);
-
-	// transformation matrix
-	glm::mat4 trans = glm::mat4(1.0f);
-
-	renderText("test", 150.0f, 0.0f, 1.0f, font_color, font_trans);
-
 	// flicker-free display with a double buffer
 	glfwSwapBuffers(window);
 	gl_has_errors();
+}
+
+void RenderSystem::updateCoinNum(std::string coins) {
+	num_coins = coins;
 }
 
 void RenderSystem::renderText(const std::string& text, float x, float y, float scale, const glm::vec3& color, const glm::mat4& trans) {
