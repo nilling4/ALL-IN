@@ -76,8 +76,22 @@ private:
 
 	// music references
 	Mix_Music* background_music;
+	Mix_Chunk* m3_mus_w1;
+	Mix_Chunk* m3_mus_w2;
+	Mix_Chunk* m3_mus_w3;
+	Mix_Chunk* m3_mus_w4;
+	Mix_Chunk* m3_mus_w5;
 	Mix_Chunk* salmon_dead_sound;
 	Mix_Chunk* roulette_hit_sound;
+	Mix_Chunk* m3_sfx_coin;
+	Mix_Chunk* m3_sfx_knife;
+	Mix_Chunk* m3_sfx_door_b;
+	Mix_Chunk* m3_sfx_door_c;
+	Mix_Chunk* m3_sfx_door_l1;
+	Mix_Chunk* m3_sfx_door_l2;
+	Mix_Chunk* m3_sfx_door_s;
+	Mix_Chunk* m3_amb_eerie;
+	Mix_Chunk* m3_amb_heartbeats;
 
 	// C++ random number generator
 	std::default_random_engine rng;

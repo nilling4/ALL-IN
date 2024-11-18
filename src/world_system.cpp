@@ -117,9 +117,43 @@ GLFWwindow* WorldSystem::create_window() {
 		return nullptr;
 	}
 
+	Mix_AllocateChannels(16);
+	/*
+	channels
+	- 1: background music
+	- 2: door sounds
+	- 3: coin sounds
+	- 4: taking damage sounds
+	- 5: ambient_sounds (nothing for now)
+	- 6: nothing for now
+	- 7: nothing for now
+	- 8: nothing for now
+	- 9: roulette ball sounds
+	- 10: other projectile sounds  (nothing for now)
+	- 11: other projectile sounds  (nothing for now)
+	- 12: other projectile sounds  (nothing for now)
+	- 13: other projectile sounds  (nothing for now)
+	- 14: nothing for now
+	- 15: rare stuff (death sound for now)
+	*/
+
 	background_music = Mix_LoadMUS(audio_path("music_careful.wav").c_str());
+	m3_mus_w1 = Mix_LoadWAV(audio_path("m3_music_simple_early.wav").c_str());
+	m3_mus_w2 = Mix_LoadWAV(audio_path("m3_music_dark_secrets.wav").c_str());
+	m3_mus_w3 = Mix_LoadWAV(audio_path("m3_music_midgame_sinister_witch.wav").c_str());
+	m3_mus_w4 = Mix_LoadWAV(audio_path("m3_music_eerie_mysterious_question.wav").c_str());
+	m3_mus_w5 = Mix_LoadWAV(audio_path("m3_music_endgame_ticking_evil.wav").c_str());
 	salmon_dead_sound = Mix_LoadWAV(audio_path("death_sound.wav").c_str());
 	roulette_hit_sound = Mix_LoadWAV(audio_path("roulette_hit.wav").c_str());
+	m3_sfx_coin =  Mix_LoadWAV(audio_path("m3_coin_collect.wav").c_str());
+	m3_sfx_knife =  Mix_LoadWAV(audio_path("m3_knife_stab.wav").c_str());
+	m3_sfx_door_b =  Mix_LoadWAV(audio_path("m3_door_beat_drop.wav").c_str());
+	m3_sfx_door_c =  Mix_LoadWAV(audio_path("m3_door_cymbal_stab.wav").c_str());
+	m3_sfx_door_l1 =  Mix_LoadWAV(audio_path("m3_door_low_whistle_hit.wav").c_str());
+	m3_sfx_door_l2 =  Mix_LoadWAV(audio_path("m3_door_low_whistle_hit2.wav").c_str());
+	m3_sfx_door_s =  Mix_LoadWAV(audio_path("m3_door_shocking_stab.wav").c_str());
+	m3_amb_eerie = Mix_LoadWAV(audio_path("m3_ambience_eerie1.wav").c_str());
+	m3_amb_heartbeats = Mix_LoadWAV(audio_path("m3_ambience_heartbeats.wav").c_str());
 
 	if (background_music == nullptr || salmon_dead_sound == nullptr || roulette_hit_sound == nullptr) {
 		if (!roulette_hit_sound) {
@@ -140,7 +174,8 @@ GLFWwindow* WorldSystem::create_window() {
 void WorldSystem::init(RenderSystem* renderer_arg) {
 	this->renderer = renderer_arg;
 	// Playing background music indefinitely
-	Mix_PlayMusic(background_music, -1);
+	// Mix_PlayMusic(background_music, -1);
+	Mix_PlayChannel(1, m3_mus_w1, 0);
 	fprintf(stderr, "Loaded music\n");
 
 	// Set all states to default
@@ -551,15 +586,40 @@ void WorldSystem::next_wave() {
 	int num_of_enemies[] = {
 		0, 6, 8, 13, 18, 24, 27, 28, 28, 29, 33, 34, 36, 39, 41, 44, 47, 50, 53, 56
 	};
+
 	if (wave.wave_num < 3) {
+		Mix_PlayChannel(2, m3_sfx_door_b, 0);
+		if (!Mix_Playing(1)) {
+			Mix_PlayChannel(1, m3_mus_w1, 0);
+		}		
 		wave.num_king_clubs = num_of_enemies[wave.wave_num];
 	} else if (wave.wave_num >=3 && wave.wave_num <7) {
+		if ((wave.wave_num == 3) || !Mix_Playing(1)) {
+			Mix_PlayChannel(1, m3_mus_w2, 0);
+		}
+		Mix_PlayChannel(2, m3_sfx_door_s, 0);		
 		int total_num_enemies = num_of_enemies[wave.wave_num];
 		int num_birds = ceil(total_num_enemies * 0.25);
 		int num_kings = total_num_enemies - num_birds;
 		wave.num_king_clubs = num_kings;
 		wave.num_bird_clubs = num_birds;
-	} else if (wave.wave_num >= 7 && wave.wave_num < 20) {
+	} else if (wave.wave_num >= 7 && wave.wave_num < 12) {
+		if ((wave.wave_num == 7) || !Mix_Playing(1)) {
+			Mix_PlayChannel(1, m3_mus_w3, 0);
+		}
+		Mix_PlayChannel(2, m3_sfx_door_l1, 0);		
+		int total_num_enemies = num_of_enemies[wave.wave_num];
+		int num_birds = ceil(total_num_enemies * 0.25);
+		int num_healers = ceil(total_num_enemies * 0.15);
+		int num_kings = total_num_enemies - num_birds - num_healers;
+		wave.num_king_clubs = num_kings;
+		wave.num_bird_clubs = num_birds;
+		wave.num_queen_hearts = num_healers;
+	} else if (wave.wave_num < 20) {
+		if ((wave.wave_num == 12) || !Mix_Playing(1)) {
+			Mix_PlayChannel(1, m3_mus_w4, 0);
+		}
+		Mix_PlayChannel(2, m3_sfx_door_c, 0);		
 		int total_num_enemies = num_of_enemies[wave.wave_num];
 		int num_birds = ceil(total_num_enemies * 0.25);
 		int num_healers = ceil(total_num_enemies * 0.15);
@@ -569,6 +629,10 @@ void WorldSystem::next_wave() {
 		wave.num_queen_hearts = num_healers;
 	} else {
 		// wave 20 and above, use formula
+		if ((wave.wave_num == 20) || !Mix_Playing(1)) {
+			Mix_PlayChannel(1, m3_mus_w5, 0);
+		}
+		Mix_PlayChannel(2, m3_sfx_door_l2, 0);	
 		int total_num_enemies = ceil(0.09f * wave.wave_num * wave.wave_num - 0.0029f * wave.wave_num + 23.9580f);
 		int num_birds = ceil(total_num_enemies * 0.25);
 		int num_healers = ceil(total_num_enemies * 0.05);
@@ -654,7 +718,7 @@ void WorldSystem::handle_collisions() {
 						registry.deathTimers.emplace(entity);
 						your_motion.velocity.x = 0.f;
 						your_motion.velocity.y = 0.f;
-						Mix_PlayChannel(-1, salmon_dead_sound, 0);		
+						Mix_PlayChannel(15, salmon_dead_sound, 0);		
 						std::ofstream ofs("save.json", std::ios::trunc);
 						if (ofs.is_open()) {
 							ofs.close();
@@ -662,6 +726,10 @@ void WorldSystem::handle_collisions() {
 						} else {
 							std::cerr << "Unable to open save.json for erasing." << std::endl;
 						}
+					}
+				} else {
+					if (!Mix_Playing(4)) {
+						Mix_PlayChannel(4, m3_sfx_knife, 0);
 					}
 				}
 			}
@@ -675,7 +743,7 @@ void WorldSystem::handle_collisions() {
 
 					// chew, count coins, and set the LightUp timer
 					registry.remove_all_components_of(entity_other);
-					Mix_PlayChannel(-1, roulette_hit_sound, 0);
+					Mix_PlayChannel(3, m3_sfx_coin, 0);
 				}
 			}
 			else if (registry.solids.has(entity_other)) {
@@ -755,7 +823,7 @@ void WorldSystem::handle_collisions() {
 						createCoin(renderer, registry.motions.get(entity_other).position);
 						registry.remove_all_components_of(entity_other);
 					}
-					Mix_PlayChannel(-1, roulette_hit_sound, 0);
+					Mix_PlayChannel(9, roulette_hit_sound, 0);
 				}
 			}
 
