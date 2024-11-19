@@ -93,9 +93,11 @@ int main()
 			renderer.draw("the home screen duh");
 			
             if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-                if (is_button_clicked(420, 650, 490, 620, mouse_x, mouse_y)) {
+                if (is_button_clicked(320, 530, 490, 620, mouse_x, mouse_y)) {
                     game_state = "playing";
-                } else if (is_button_clicked(675, 880, 490, 620, mouse_x, mouse_y)) {
+                } else if (is_button_clicked(560, 760, 490, 620, mouse_x, mouse_y)) {
+                    game_state = "playing"; // NOEL change this to shop
+                } else if (is_button_clicked(790, 1000, 490, 620, mouse_x, mouse_y)) {
                     game_state = "tutorial";
                 }
             }
