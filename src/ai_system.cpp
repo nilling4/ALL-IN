@@ -21,31 +21,7 @@ static float next_hearts_spawn = 5000.0f;
 void AISystem::init(RenderSystem* renderer_arg) {
     this->renderer = renderer_arg;
 }   
-vec2 getDirection(int dy, int dx) {
-    float dir_x = 0.0f;
-    float dir_y = 0.0f;
-    const float inv_sqrt2 = 0.707f;
 
-    if (dy > 0) {
-        dir_y = -1.0f;
-    } else if (dy < 0) {
-        dir_y = 1.0f;
-    }
-
-    if (dx > 0) {
-        dir_x = -1.0f;
-    } else if (dx < 0) {
-        dir_x = 1.0f;
-    }
-
-    // Normalize for diagonal directions
-    if (dy != 0 && dx != 0) {
-        dir_x *= inv_sqrt2;
-        dir_y *= inv_sqrt2;
-    }
-
-    return {dir_x, dir_y};
-}
 const int dRow[] = {-1, -1, 0, 1, 1, 1, 0, -1}; // Up, Up-Right, Right, Down-Right, Down, Down-Left, Left, Up-Left
 const int dCol[] = {0, 1, 1, 1, 0, -1, -1, -1}; // Corresponding columns
 // In ai_system.cpp
@@ -226,11 +202,13 @@ void AISystem::step(float elapsed_ms)
 		acceleration *= RANDOM_FORCE * fmin((cohesion_count+1.f), 15.f); 
 
 		acceleration += separation_force * 1.f + alignment_force * 1.f + cohesion_force * 1.f;
-
-		acceleration += normalize(player_motion->position - position)* fmin(3.f * (cohesion_count+0.f), 50.f);
+        int startRow = static_cast<int>(position.y)/12;
+        int startCol = static_cast<int>(position.x)/12;
+        
+		acceleration += move(startRow,startCol)* fmin(3.f * (cohesion_count+0.f), 50.f);
 
         if (length(player_motion->position - position) < SEPARATION_DIST*2) {
-            acceleration += normalize(player_motion->position - position) * 1000.f;
+            acceleration += move(startRow,startCol) * 1000.f;
             acceleration += separation_force * 10.f;
         }
 
