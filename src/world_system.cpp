@@ -603,10 +603,7 @@ void WorldSystem::restart_game() {
 
 	for (int i=1;i<39;i++){
 		for (int j=1;j<79;j++){
-			if (grid[i][j] == 2){
-				grid[i][j] = 0;
-
-			} else if (grid[i][j] == 4){
+			if (grid[i][j] == 4){
 				grid[i][j] = 3;
 
 			}
@@ -742,31 +739,31 @@ void WorldSystem::next_wave() {
 	} else if (wave.wave_num == 2) {
 		your.health = 200;
 		your.card_reload_time = 1933;
-		your.roulette_reload_time = 896;
+		your.roulette_reload_time = 1896;
 	} else if (wave.wave_num == 3) {
 		your.health = 200;
 		your.card_reload_time = 1672;
-		your.roulette_reload_time = 664;
+		your.roulette_reload_time = 1664;
 		your.dart_reload_time = 3367;
 	} else if (wave.wave_num == 4) {
 		your.health = 300;
 		your.card_reload_time = 1373;
-		your.roulette_reload_time = 326;
+		your.roulette_reload_time = 1326;
 		your.dart_reload_time = 2900;
 	} else if (wave.wave_num == 5) {
 		your.health = 300;
 		your.card_reload_time = 1042;
-		your.roulette_reload_time = 326;
+		your.roulette_reload_time = 1326;
 		your.dart_reload_time = 2500;
 	} else if (wave.wave_num == 6) {
 		your.health = 900;
 		your.card_reload_time = 852;
-		your.roulette_reload_time = 326;
+		your.roulette_reload_time = 1326;
 		your.dart_reload_time = 2200;
 	} else {
 		your.health = 1000;
 		your.card_reload_time = 549;
-		your.roulette_reload_time = 326;
+		your.roulette_reload_time = 1326;
 		your.dart_reload_time = 1700;
 	}
 	// remove all projectiles
@@ -1177,17 +1174,11 @@ void WorldSystem::on_key(int key, int, int action, int mod) {
 			for (int j = 0; j<160;j++){
 				if (i==static_cast<int>(player_motion->position.y / 12)&&j==static_cast<int>(player_motion->position.x / 12)){
 				std::cout << "K";
-				} else if (grid[i][j]==2){
-					std::cout << "P";
-				} else if (grid[i][j]==1){
-					std::cout << "1";
-				}else if (grid[i][j]==3){
-					std::cout << "3";
-				}  else if (grid[i][j]==0){
-					std::cout <<  ".";
-				} else {
-					std::cout << grid[i][j];
-				}
+				}  else if (flowField[i][j]==5000){
+				std::cout << "W";
+				}   else{
+					std::cout <<".";
+				}  
 			}
 			std::cout << std::endl;
 		}
@@ -1252,43 +1243,43 @@ void WorldSystem::handle_movement() {
 			component.velocity.y = 0.f;
 			texture_num = 0.5f;
 		} else if (up && right && down) {
-			component.velocity.x = 100.f;
+			component.velocity.x = 200.f;
 			component.velocity.y = 0.f;
 			texture_num += 0.05f;
 			if (texture_num > 2.99f) {
 				texture_num = 1.0f;
 			}
 		} else if (up && right && left) {
-			component.velocity.y = -100.f;
+			component.velocity.y = -200.f;
 			component.velocity.x = 0.f;
 			texture_num += 0.05f;
 			if (texture_num > 2.99f) {
 				texture_num = 1.0f;
 			}
 		} else if (up && left && down) {
-			component.velocity.x = -100.f;
+			component.velocity.x = -200.f;
 			component.velocity.y = 0.f;
 			texture_num += 0.05f;
 			if (texture_num > 2.99f) {
 				texture_num = 1.0f;
 			}
 		} else if (down && left && right) {
-			component.velocity.y = 100.f;
+			component.velocity.y = 200.f;
 			component.velocity.x = 0.f;
 			texture_num += 0.05f;
 			if (texture_num > 2.99f) {
 				texture_num = 1.0f;
 			}
 		} else if (up && right) {
-			component.velocity.x = cos(M_PI / 4) * 100.f;
-			component.velocity.y = -sin(M_PI / 4) * 100.f;
+			component.velocity.x = cos(M_PI / 4) * 200.f;
+			component.velocity.y = -sin(M_PI / 4) * 200.f;
 			texture_num += 0.05f;
 			if (texture_num > 2.99f) {
 				texture_num = 1.0f;
 			}
 		} else if (up && left) {
-			component.velocity.x = -cos(M_PI / 4) * 100.f;
-			component.velocity.y = -sin(M_PI / 4) * 100.f;
+			component.velocity.x = -cos(M_PI / 4) * 200.f;
+			component.velocity.y = -sin(M_PI / 4) * 200.f;
 			texture_num += 0.05f;
 			if (texture_num > 2.99f) {
 				texture_num = 1.0f;
@@ -1302,42 +1293,42 @@ void WorldSystem::handle_movement() {
 			component.velocity.y = 0.f;
 			texture_num = 0.5f;
 		} else if (right && down) {
-			component.velocity.x = cos(M_PI / 4) * 100.f;
-			component.velocity.y = sin(M_PI / 4) * 100.f;
+			component.velocity.x = cos(M_PI / 4) * 200.f;
+			component.velocity.y = sin(M_PI / 4) * 200.f;
 			texture_num += 0.05f;
 			if (texture_num > 2.99f) {
 				texture_num = 1.0f;
 			}
 		} else if (down && left) {
-			component.velocity.x = -cos(M_PI / 4) * 100.f;
-			component.velocity.y = sin(M_PI / 4) * 100.f;
+			component.velocity.x = -cos(M_PI / 4) * 200.f;
+			component.velocity.y = sin(M_PI / 4) * 200.f;
 			texture_num += 0.05f;
 			if (texture_num > 2.99f) {
 				texture_num = 1.0f;
 			}
 		} else if (up) {
-			component.velocity.y = -100.f;
+			component.velocity.y = -200.f;
 			component.velocity.x = 0.f;
 			texture_num += 0.05f;
 			if (texture_num > 2.99f) {
 				texture_num = 1.0f;
 			}
 		} else if (down) {
-			component.velocity.y = 100.f;
+			component.velocity.y = 200.f;
 			component.velocity.x = 0.f;
 			texture_num += 0.05f;
 			if (texture_num > 2.99f) {
 				texture_num = 1.0f;
 			}
 		} else if (right) {
-			component.velocity.x = 100.f;
+			component.velocity.x = 200.f;
 			component.velocity.y = 0.f;
 			texture_num += 0.05f;
 			if (texture_num > 2.99f) {
 				texture_num = 1.0f;
 			}
 		} else if (left) {
-			component.velocity.x = -100.f;
+			component.velocity.x = -200.f;
 			component.velocity.y = 0.f;
 			texture_num += 0.05f;
 			if (texture_num > 2.99f) {

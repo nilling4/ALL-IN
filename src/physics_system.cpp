@@ -2,9 +2,72 @@
 #include "physics_system.hpp"
 #include "world_init.hpp"
 #include "iostream"
-
+#include <queue>
+#include <utility>
 using namespace std;
 const float COLLECT_DIST = 100.0f;  
+const int dRow[] = {-1, -1, 0, 1, 1, 1, 0, -1}; // Up, Up-Right, Right, Down-Right, Down, Down-Left, Left, Up-Left
+const int dCol[] = {0, 1, 1, 1, 0, -1, -1, -1}; // Corresponding columns
+
+
+bool isValid(int row, int col) {
+    // If cell lies out of bounds
+    if (row < 0 || col < 0 || row >= 80 || col >= 160)
+        return false;
+
+    // If cell is already visited or is a wall or goal
+    if (grid[row][col] == 1 || grid[row][col] == 2|| grid[row][col] == 3)
+        return false;
+
+    return true;
+}
+
+void generateFlowField(int row, int col) {
+    // Initialize flowField
+    for (int i = 0; i < 80; i++) {
+        for (int j = 0; j < 160; j++) {
+            if (flowField[i][j] < 5000) {
+                flowField[i][j] = 5000;
+            }
+        }
+    }
+    flowField[row][col] = 0;
+	flowField[row][col-1] = 0;
+    // Stores indices of the matrix cells
+    queue<pair<int, int>> q;
+    q.push({row, col});
+	q.push({row, col-1});
+
+    while (!q.empty()) {
+        pair<int, int> cell = q.front();
+        int y = cell.first;
+        int x = cell.second;
+        q.pop();
+
+        // Explore all 8 adjacent cells
+		for (int i = 0; i < 8; i++) {
+			int adjx = x + dCol[i];
+			int adjy = y + dRow[i];
+			
+			// Ensure adjx and adjy are within bounds before accessing arrays
+			if (isValid(adjy, adjx)) {
+				// Determine if the direction is diagonal
+				bool isDiagonal = (dRow[i] != 0) && (dCol[i] != 0);
+				float cost = isDiagonal ? 14: 10;
+				if (flowField[adjy][adjx]<5000){
+					if (flowField[adjy][adjx] > flowField[y][x] + cost) {
+						flowField[adjy][adjx] = flowField[y][x] + cost;
+					}
+				}else{
+					flowField[adjy][adjx] = flowField[y][x] + cost;
+					q.push({adjy, adjx});
+				}
+					
+			}
+		}
+    }
+}
+
 
 // Returns the local bounding coordinates scaled by the current size of the entity
 vec2 get_bounding_box(const Motion& motion)
@@ -118,29 +181,12 @@ void PhysicsSystem::step(float elapsed_ms)
             }
             if (!canMoveY) break;
         }
-		for (int y = prevMinGridY; y <= prevMaxGridY; ++y) {
-            for (int x = prevMinGridX; x <= prevMaxGridX; ++x) {
-				if (canMoveX||canMoveY){
-					if (grid[y][x] == 4) {
-						grid[y][x] = 3; // Turn 4 into 3
 
-					} 
-
-				}
-
-            }
-        }
         if (canMoveX) {
             // Update the player's X position
             player_motion.position.x = new_position.x;
             // Update the new grid cells for X movement
-            for (int y = minGridY; y <= maxGridY; ++y) {
-                for (int x = minGridX; x <= maxGridX; ++x) {
-					if (grid[y][x] == 3) {
-						grid[y][x] = 4; // Turn 3 into 4
-					} 
-                }
-            }
+
         } else {
             // Handle collision by stopping the player's X movement
             player_motion.velocity.x = 0;
@@ -152,19 +198,16 @@ void PhysicsSystem::step(float elapsed_ms)
             // Update the player's Y position
             player_motion.position.y = new_position.y;
             // Update the new grid cells for Y movement
-            for (int y = minGridY; y <= maxGridY; ++y) {
-                for (int x = minGridX; x <= maxGridX; ++x) {
-					if (grid[y][x] == 3) {
-						grid[y][x] = 4; // Turn 3 into 4
-					}
-                }
-            }
+
         } else {
             // Handle collision by stopping the player's Y movement
             player_motion.velocity.y = 0;
             your.push.y = 0;
         }
-
+		if (canMoveX || canMoveY) {
+			// Update the flow field
+		generateFlowField(static_cast<int>(player_motion.position.y / 12), static_cast<int>(player_motion.position.x / 12));
+		}
         // Update the previous position
         player_motion.previous_position = player_motion.position;
         // Handle eatable entities
@@ -282,29 +325,43 @@ void PhysicsSystem::step(float elapsed_ms)
 		motion.position += motion.velocity * step_seconds;
 	}
 	}
-	for (Entity entity : registry.deadlys.entities) {
-		Motion& motion = motion_registry.get(entity);
-		vec2 new_position = motion.position + motion.velocity * step_seconds;
-		float width = motion.velocity.x>0?abs(motion.scale.x/2):-abs(motion.scale.x/2);
-		float height = motion.velocity.y>0?abs(motion.scale.y/2):-abs(motion.scale.y/2);
+    for (Entity entity : registry.deadlys.entities) {
+        if (!motion_registry.has(entity)) {
+            continue;
+        }
 
-		int grid_x = (int)((new_position.x + width) / 12);
-    	int grid_y = (int)((new_position.y + height) / 12);
 
-		if (grid[grid_y][grid_x] == 1) {
-			if (registry.boids.has(entity) || registry.otherDeadlys.has(entity)) {
-				if (grid[grid_y][(int)((motion.position.x + width) / 12)] == 1) {
-					motion.velocity.x = -motion.velocity.x;
-				}
-				if (grid[(int)((motion.position.y + height) / 12)][grid_x] == 1) {
-					motion.velocity.y = -motion.velocity.y;
-				}
-				motion.position += motion.velocity * step_seconds;
-			}
-		} else {
-			motion.position += motion.velocity * step_seconds;
-		}
-	}
+        Motion& motion = motion_registry.get(entity);
+        vec2 new_position = motion.position + motion.velocity * step_seconds;
+
+        float width = motion.velocity.x > 0 ? std::abs(motion.scale.x / 2) : -std::abs(motion.scale.x / 2);
+        float height = motion.velocity.y > 0 ? std::abs(motion.scale.y / 2) : -std::abs(motion.scale.y / 2);
+
+        int grid_x = static_cast<int>((new_position.x + width) / 12);
+        int grid_y = static_cast<int>((new_position.y + height) / 12);
+
+        // Validate grid indices
+        if (grid_y < 0 || grid_y >= 80 || grid_x < 0 || grid_x >= 160) {
+            registry.remove_all_components_of(entity);
+            continue;
+        }
+
+
+      if (grid[grid_y][grid_x] == 1) {
+        if (registry.boids.has(entity) || registry.otherDeadlys.has(entity)) {
+          if (grid[grid_y][(int)((motion.position.x + width) / 12)] == 1) {
+            motion.velocity.x = -motion.velocity.x;
+          }
+          if (grid[(int)((motion.position.y + height) / 12)][grid_x] == 1) {
+            motion.velocity.y = -motion.velocity.y;
+          }
+          motion.position += motion.velocity * step_seconds;
+        }
+      } else {
+        motion.position += motion.velocity * step_seconds;
+      }
+    }
+
 
 	for (Entity entity : registry.otherDeadlys.entities) {
 		Motion& motion = motion_registry.get(entity);

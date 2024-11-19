@@ -75,7 +75,7 @@ Entity createWallBlock(RenderSystem* renderer, vec2 pos) {
 			
 			// Ensure indices are within grid boundaries
 			if (new_y >= 0 && new_y < GRID_HEIGHT && new_x >= 0 && new_x < GRID_WIDTH && grid[new_y][new_x] == 0) {
-				grid[new_y][new_x] = 3;
+				grid[new_y][new_x] = 2;
 			}
 		}
 	}

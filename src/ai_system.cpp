@@ -5,9 +5,7 @@
 #include <cmath>
 #include "world_init.hpp"
 #include <iostream>
-#include <queue>
-#include <utility>
-#include <algorithm>
+
 using namespace std;
 const float SEPARATION_DIST = 50.0f;  
 const float ALIGNMENT_DIST = 400.0f;  
@@ -23,124 +21,130 @@ static float next_hearts_spawn = 5000.0f;
 void AISystem::init(RenderSystem* renderer_arg) {
     this->renderer = renderer_arg;
 }   
+vec2 getDirection(int dy, int dx) {
+    float dir_x = 0.0f;
+    float dir_y = 0.0f;
+    const float inv_sqrt2 = 0.707f;
 
-const int dRow[] = {-1, 1, 0, 0, -1, -1, 1, 1}; // Up, Down, Left, Right, Up-Left, Up-Right, Down-Left, Down-Right
-const int dCol[] = {0, 0, -1, 1, -1, 1, -1, 1}; // Up, Down, Left, Right, Up-Left, Up-Right, Down-Left, Down-Right
-
-
-
-bool isValid(int row, int col) {
-    // If cell lies out of bounds
-    if (row < 0 || col < 0 || row >= 80 || col >= 160)
-        return false;
-
-    // If cell is already visited or is a wall or goal
-    if (vis[row][col]== 1 || grid[row][col] == 1 || grid[row][col] == 3)
-        return false;
-
-    return true;
-}
-
-vec2 BFS(int row, int col, Motion* motion,Motion* player_motion) {
-    // Initialize visited array
-    for (int i = 0; i < 80; i++) {
-        for (int j = 0; j < 160; j++) {
-            if (vis[i][j] == 1) {
-                vis[i][j] = 0;
-            }
-        }
+    if (dy > 0) {
+        dir_y = -1.0f;
+    } else if (dy < 0) {
+        dir_y = 1.0f;
     }
 
-    // Stores indices of the matrix cells
-    queue<pair<int, int>> q;
-    vector<vector<pair<int, int>>> parent(80, vector<pair<int, int>>(160, {-1, -1}));
-    vector<pair<int, int>> path;
-
-    // Mark the starting cell as visited and push it into the queue
-    q.push({row, col});
-
-    vis[row][col] = 1;
-
-    while (!q.empty()) {
-        pair<int, int> cell = q.front();
-        int y = cell.first;
-        int x = cell.second;
-        q.pop();
-
-        // Check if we've reached the goal
-        if (grid[y][x] == 2||grid[y][x] == 4) {            // Reconstruct the path to get the next position
-            pair<int, int> next_position = {y, x};
-            while (parent[next_position.first][next_position.second] != make_pair(row, col)) {
-                
-                path.push_back(next_position);
-                next_position = parent[next_position.first][next_position.second];
-                grid[next_position.first][next_position.second] = grid[next_position.first][next_position.second]==3||grid[next_position.first][next_position.second]==4?4:2;
-                // Safety check to prevent infinite loop
-                if (next_position.first == -1 && next_position.second == -1) {
-                    break;
-                }
-            }
-
-            reverse(path.begin(), path.end());
-
-            // Calculate the direction based on the next step in the path
-            if (path.size() > 1) {
-                int next_y = path[0].first; // The second element is the next step
-                int next_x = path[0].second;
-                int dx = next_x - col;
-                int dy = next_y - row;
-
-                // Set the velocity based on the direction
-                motion->velocity.x = (dx > 0) ? 50 : (dx < 0) ? -50 : 0;
-                motion->velocity.y = (dy > 0) ? 50 : (dy < 0) ? -50 : 0;
-                
-                if (dx > 0 && dy > 0) {
-                    return {1, 1};
-                } else if (dx > 0 && dy < 0) {
-                    return {1, -1};
-                } else if (dx < 0 && dy > 0) {
-                    return {-1, 1};
-                } else if (dx < 0 && dy < 0) {
-                    return {-1, -1};
-                } else if (dx == 0 && dy > 0) {
-                    return {0, sqrt(2)};
-                } else if (dx == 0 && dy < 0) {
-                    return {0, -sqrt(2)};
-                } else if (dx > 0 && dy == 0) {
-                    return {sqrt(2), 0};
-                } else if (dx < 0 && dy == 0) {
-                    return {-sqrt(2), 0};
-                } else {
-                    return {motion->velocity.x/motion->velocity.x, motion->velocity.y/motion->velocity.y}; // Handle the case where dx == 0 and dy == 0
-                }
-            }
-        }
- 
-        // Explore all 8 adjacent cells
-        for (int i = 0; i < 8; i++) {
-            int adjx = x + dCol[i];
-            int adjy = y + dRow[i];
-
-            // Ensure adjx and adjy are within bounds before accessing arrays
-            if (isValid(adjy, adjx)) {
-                q.push({adjy, adjx});
-                vis[adjy][adjx] = 1;
-                parent[adjy][adjx] = {y, x};
-            }
-        }
+    if (dx > 0) {
+        dir_x = -1.0f;
+    } else if (dx < 0) {
+        dir_x = 1.0f;
     }
 
-    // If no path is found
-    return {0, 0}; // Return an invalid velocity if the target is not found
+    // Normalize for diagonal directions
+    if (dy != 0 && dx != 0) {
+        dir_x *= inv_sqrt2;
+        dir_y *= inv_sqrt2;
+    }
+
+    return {dir_x, dir_y};
 }
+const int dRow[] = {-1, -1, 0, 1, 1, 1, 0, -1}; // Up, Up-Right, Right, Down-Right, Down, Down-Left, Left, Up-Left
+const int dCol[] = {0, 1, 1, 1, 0, -1, -1, -1}; // Corresponding columns
+// In ai_system.cpp
 
 
+
+// Declare the flowField from physics_system.cpp
+
+// Define the vec2 structure if not already defined
+
+
+// Function to limit the velocity vector to a maximum length
 vec2 cap_velocity(vec2 v, float maxLength) {
-    float len = length(v);
+    float len = std::sqrt(v.x * v.x + v.y * v.y);
     if (len > maxLength) {
-        v = normalize(v) * maxLength;
+        return { v.x / len * maxLength, v.y / len * maxLength };
     }
     return v;
+}
+
+vec2 move(int row, int col) {
+    // Define the direction vectors for the 8 possible movements
+    const vec2 directionVectors[8] = {
+        {  0.0f,  -1.0f },        // Up
+        { 0.707f,  -0.707f },    // Up-Right
+        { 1.0f,  0.0f },        // Right
+        { 0.707f, 0.707f },    // Down-Right
+        {  0.0f, 1.0f },        // Down
+        {  -0.707f, 0.707f },    // Down-Left
+        {  -1.0f,  0.0f },        // Left
+        {  -0.707f,  -0.707f }     // Up-Left
+    };
+
+    vec2 movement = { 0.0f, 0.0f };
+    bool hasInvalidTile = false;
+    float minFlowValue = std::numeric_limits<float>::max();
+    vec2 minDirection = {0.0f, 0.0f};
+
+    // Iterate through all 8 directions
+    for (int i = 0; i < 8; ++i) {
+        int adjRow = row + dRow[i];
+        int adjCol = col + dCol[i];
+
+        if (!(adjRow < 0 || adjCol < 0 || adjRow >= 80 || adjCol >= 160||grid[adjRow][adjCol] == 1 || grid[adjRow][adjCol] == 2||grid[adjRow][adjCol] == 3)) {
+            float flowValue = flowField[adjRow][adjCol];
+            
+            // Avoid division by zero
+            if (flowValue > 0.0f) {
+                // Accumulate the weighted direction vectors
+                float weight = 1.0f / flowValue;
+                movement.x += directionVectors[i].x * weight;
+                movement.y += directionVectors[i].y * weight;
+            }
+        } else {
+            hasInvalidTile = true;
+
+            // Find the valid tile with the smallest flow value
+            for (int j = 0; j < 8; ++j) {
+                int checkRow = row + dRow[j];
+                int checkCol = col + dCol[j];
+                if (!(checkRow < 0 || checkCol < 0 || checkRow >= 80 || checkCol >= 160||grid[checkRow][checkCol] == 1 || grid[checkRow][checkCol] == 2||grid[checkRow][checkCol] == 3)) {
+                    float currentFlow = flowField[checkRow][checkCol];
+                    if (currentFlow < minFlowValue) {
+                        minFlowValue = currentFlow;
+                        minDirection = directionVectors[j];
+                    }
+                }
+            }
+        }
+    }
+
+    if (hasInvalidTile && minFlowValue < std::numeric_limits<float>::max()) {
+        // Apply 1/x to the selected direction vector
+        float weight = 1.0f / minFlowValue;
+        vec2 selectedMovement = { minDirection.x * weight, minDirection.y * weight };
+
+        // Normalize the movement vector to ensure consistent speed
+        float magnitude = std::sqrt(selectedMovement.x * selectedMovement.x + selectedMovement.y * selectedMovement.y);
+        if (magnitude > 0.0f) {
+            selectedMovement.x /= magnitude;
+            selectedMovement.y /= magnitude;
+        }
+
+        // Optionally, cap the velocity to a maximum speed
+        selectedMovement = cap_velocity(selectedMovement, MAX_SPEED);
+
+        return selectedMovement;
+    }
+    // Normalize the accumulated movement vector to ensure consistent speed
+    float totalMagnitude = std::sqrt(movement.x * movement.x + movement.y * movement.y);
+    if (totalMagnitude > 0.0f) {
+        movement.x /= totalMagnitude;
+        movement.y /= totalMagnitude;
+    }
+
+    // Optionally, cap the velocity to a maximum speed
+    movement = cap_velocity(movement, MAX_SPEED);
+
+    return movement;
 }
 
 void AISystem::step(float elapsed_ms)
@@ -240,79 +244,8 @@ void AISystem::step(float elapsed_ms)
         motion.velocity.y = new_velocity.y;
         motion.angle = atan2(new_velocity.y, new_velocity.x) + 0.5 * M_PI;
     }
-    for (int i = 0; i<80;i++){
-        for (int j = 0; j<160;j++){
-            if (grid[i][j]==2){
-                grid[i][j] = 0;
-            } else if (grid[i][j]==4){
-                grid[i][j] = 3;
-            }
-        }
-    }
-    grid[static_cast<int>(player_motion->position.y / 12)][static_cast<int>(player_motion->position.x / 12)] = grid[static_cast<int>(player_motion->position.y / 12)][static_cast<int>(player_motion->position.x / 12)]==4||grid[static_cast<int>(player_motion->position.y / 12)][static_cast<int>(player_motion->position.x / 12)]==3?4:2;
-    
 
-    // Collect KING_CLUBS entities
-    std::vector<Entity> king_clubs;
-    for (Entity entity : registry.deadlys.entities) {
-        Deadly& deadly = registry.deadlys.get(entity);
-        if (deadly.enemy_type == ENEMIES::KING_CLUBS) {
-            king_clubs.push_back(entity);
-        }
-    }
 
-    // Sort KING_CLUBS by distance to player
-    std::sort(king_clubs.begin(), king_clubs.end(), [&](const Entity a, const Entity b) {
-        Motion& motion_a = registry.motions.get(a);
-        Motion& motion_b = registry.motions.get(b);
-        float dist_a = glm::distance(motion_a.position, player_motion->position);
-        float dist_b = glm::distance(motion_b.position, player_motion->position);
-        return dist_a < dist_b;
-    });
-
-    // Process sorted KING_CLUBS
-    for (Entity entity : king_clubs) {
-        Motion& motion = registry.motions.get(entity);
-
-        vec2 separation_force = { 0.f, 0.f };
-        int separation_count = 0;
-
-        for (Entity other : registry.deadlys.entities) {
-            Deadly& deadly_other = registry.deadlys.get(other);
-
-            if (deadly_other.enemy_type != ENEMIES::KING_CLUBS || other == entity) {
-                continue;
-            }
-
-            Motion& other_motion = registry.motions.get(other);
-            vec2 other_position = { other_motion.position.x, other_motion.position.y };
-            float dist = length(other_position - motion.position);
-
-            if (dist < SEPARATION_DIST && dist > 0) {
-                vec2 diff = normalize(motion.position - other_position) / dist;
-                separation_force += diff;
-                separation_count++;
-            }
-        }
-
-        if (separation_count > 0) {
-            separation_force /= static_cast<float>(separation_count);
-            separation_force *= 69420.f;
-            separation_force = cap_velocity(separation_force, 0.5f * MAX_PUSH * (1 + 0.05f * separation_count));
-        }
-
-        int startRow = static_cast<int>(motion.position.y) / 12;
-        int startCol = static_cast<int>(motion.position.x) / 12;
-
-        motion.velocity = BFS(startRow, startCol, &motion, player_motion);
-        motion.velocity *= 50;
-        // motion.velocity = cap_velocity(motion.velocity + separation_force, 50);
-
-        if ((motion.position.x > player_motion->position.x && motion.scale.y < 0) ||
-            (motion.position.x < player_motion->position.x && motion.scale.y > 0)) {
-            motion.scale.y *= -1;
-        }
-    }
 	for (Entity entity : registry.deadlys.entities) { // root of decision tree
 		Motion& motion = registry.motions.get(entity);
 		Deadly& deadly = registry.deadlys.get(entity);
@@ -364,9 +297,52 @@ void AISystem::step(float elapsed_ms)
             }
             continue;
 		}
+		else if (deadly.enemy_type == ENEMIES::KING_CLUBS) {
+            vec2 separation_force = { 0.f, 0.f };
+            int separation_count = 0;
 
-    }
+            for (Entity other : registry.deadlys.entities) {
+                Deadly& deadly_other = registry.deadlys.get(entity);
 
+                if (deadly_other.enemy_type != ENEMIES::KING_CLUBS) {
+                    continue;
+                }
+                if (other == entity) {
+                    continue;
+                }
+
+                Motion& other_motion = registry.motions.get(other);
+                vec2 other_position = { other_motion.position.x, other_motion.position.y };
+
+                float dist = length(other_position - motion.position);
+
+                if (dist < SEPARATION_DIST && dist > 0) {
+                    vec2 diff = normalize(motion.position - other_position) / dist;
+                    separation_force += diff;
+                    separation_count++;
+                }
+            }
+
+            if (separation_count > 0) {
+                separation_force /= (float)separation_count;
+                separation_force *= 69420.f;
+                separation_force = cap_velocity(separation_force, 0.5 * MAX_PUSH * (1 + 0.05 * separation_count));
+            }
+ 
+
+                int startRow = static_cast<int>(motion.position.y)/12;
+                int startCol = static_cast<int>(motion.position.x)/12;
+                motion.velocity = move(startRow,startCol);
+                motion.velocity*=120;
+                motion.velocity = cap_velocity(motion.velocity + separation_force, 120);
+
+            
+            if ((motion.position.x > player_motion->position.x && motion.scale.y < 0) ||
+                (motion.position.x < player_motion->position.x && motion.scale.y > 0)) {
+                motion.scale.y *= -1;
+            }
+        }        
+	}
 
     for (Entity heart_entity : registry.healsEnemies.entities) {
         Motion& heart_motion = registry.motions.get(heart_entity);
