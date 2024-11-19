@@ -223,7 +223,7 @@ void AISystem::step(float elapsed_ms)
 
 		acceleration += separation_force * 1.f + alignment_force * 1.f + cohesion_force * 1.f;
 
-		acceleration += normalize(player_motion->position - position)* fmin(2.f * (cohesion_count+0.f), 20.f);
+		acceleration += normalize(player_motion->position - position)* fmin(3.f * (cohesion_count+0.f), 50.f);
 
         if (length(player_motion->position - position) < SEPARATION_DIST*2) {
             acceleration += normalize(player_motion->position - position) * 1000.f;

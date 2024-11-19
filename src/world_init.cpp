@@ -18,9 +18,9 @@ Entity createProtagonist(RenderSystem* renderer, vec2 pos, Player* copy_player) 
 	Player& player = registry.players.emplace(entity);
 	if (copy_player == nullptr) {
 
-		player.health = 100.f;
+		player.health = 10000.f;
 		player.armour = 0.f;
-		player.card_reload_time = 2000.f;
+		player.card_reload_time = 50.f;
 	} else {
 		player.health = copy_player->health;
 
@@ -210,6 +210,44 @@ Entity createBirdClubs(RenderSystem* renderer, vec2 position, int wave_num)
 	deadly.armour = 0.f;
 
 	deadly.enemy_type = ENEMIES::BIRD_CLUBS;
+	registry.renderRequests.insert(
+		entity,
+		{
+			TEXTURE_ASSET_ID::BIRD_CLUBS,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE
+		});
+
+	return entity;
+}
+
+Entity createBossBirdClubs(RenderSystem* renderer, vec2 position, int wave_num)
+{
+	auto entity = Entity();
+
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 0.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+	motion.scale = vec2({ 2*BIRD_CLUB_BB_WIDTH, 2*BIRD_CLUB_BB_HEIGHT });
+	registry.otherDeadlys.emplace(entity);
+
+	auto& deadly = registry.deadlys.emplace(entity);
+	if (wave_num >= 1 && wave_num <= 9) {
+        deadly.health = 60 + 40 * (wave_num - 1);
+    } else {
+        deadly.health = 60 + 40 * (8);
+        for (int r = 10; r <= wave_num; r++) {
+            deadly.health *= 1.1f;
+        }
+    }
+	deadly.health *= 10.f;
+	deadly.armour = 0.f;
+
+	deadly.enemy_type = ENEMIES::BOSS_BIRD_CLUBS;
 	registry.renderRequests.insert(
 		entity,
 		{

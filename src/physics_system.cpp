@@ -200,7 +200,7 @@ void PhysicsSystem::step(float elapsed_ms)
 		
 		vec2 new_position = motion.position + motion.velocity * step_seconds;
 
-// Determine the half dimensions
+		// Determine the half dimensions
 		float half_width = motion.velocity.x>0?abs(motion.scale.x):-abs(motion.scale.x);
 		float half_height = motion.velocity.y>0?abs(motion.scale.y):-abs(motion.scale.y);
 
@@ -288,10 +288,28 @@ void PhysicsSystem::step(float elapsed_ms)
 		float width = motion.velocity.x>0?abs(motion.scale.x/2):-abs(motion.scale.x/2);
 		float height = motion.velocity.y>0?abs(motion.scale.y/2):-abs(motion.scale.y/2);
 
-		if (grid[(int)(new_position.y+height)/12][(int)(new_position.x+width)/12] == 1 && registry.boids.has(entity)) {
+		int grid_x = (int)((new_position.x + width) / 12);
+    	int grid_y = (int)((new_position.y + height) / 12);
 
-			registry.remove_all_components_of(entity);
+		if (grid[grid_y][grid_x] == 1) {
+			if (registry.boids.has(entity) || registry.otherDeadlys.has(entity)) {
+				if (grid[grid_y][(int)((motion.position.x + width) / 12)] == 1) {
+					motion.velocity.x = -motion.velocity.x;
+				}
+				if (grid[(int)((motion.position.y + height) / 12)][grid_x] == 1) {
+					motion.velocity.y = -motion.velocity.y;
+				}
+				motion.position += motion.velocity * step_seconds;
+			}
 		} else {
+			motion.position += motion.velocity * step_seconds;
+		}
+	}
+
+	for (Entity entity : registry.otherDeadlys.entities) {
+		Motion& motion = motion_registry.get(entity);
+		Deadly& deadly = registry.deadlys.get(entity);
+		if (deadly.enemy_type == ENEMIES::BOSS_BIRD_CLUBS) {
 			motion.position += motion.velocity * step_seconds;
 		}
 	}

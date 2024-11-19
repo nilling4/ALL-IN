@@ -38,6 +38,7 @@ Entity createProtagonist(RenderSystem* renderer, vec2 pos, Player* copy_player);
 Entity createQueenHearts(RenderSystem* renderer, vec2 position, int wave_num);
 Entity createKingClubs(RenderSystem* renderer, vec2 position, int wave_num);
 Entity createBirdClubs(RenderSystem* renderer, vec2 position, int wave_num);
+Entity createBossBirdClubs(RenderSystem* renderer, vec2 position, int wave_num);
 
 Entity createHeartProjectile(RenderSystem* renderer, vec2 position, vec2 velocity, Entity* target_entity, int wave_num);
 

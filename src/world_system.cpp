@@ -350,12 +350,56 @@ bool WorldSystem::step(float elapsed_ms_since_last_update, std::string* game_sta
 
 			}
 		}
+
+		if (wave.num_bird_boss > 0) {
+			wave.progress_bird_boss += elapsed_time;
+			if (wave.progress_bird_boss > wave.delay_for_all_entities) {
+				wave.progress_bird_boss = 0;
+				wave.num_bird_boss -= 1;
+
+				vec2 player_position = p_motion.position;
+				float min_distance_from_player = 300.0f; 
+
+				float spawnX, spawnY;
+            bool valid_spawn;
+            do {
+                spawnX = uniform_dist(rng) * (right_bound - left_bound) + left_bound;
+                spawnY = uniform_dist(rng) * (bottom_bound - top_bound) + top_bound;
+                valid_spawn = true;
+
+                // Check distance from player
+                if (sqrt(pow(spawnX - player_position.x, 2) + pow(spawnY - player_position.y, 2)) < min_distance_from_player) {
+                    valid_spawn = false;
+                }
+
+                // Check distance from walls
+
+                int grid_x = static_cast<int>(spawnX / 12);
+                int grid_y = static_cast<int>(spawnY / 12);
+                for (int dy = -3; dy <= 3 && valid_spawn; ++dy) {
+                    for (int dx = -2; dx <= 2 && valid_spawn; ++dx) {
+
+                        int check_x = grid_x + dx;
+                        int check_y = grid_y + dy;
+                        if (check_x >= 0 && check_x < GRID_WIDTH && check_y >= 0 && check_y < GRID_HEIGHT) {
+                            if (grid[check_y][check_x] == 1) {
+                                valid_spawn = false;
+                            }
+                        }
+                    }
+                }
+            } while (!valid_spawn);
+				createBossBirdClubs(renderer, vec2(spawnX, spawnY), wave.wave_num);
+
+			}
+		}
 	}
 	
 
 	if (wave.state == "game on" &&
 		registry.deadlys.entities.size() == 0 && 
 		(wave.num_king_clubs == 0) &&
+		(wave.num_bird_boss == 0) &&
 		(wave.num_bird_clubs == 0)
 		) {
 		wave.state = "spawn doors";
@@ -467,6 +511,44 @@ bool WorldSystem::step(float elapsed_ms_since_last_update, std::string* game_sta
 	// 		next_lerp_spawn = LERP_SPAWN_DELAY;
 	// 	createLerpProjectile(renderer, vec2(p_motion.position.x, p_motion.position.y),vec2(p_motion.position.x, p_motion.position.y), vec2(p_motion.position.x+400*cos(angle), p_motion.position.y+400*sin(angle)),0,0);
 	// }
+
+	for (Entity entity : registry.otherDeadlys.entities) {
+        Motion& motion = registry.motions.get(entity);
+        
+        vec2 position = {motion.position.x, motion.position.y};
+        vec2 velocity = {0.f, 0.f};
+
+        vec2 acceleration;
+		float random_angle = (rand() % 360) * M_PI / 180.0f; 
+		acceleration = {cos(random_angle), sin(random_angle)};
+
+		acceleration *= 30.f;
+
+		acceleration += normalize(p_motion.position - position)* 50.f;
+
+        velocity += acceleration;
+		if (length(velocity) > 100.f) {
+			velocity = normalize(velocity) * 100.f;
+		}
+
+	    vec2 new_velocity = (motion.velocity + (velocity * 0.1f))*1000.f;
+		if (length(new_velocity) > 500.f) {
+			new_velocity = normalize(new_velocity) * 500.f;
+		}
+        float curr_speed = length(motion.velocity);
+        motion.velocity.x = new_velocity.x;
+        motion.velocity.y = new_velocity.y;
+        if (curr_speed > 1.f) {
+            motion.velocity = normalize(motion.velocity) * curr_speed * 0.9f;
+			
+        } else {
+			if (registry.deadlys.size() < 200) {
+				createBirdClubs(renderer, vec2(motion.position.x, motion.position.y), wave.wave_num);
+			}
+		}
+
+        motion.angle = atan2(new_velocity.y, new_velocity.x) + 0.5 * M_PI;
+    }
 
 	assert(registry.screenStates.components.size() <= 1);
     ScreenState &screen = registry.screenStates.components[0];
@@ -593,53 +675,64 @@ void WorldSystem::next_wave() {
 			Mix_PlayChannel(1, m3_mus_w1, 0);
 		}		
 		wave.num_king_clubs = num_of_enemies[wave.wave_num];
+
 	} else if (wave.wave_num >=3 && wave.wave_num <7) {
 		if ((wave.wave_num == 3) || !Mix_Playing(1)) {
 			Mix_PlayChannel(1, m3_mus_w2, 0);
 		}
 		Mix_PlayChannel(2, m3_sfx_door_s, 0);		
-		int total_num_enemies = num_of_enemies[wave.wave_num];
-		int num_birds = ceil(total_num_enemies * 0.25);
-		int num_kings = total_num_enemies - num_birds;
-		wave.num_king_clubs = num_kings;
+		// int total_num_enemies = num_of_enemies[wave.wave_num];
+		int num_birds = num_of_enemies[wave.wave_num];
+		// int num_kings = total_num_enemies - num_birds;
+		wave.num_king_clubs = 0;
 		wave.num_bird_clubs = num_birds;
 	} else if (wave.wave_num >= 7 && wave.wave_num < 12) {
 		if ((wave.wave_num == 7) || !Mix_Playing(1)) {
 			Mix_PlayChannel(1, m3_mus_w3, 0);
 		}
 		Mix_PlayChannel(2, m3_sfx_door_l1, 0);		
-		int total_num_enemies = num_of_enemies[wave.wave_num];
-		int num_birds = ceil(total_num_enemies * 0.25);
-		int num_healers = ceil(total_num_enemies * 0.15);
-		int num_kings = total_num_enemies - num_birds - num_healers;
-		wave.num_king_clubs = num_kings;
-		wave.num_bird_clubs = num_birds;
-		wave.num_queen_hearts = num_healers;
+		if (wave.wave_num == 7) {
+			wave.num_king_clubs = 3;
+			wave.num_bird_clubs = 0;			
+			wave.num_bird_boss = 1;
+		} else {
+			int total_num_enemies = num_of_enemies[wave.wave_num]*3;
+			int num_birds = ceil(total_num_enemies * 0.70);
+			int num_healers = ceil(total_num_enemies * 0.05);
+			int num_kings = total_num_enemies - num_birds - num_healers;
+			wave.num_king_clubs = num_kings;
+			wave.num_bird_clubs = num_birds;
+			wave.num_queen_hearts = num_healers;
+		}
 	} else if (wave.wave_num < 20) {
 		if ((wave.wave_num == 12) || !Mix_Playing(1)) {
 			Mix_PlayChannel(1, m3_mus_w4, 0);
 		}
 		Mix_PlayChannel(2, m3_sfx_door_c, 0);		
-		int total_num_enemies = num_of_enemies[wave.wave_num];
-		int num_birds = ceil(total_num_enemies * 0.25);
-		int num_healers = ceil(total_num_enemies * 0.15);
+		int total_num_enemies = num_of_enemies[wave.wave_num]*2;
+		int num_birds = ceil(total_num_enemies * 0.40);
+		int num_healers = ceil(total_num_enemies * 0.05);
+		int num_boss_clubs = ceil(total_num_enemies * 0.02);
 		int num_kings = total_num_enemies - num_birds - num_healers;
 		wave.num_king_clubs = num_kings;
 		wave.num_bird_clubs = num_birds;
 		wave.num_queen_hearts = num_healers;
+		wave.num_bird_boss = num_boss_clubs;
 	} else {
 		// wave 20 and above, use formula
 		if ((wave.wave_num == 20) || !Mix_Playing(1)) {
 			Mix_PlayChannel(1, m3_mus_w5, 0);
 		}
 		Mix_PlayChannel(2, m3_sfx_door_l2, 0);	
-		int total_num_enemies = ceil(0.09f * wave.wave_num * wave.wave_num - 0.0029f * wave.wave_num + 23.9580f);
-		int num_birds = ceil(total_num_enemies * 0.25);
+		int total_num_enemies = ceil(0.09f * wave.wave_num * wave.wave_num - 0.0029f * wave.wave_num + 23.9580f)*5;
+		int num_birds = ceil(total_num_enemies * 0.40);
 		int num_healers = ceil(total_num_enemies * 0.05);
+		int num_boss_clubs = ceil(total_num_enemies * 0.02);
 		int num_kings = total_num_enemies - num_birds - num_healers;
 		wave.num_king_clubs = num_kings;
 		wave.num_bird_clubs = num_birds;
 		wave.num_queen_hearts = num_healers;
+		wave.num_bird_boss = num_boss_clubs;
 	}
 
 	// wave.state = "game on"
@@ -920,6 +1013,8 @@ void WorldSystem::load() {
 				createKingClubs(renderer, vec2(value["position"][0], value["position"][1]), wave.wave_num);
 			} else if (value["enemy_type"] == ENEMIES::BIRD_CLUBS) {
 				createBirdClubs(renderer, vec2(value["position"][0], value["position"][1]), wave.wave_num);
+			} else if (value["enemy_type"] == ENEMIES::BOSS_BIRD_CLUBS) {
+				createBossBirdClubs(renderer, vec2(value["position"][0], value["position"][1]), wave.wave_num);
 			} else if (value["enemy_type"] == ENEMIES::QUEEN_HEARTS) {
 				createQueenHearts(renderer, vec2(value["position"][0], value["position"][1]), wave.wave_num);
 			}

@@ -35,14 +35,16 @@ struct Door {
 
 struct Wave {
 	int wave_num = 1;
-	float delay_for_all_entities = 1000;
+	float delay_for_all_entities = 200;
 
-	int num_king_clubs = 6;
+	int num_king_clubs = 1;
 	float progress_king_clubs = 0;
 	int num_bird_clubs = 0;
 	float progress_bird_clubs = 0;
 	int num_queen_hearts = 0;
 	float progress_queen_hearts = 0;
+	int num_bird_boss = 0;
+	float progress_bird_boss = 0;
 	std::string state = "game on"; // "game on", "spawn doors", "limbo"
 };
 
@@ -50,7 +52,8 @@ enum class ENEMIES {
 	KING_CLUBS = 0,
 	BIRD_CLUBS = KING_CLUBS + 1,
 	QUEEN_HEARTS = BIRD_CLUBS + 1,
-	ENEMY_COUNT = QUEEN_HEARTS + 1
+	BOSS_BIRD_CLUBS = QUEEN_HEARTS + 1,
+	ENEMY_COUNT = BOSS_BIRD_CLUBS + 1
 };
 
 // anything that is deadly to the player
@@ -60,6 +63,11 @@ struct Deadly
 	float armour = 0;
 	ENEMIES enemy_type;
 	// float melee damage
+};
+
+struct OtherDeadly
+{
+
 };
 
 struct Melee
