@@ -15,6 +15,10 @@ void main()
 {
 	vec4 tex_color = texture(sampler0, texcoord);
 
+    if (tex_color.a < 0.1) {
+        discard;
+    }
+
     if (light_up) {
         vec4 glow_color = vec4(1.0, 0, 0, 1.0);
         color = mix(tex_color * vec4(fcolor, 1.0), glow_color, 0.5); // Blend normal colour with the glow
