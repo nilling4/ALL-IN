@@ -6,6 +6,7 @@
 #include "common.hpp"
 #include "components.hpp"
 #include "tiny_ecs.hpp"
+#include "grid.hpp"
 
 #include "ft2build.h"
 #include FT_FREETYPE_H
@@ -163,12 +164,13 @@ public:
 		{UPGRADE_TYPE::HEALTH, UPGRADE_LEVEL::NO_UPGRADES}
 	};
 
-	int RenderSystem::calculateUpgradeCost(RenderSystem::UPGRADE_TYPE type);
+	int calculateUpgradeCost(RenderSystem::UPGRADE_TYPE type);
 	bool transactionSuccessful = true;
 
 private:
 	// Internal drawing functions for each entity type
 	void drawTexturedMesh(Entity entity, const mat3& projection);
+	void drawFloorTexturedMesh(Entity entity, const mat3& projection);
 	void drawToScreen();
 
 	// Window handle

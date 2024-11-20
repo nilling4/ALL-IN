@@ -123,6 +123,7 @@ int main()
             if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
                 if (is_button_clicked(320, 530, 490, 620, mouse_x, mouse_y)) {
                     game_state = "playing";
+					// world.init(&renderer);
                 } else if (is_button_clicked(560, 760, 490, 620, mouse_x, mouse_y)) {
                     game_state = "shop";
                 } else if (is_button_clicked(790, 1000, 490, 620, mouse_x, mouse_y)) {

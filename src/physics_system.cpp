@@ -149,7 +149,6 @@ void PhysicsSystem::step(float elapsed_ms)
         int prevMinGridY = static_cast<int>(player_motion.previous_position.y - 35) / 12;
         int prevMaxGridY = static_cast<int>(player_motion.previous_position.y + 35) / 12;
 
-        // Clear the previous grid cells
 
         vec2 new_position = player_motion.position + (player_motion.velocity + your.push) * step_seconds;
         // Calculate the range of grid cells the player will occupy
@@ -171,7 +170,7 @@ void PhysicsSystem::step(float elapsed_ms)
             }
             if (!canMoveX) break;
         }
-		        bool canMoveY = true;
+		bool canMoveY = true;
         for (int y = minGridY; y <= maxGridY; ++y) {
             for (int x = prevMinGridX; x <= prevMaxGridX; ++x) {
                 if (grid[y][x] == 1) {

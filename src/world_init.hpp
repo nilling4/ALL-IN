@@ -63,6 +63,7 @@ Entity createLerpProjectile(RenderSystem* renderer, vec2 position, vec2 startpos
 
 
 Entity createWallBlock(RenderSystem* renderer, vec2 position);
+Entity createFloorBlock(RenderSystem* renderer, vec2 position);
 Entity createDoor(RenderSystem* renderer, vec2 position);
 Entity createSlotMachine(RenderSystem* renderer, vec2 pos);
 Entity createRouletteTable(RenderSystem* renderer, vec2 pos);
@@ -73,6 +74,8 @@ Entity createCoin(RenderSystem* renderer, vec2 position);
 Entity createHUDCoin(RenderSystem* renderer, vec2 position);
 Entity createHealthBar(RenderSystem* renderer, vec2 pos);
 Entity createHealthBarFrame(RenderSystem* renderer, vec2 pos);
+
+Entity createBlackRectangle(vec2 position, vec2 scale);
 
 // a red line for debugging purposes
 Entity createLine(vec2 position, vec2 size);

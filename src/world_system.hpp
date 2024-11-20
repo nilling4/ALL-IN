@@ -33,7 +33,7 @@ public:
 	bool step(float elapsed_ms, std::string* game_state);
 	void update_title(int fps);
 	void save();
-	void load();
+	bool load();
 	// Check for collisions
 	void handle_collisions();
 	void go_to_home(std::string* game_state);

@@ -9,6 +9,7 @@
 #include "physics_system.hpp"
 #include <iostream>
 #include <fstream>
+#include <cstring>
 #include "nlohmann/json.hpp"
 #include <cmath> 
 #include "components.hpp"
@@ -178,8 +179,10 @@ void WorldSystem::init(RenderSystem* renderer_arg) {
 	Mix_PlayChannel(1, m3_mus_w1, 0);
 	fprintf(stderr, "Loaded music\n");
 
+	if (!load()) {
+    	restart_game();
+	}
 	// Set all states to default
-    restart_game();
 }
 
 // Update our game world
@@ -420,7 +423,7 @@ bool WorldSystem::step(float elapsed_ms_since_last_update, std::string* game_sta
 	}
 
 	if (wave.state == "spawn doors") {
-		createDoor(renderer, {912, 432});
+		createDoor(renderer, {72, 96});
 		wave.state = "limbo";
 	}
 
@@ -478,7 +481,6 @@ bool WorldSystem::step(float elapsed_ms_since_last_update, std::string* game_sta
 					createRouletteBall(renderer, vec2(p_motion.position.x, p_motion.position.y), vec2(velocity_x, velocity_y));
 				}
 			}
-
 			if (p_you.card_reload_time > 0) {
 				p_you.card_reload_counter += elapsed_ms_since_last_update * current_speed;
 				if (p_you.card_reload_counter >= p_you.card_reload_time) {
@@ -624,14 +626,14 @@ void WorldSystem::restart_game() {
 	// Reset the game speed
 	current_speed = 1.f;
 
-	for (int i=1;i<39;i++){
-		for (int j=1;j<79;j++){
-			if (grid[i][j] == 4){
-				grid[i][j] = 3;
-
-			}
-		}
-	}
+	memset(grid, 0, sizeof(grid));
+	// for (int i=1;i<39;i++){
+	// 	for (int j=1;j<79;j++){
+	// 		if (grid[i][j] == 4){
+	// 			grid[i][j] = 3;
+	// 		}
+	// 	}
+	// }
 	// Remove all entities that we created
 	// All that have a motion. Projectiles, enemies, player, walls, HUD, door
 	while (registry.motions.entities.size() > 0)
@@ -641,7 +643,6 @@ void WorldSystem::restart_game() {
 	registry.remove_all_components_of(global_wave);
 	// Debugging for memory/component leaks
 	registry.list_all_components();
-	load();
 
 	createHealthBar(renderer, { window_width_px * 0.5, window_height_px * 0.98 });
 	createHealthBarFrame(renderer, { window_width_px * 0.5, window_height_px * 0.98 });
@@ -660,16 +661,15 @@ void WorldSystem::restart_game() {
 	}
 	// create a new HUD
 	//createHUD(renderer, { window_width_px / 2, window_height_px }, { window_width_px / 4, window_height_px / 2 });
-	
-	// Top Wall
-	
-		createWallBlock(renderer, {84,108});
-		// Top Wall
-		for (int i = 0; i < num_blocks * 2; i++) {
-			createWallBlock(renderer, {i * WALL_BLOCK_BB_WIDTH+12,12});
-			createWallBlock(renderer, {12 + i * WALL_BLOCK_BB_WIDTH,948});
-		}
-	// Right Wall
+
+	// random interior Wall
+	// createWallBlock(renderer, {84,108});
+	// Top and bottom Wall
+	for (int i = 0; i < num_blocks * 2; i++) {
+		createWallBlock(renderer, {i * WALL_BLOCK_BB_WIDTH+12,12});
+		createWallBlock(renderer, {12 + i * WALL_BLOCK_BB_WIDTH,948});
+	}
+	// Right and left Wall
 	for (int i = 0; i < num_blocks; i++) {
 		createWallBlock(renderer, {1920-12,12 + i * WALL_BLOCK_BB_HEIGHT});
 		createWallBlock(renderer, {12,12 + i * WALL_BLOCK_BB_HEIGHT});
@@ -688,6 +688,7 @@ void WorldSystem::restart_game() {
 void WorldSystem::next_wave() {
 	Player& your = registry.players.get(player_protagonist);
 	Wave& wave = registry.waves.get(global_wave);
+	Motion& player_motion = registry.motions.get(player_protagonist);
 	wave.wave_num += 1;
 	// array of length 20, index by wave_num to get number of enemies per round
 	int num_of_enemies[] = {
@@ -810,8 +811,111 @@ void WorldSystem::next_wave() {
 	while (registry.doors.entities.size() > 0)
 		registry.remove_all_components_of(registry.doors.entities.back());
 
-	registry.list_all_components();
 
+	// set all grid to 0
+	memset(grid, 0, sizeof(grid));
+
+	// remove previous black rectangles
+	while (registry.blackRectangles.entities.size() > 0)
+		registry.remove_all_components_of(registry.blackRectangles.entities.back());
+
+	// remove all walls
+	while (registry.solids.entities.size() > 0)
+		registry.remove_all_components_of(registry.solids.entities.back());
+
+	// randomly pick room type
+	float roomType = uniform_dist(rng);
+	if (roomType <= 1) {
+		// donut shaped?
+		int innerWidth = (3 + ceil(uniform_dist(rng) * 17)) * 2; // min 6 wall blocks wide, max 40 wide
+		int innerHeight = (3 + ceil(uniform_dist(rng) * 4)) * 2; // min 6, max 14
+		int outerWidth = (innerWidth/2 + 10 + ceil(10)) * 2; // min is inner + 20, max inner + 40
+		int outerHeight = (innerHeight/2 + 10 + ceil(3)) * 2; // min is inner + 20, max inner + 26
+
+		std::cout << "donut dimensions. outer w/h, inner w/h: " << outerWidth << '/' << outerHeight << ':' << innerWidth << "/" << innerHeight << std::endl;
+		// walls outer
+		for (int i = 0; i < outerWidth; i++) {
+			createWallBlock(renderer, {12 + i * WALL_BLOCK_BB_WIDTH, 12}); // outer top wall
+			createWallBlock(renderer, {12 + i * WALL_BLOCK_BB_WIDTH, 12 + WALL_BLOCK_BB_HEIGHT * (outerHeight - 1)}); // outer bottom wall
+		}
+		for (int i = 1; i < outerHeight - 1; i++) {
+			createWallBlock(renderer, {12, 12 + i * WALL_BLOCK_BB_HEIGHT}); // outer left wall
+			createWallBlock(renderer, {12 + WALL_BLOCK_BB_WIDTH * (outerWidth - 1), 12 + i * WALL_BLOCK_BB_HEIGHT}); // outer right wall
+		}
+		// walls inner
+		for (int i = 0; i < innerWidth; i++) {
+			createWallBlock(renderer, {12 + i * WALL_BLOCK_BB_WIDTH + WALL_BLOCK_BB_WIDTH * ((outerWidth - innerWidth) / 2), 12 + WALL_BLOCK_BB_HEIGHT * ((outerHeight - innerHeight) / 2)}); // inner top wall
+			createWallBlock(renderer, {12 + i * WALL_BLOCK_BB_WIDTH + WALL_BLOCK_BB_WIDTH * ((outerWidth - innerWidth) / 2), 12 + WALL_BLOCK_BB_HEIGHT * (((outerHeight - innerHeight) / 2) + (innerHeight - 1))}); // inner bottom wall
+		}
+		for (int i = 1; i < innerHeight - 1; i++) {
+			createWallBlock(renderer, {12 + WALL_BLOCK_BB_WIDTH * ((outerWidth - innerWidth) / 2), 12 + i * WALL_BLOCK_BB_HEIGHT + WALL_BLOCK_BB_HEIGHT * ((outerHeight - innerHeight) / 2)}); // inner left wall
+			createWallBlock(renderer, {12 + WALL_BLOCK_BB_WIDTH * (((outerWidth - innerWidth) / 2) + (innerWidth - 1)), 12 + i * WALL_BLOCK_BB_HEIGHT + WALL_BLOCK_BB_HEIGHT * ((outerHeight - innerHeight) / 2)}); // inner right wall
+		}
+
+		// floors
+		// // top bar
+		// for (int y = 1; y < (outerHeight - innerHeight)/2; y++) {
+		// 	for (int x = 1; x < outerWidth - 1; x++) {
+		// 		createFloorBlock(renderer, {12 + WALL_BLOCK_BB_WIDTH * x, 12 + WALL_BLOCK_BB_HEIGHT * y});
+		// 	}
+		// }
+		// // left section
+		// for (int y = (outerHeight - innerHeight)/2; y < outerHeight - (outerHeight - innerHeight)/2; y++) {
+		// 	for (int x = 1; x < (outerWidth - innerWidth)/2; x++) {
+		// 		createFloorBlock(renderer, {12 + WALL_BLOCK_BB_WIDTH * x, 12 + WALL_BLOCK_BB_HEIGHT * y});
+		// 	}
+		// }
+		// // right section
+		// for (int y = (outerHeight - innerHeight)/2; y < outerHeight - (outerHeight - innerHeight)/2; y++) {
+		// 	for (int x = outerWidth - (outerWidth - innerWidth)/2; x < outerWidth - 1; x++) {
+		// 		createFloorBlock(renderer, {12 + WALL_BLOCK_BB_WIDTH * x, 12 + WALL_BLOCK_BB_HEIGHT * y});
+		// 	}
+		// }
+		// // bottom bar
+		// for (int y = outerHeight - (outerHeight - innerHeight)/2; y < outerHeight - 1; y++) {
+		// 	for (int x = 1; x < outerWidth - 1; x++) {
+		// 		createFloorBlock(renderer, {12 + WALL_BLOCK_BB_WIDTH * x, 12 + WALL_BLOCK_BB_HEIGHT * y});
+		// 	}
+		// }
+
+		// cover floor background in non playable area
+		// inner area
+		createBlackRectangle({WALL_BLOCK_BB_WIDTH * (outerWidth/2), WALL_BLOCK_BB_HEIGHT * (outerHeight/2)}, {WALL_BLOCK_BB_WIDTH * (innerWidth - 2), WALL_BLOCK_BB_HEIGHT * (innerHeight - 2)});
+		// outside outer to the right
+		if (outerWidth < 80) {
+			createBlackRectangle({1920 - ((80 - outerWidth)/2) * WALL_BLOCK_BB_WIDTH, 480}, {(80 - outerWidth) * WALL_BLOCK_BB_WIDTH, 960});
+		}
+		// outside outer below
+		if (outerHeight < 40) {
+			createBlackRectangle({WALL_BLOCK_BB_WIDTH * outerWidth/2, 960 - ((40 - outerHeight)/2) * WALL_BLOCK_BB_HEIGHT}, {WALL_BLOCK_BB_WIDTH * outerWidth, WALL_BLOCK_BB_HEIGHT * (40 - outerHeight)});
+		}
+
+		// make right bar outside of donut unspawnable
+		if (outerWidth < 80) {
+			for (int j = 0; j < 80; j++) {
+				for (int i = outerWidth * 2; i < 160; i++) {
+					grid[j][i] = 1;
+				}
+			}
+		}
+		// make below donut unspawnable
+		if (outerHeight < 40) {
+			for (int j = outerHeight * 2; j < 80; j++) {
+				for (int i = 0; i < outerWidth * 2; i++) {
+					grid[j][i] = 1;
+				}
+			}
+		}
+		// make inside of inner donut unspawnable
+		for (int j = (outerHeight - innerHeight) + 2; j < (outerHeight - innerHeight) + 2 + (innerHeight - 2) * 2; j++) {
+			for (int i = (outerWidth - innerWidth) + 2; i < (outerWidth - innerWidth) + 2 + (innerWidth - 2) * 2; i++) {
+				grid[j][i] = 1;
+			}
+		}
+		player_motion.position = vec2(WALL_BLOCK_BB_WIDTH * outerWidth / 2, 84);
+	}
+
+	registry.list_all_components();
 	wave.state = "game on";
 } 
 
@@ -999,6 +1103,13 @@ void WorldSystem::handle_collisions() {
 				registry.remove_all_components_of(entity);
 			}
 		}
+
+		// collision with black floor cover
+		if (registry.blackRectangles.has(entity)) {
+			if (registry.deadlys.has(entity_other)) {
+				registry.remove_all_components_of(entity_other);
+			}
+		}
 	}
 
 	// Remove all collisions from this simulation step
@@ -1009,141 +1120,189 @@ void WorldSystem::handle_collisions() {
 bool WorldSystem::is_over() const {
 	return bool(glfwWindowShouldClose(window));
 }
-void WorldSystem::load() {
+bool WorldSystem::load() {
 	std::string filename = "save.json";
 
-	std::ifstream file_check(filename);
-	if (!file_check.good()) {
-		std::cerr << "File does not exist: " << filename << std::endl;
-		return;
-	}
+	try {
+		std::ifstream file_check(filename);
+		if (!file_check.good()) {
+			std::cerr << "File does not exist: " << filename << std::endl;
+			return false;
+		}
 
-	std::ifstream file(filename, std::ios::ate | std::ios::binary);
-	if (file.tellg() == 0) {
-		std::cerr << "File is empty: " << filename << std::endl;
-		return;
-	}
+		std::ifstream file(filename, std::ios::ate | std::ios::binary);
+		if (file.tellg() == 0) {
+			std::cerr << "File is empty: " << filename << std::endl;
+			return false;
+		}
 
-	file.seekg(0, std::ios::beg);
+		file.seekg(0, std::ios::beg);
 
-	json j;
-	file >> j;
+		json j;
+		file >> j;
+		if (j.contains("coin_count")) {
+			coins = j["coin_count"].get<int>();
+		}
 
-	if (j.contains("coin_count")) {
-		coins = j["coin_count"].get<int>();
-	}
 
+		if (j.contains("wave")) {
+			global_wave = loadWave(j["wave"]["wave_num"], j["wave"]["num_king_clubs"], j["wave"]["num_bird_clubs"]);
+		}
+		Wave& wave = registry.waves.get(global_wave);
 
-	if (j.contains("wave")) {
-		global_wave = loadWave(j["wave"]["wave_num"], j["wave"]["num_king_clubs"], j["wave"]["num_bird_clubs"]);
-	}
-	Wave& wave = registry.waves.get(global_wave);
+		// Load player position
+		if (j.contains("player")) {
+			player_protagonist = createProtagonist(renderer, { j["player"]["position"][0],j["player"]["position"][1] }, nullptr);
+			Player& player = registry.players.get(player_protagonist);
+			registry.colors.insert(player_protagonist, { 1, 0.8f, 0.8f });
+		}
 
-	// Load player position
-	if (j.contains("player")) {
-		player_protagonist = createProtagonist(renderer, { j["player"]["position"][0],j["player"]["position"][1] }, nullptr);
-		Player& player = registry.players.get(player_protagonist);
-		registry.colors.insert(player_protagonist, { 1, 0.8f, 0.8f });
-		player.health = j["player"]["health"];
-	}
+		// Load player stats
+		if (j.contains("player_stats")) {
+			Player& player_stats = registry.players.get(player_protagonist);
+			player_stats.health = j["player_stats"]["health"];
+			player_stats.max_health = j["player_stats"]["max_health"];
+			player_stats.armour = j["player_stats"]["armour"];
+			player_stats.push = {j["player_stats"]["push"][0], j["player_stats"]["push"][1]};
+			player_stats.agility = j["player_stats"]["agility"];
+			player_stats.roulette_reload_counter = j["player_stats"]["roulette_reload_counter"];
+			player_stats.roulette_reload_time = j["player_stats"]["roulette_reload_time"];
+			player_stats.roulette_dmg = j["player_stats"]["roulette_dmg"];
+			player_stats.roulette_bounce = j["player_stats"]["roulette_bounce"];
+			player_stats.card_reload_counter = j["player_stats"]["card_reload_counter"];
+			player_stats.card_reload_time = j["player_stats"]["card_reload_time"];
+			player_stats.card_dmg = j["player_stats"]["card_dmg"];
+			player_stats.card_pierce = j["player_stats"]["card_pierce"];
+			player_stats.dart_reload_counter = j["player_stats"]["dart_reload_counter"];
+			player_stats.dart_reload_time = j["player_stats"]["dart_reload_time"];
+			player_stats.dart_dmg = j["player_stats"]["dart_dmg"];
+			player_stats.dart_pierce = j["player_stats"]["dart_pierce"];
+		}
 
-	// Load enemies positions
-	if (j.contains("enemies")) {
-		for (auto& item : j["enemies"].items()) {
-			auto& value = item.value();
-			if (value["enemy_type"] == ENEMIES::KING_CLUBS) {
-				createKingClubs(renderer, vec2(value["position"][0], value["position"][1]), wave.wave_num);
-			} else if (value["enemy_type"] == ENEMIES::BIRD_CLUBS) {
-				createBirdClubs(renderer, vec2(value["position"][0], value["position"][1]), wave.wave_num);
-			} else if (value["enemy_type"] == ENEMIES::BOSS_BIRD_CLUBS) {
-				createBossBirdClubs(renderer, vec2(value["position"][0], value["position"][1]), wave.wave_num);
-			} else if (value["enemy_type"] == ENEMIES::QUEEN_HEARTS) {
-				createQueenHearts(renderer, vec2(value["position"][0], value["position"][1]), wave.wave_num);
+		// Load enemies positions
+		if (j.contains("enemies")) {
+			for (auto& item : j["enemies"].items()) {
+				auto& value = item.value();
+				if (value["enemy_type"] == ENEMIES::KING_CLUBS) {
+					createKingClubs(renderer, vec2(value["position"][0], value["position"][1]), wave.wave_num);
+				} else if (value["enemy_type"] == ENEMIES::BIRD_CLUBS) {
+					createBirdClubs(renderer, vec2(value["position"][0], value["position"][1]), wave.wave_num);
+				} else if (value["enemy_type"] == ENEMIES::BOSS_BIRD_CLUBS) {
+					createBossBirdClubs(renderer, vec2(value["position"][0], value["position"][1]), wave.wave_num);
+				} else if (value["enemy_type"] == ENEMIES::QUEEN_HEARTS) {
+					createQueenHearts(renderer, vec2(value["position"][0], value["position"][1]), wave.wave_num);
+				}
 			}
 		}
-	}
 
-	// Load projectiles positions
-	if (j.contains("projectiles")) {
-		for (auto& item : j["projectiles"].items()) {
-			auto& value = item.value();
-			double velocity_x = value["velocity"][0];
-			double velocity_y = value["velocity"][1];
-			double velocity_magnitude = std::sqrt(velocity_x * velocity_x + velocity_y * velocity_y);
-			if (velocity_magnitude <= 260) {
-				createDiamondProjectile(renderer, vec2(value["position"][0], value["position"][1]), vec2(velocity_x, velocity_y), value["angle"]);
-			}
-			else if (velocity_magnitude <= 300) {
-				createRouletteBall(renderer, vec2(value["position"][0], value["position"][1]), vec2(velocity_x, velocity_y));
-			}
-			else if (velocity_magnitude <= 380) {
-				createDartProjectile(renderer, vec2(value["position"][0], value["position"][1]), vec2(velocity_x, velocity_y), value["angle"]);
-			}
-			else {
-				createCardProjectile(renderer, vec2(value["position"][0], value["position"][1]), vec2(velocity_x, velocity_y));
+		// Load solids (walls)
+		if (j.contains("solids")) {
+			for (auto& item : j["solids"].items()) {
+				auto& value = item.value();
+				createWallBlock(renderer, {value["position"][0], value["position"][1]});
 			}
 		}
-	}
 
-	if (j.contains("lerp_projectiles")) {
-		for (auto& item : j["lerp_projectiles"].items()) {
-			auto& value = item.value();
-			double start_x = value["start_pos"][0];
-			double start_y = value["start_pos"][1];
-			double end_x = value["end_pos"][0];
-			double end_y = value["end_pos"][1];
-			double angle = value["angle"];
-
-			createLerpProjectile(renderer, vec2(value["position"][0], value["position"][1]), vec2(start_x, start_y), vec2(end_x, end_y), value["total_time"], angle);
+		// Load floor covers
+		if (j.contains("floor_covers")) {
+			for (auto& item : j["floor_covers"].items()) {
+				auto& value = item.value();
+				createBlackRectangle({value["position"][0], value["position"][1]}, {value["scale"][0], value["scale"][1]});
+			}
 		}
-	}
-	if (j.contains("coins")) {
-		for (auto& item : j["coins"].items()) {
-			auto& value = item.value();
-			createCoin(renderer, vec2(value["position"][0], value["position"][1]));
+
+		// Load projectiles positions
+		if (j.contains("projectiles")) {
+			for (auto& item : j["projectiles"].items()) {
+				auto& value = item.value();
+				double velocity_x = value["velocity"][0];
+				double velocity_y = value["velocity"][1];
+				double velocity_magnitude = std::sqrt(velocity_x * velocity_x + velocity_y * velocity_y);
+				if (velocity_magnitude <= 260) {
+					createDiamondProjectile(renderer, vec2(value["position"][0], value["position"][1]), vec2(velocity_x, velocity_y), value["angle"]);
+				}
+				else if (velocity_magnitude <= 300) {
+					createRouletteBall(renderer, vec2(value["position"][0], value["position"][1]), vec2(velocity_x, velocity_y));
+				}
+				else if (velocity_magnitude <= 380) {
+					createDartProjectile(renderer, vec2(value["position"][0], value["position"][1]), vec2(velocity_x, velocity_y), value["angle"]);
+				}
+				else {
+					createCardProjectile(renderer, vec2(value["position"][0], value["position"][1]), vec2(velocity_x, velocity_y));
+				}
+			}
 		}
-	}
 
-	if (j.contains("upgrade_levels")) {
-		for (auto& item : j["upgrade_levels"].items()) {
-			std::string upgrade_type_str = item.key();
-			std::string upgrade_level_str = item.value();
-			RenderSystem::UPGRADE_TYPE upgrade_type;
-			RenderSystem::UPGRADE_LEVEL upgrade_level;
-			printf("load %s\n", upgrade_level_str.c_str());
-			printf("load %s\n", upgrade_type_str.c_str());
+		if (j.contains("lerp_projectiles")) {
+			for (auto& item : j["lerp_projectiles"].items()) {
+				auto& value = item.value();
+				double start_x = value["start_pos"][0];
+				double start_y = value["start_pos"][1];
+				double end_x = value["end_pos"][0];
+				double end_y = value["end_pos"][1];
+				double angle = value["angle"];
 
-			if (upgrade_type_str == "DAMAGE") {
-				upgrade_type = RenderSystem::UPGRADE_TYPE::DAMAGE;
+				createLerpProjectile(renderer, vec2(value["position"][0], value["position"][1]), vec2(start_x, start_y), vec2(end_x, end_y), value["total_time"], angle);
 			}
-			else if (upgrade_type_str == "SPEED") {
-				upgrade_type = RenderSystem::UPGRADE_TYPE::SPEED;
-			}
-			else if (upgrade_type_str == "HEALTH") {
-				upgrade_type = RenderSystem::UPGRADE_TYPE::HEALTH;
-			}
-
-			if (upgrade_level_str == "NO_UPGRADES") {
-				upgrade_level = RenderSystem::UPGRADE_LEVEL::NO_UPGRADES;
-			}
-			else if (upgrade_level_str == "LEVEL_1") {
-				upgrade_level = RenderSystem::UPGRADE_LEVEL::LEVEL_1;
-			}
-			else if (upgrade_level_str == "LEVEL_2") {
-				upgrade_level = RenderSystem::UPGRADE_LEVEL::LEVEL_2;
-			}
-			else if (upgrade_level_str == "LEVEL_3") {
-				upgrade_level = RenderSystem::UPGRADE_LEVEL::LEVEL_3;
-			}
-			else if (upgrade_level_str == "MAX_UPGRADES") {
-				upgrade_level = RenderSystem::UPGRADE_LEVEL::MAX_UPGRADES;
-			}
-			worldUpgradeLevels[upgrade_type] = upgrade_level;
-			renderer->upgradeLevels[upgrade_type] = upgrade_level;
 		}
-	}
+		if (j.contains("coins")) {
+			for (auto& item : j["coins"].items()) {
+				auto& value = item.value();
+				createCoin(renderer, vec2(value["position"][0], value["position"][1]));
+			}
+		}
 
-	std::cout << "Game state loaded from " << filename << std::endl;
+		if (j.contains("upgrade_levels")) {
+			for (auto& item : j["upgrade_levels"].items()) {
+				std::string upgrade_type_str = item.key();
+				std::string upgrade_level_str = item.value();
+				RenderSystem::UPGRADE_TYPE upgrade_type;
+				RenderSystem::UPGRADE_LEVEL upgrade_level;
+				printf("load %s\n", upgrade_level_str.c_str());
+				printf("load %s\n", upgrade_type_str.c_str());
+
+				if (upgrade_type_str == "DAMAGE") {
+					upgrade_type = RenderSystem::UPGRADE_TYPE::DAMAGE;
+				}
+				else if (upgrade_type_str == "SPEED") {
+					upgrade_type = RenderSystem::UPGRADE_TYPE::SPEED;
+				}
+				else if (upgrade_type_str == "HEALTH") {
+					upgrade_type = RenderSystem::UPGRADE_TYPE::HEALTH;
+				}
+
+				if (upgrade_level_str == "NO_UPGRADES") {
+					upgrade_level = RenderSystem::UPGRADE_LEVEL::NO_UPGRADES;
+				}
+				else if (upgrade_level_str == "LEVEL_1") {
+					upgrade_level = RenderSystem::UPGRADE_LEVEL::LEVEL_1;
+				}
+				else if (upgrade_level_str == "LEVEL_2") {
+					upgrade_level = RenderSystem::UPGRADE_LEVEL::LEVEL_2;
+				}
+				else if (upgrade_level_str == "LEVEL_3") {
+					upgrade_level = RenderSystem::UPGRADE_LEVEL::LEVEL_3;
+				}
+				else if (upgrade_level_str == "MAX_UPGRADES") {
+					upgrade_level = RenderSystem::UPGRADE_LEVEL::MAX_UPGRADES;
+				}
+				worldUpgradeLevels[upgrade_type] = upgrade_level;
+				renderer->upgradeLevels[upgrade_type] = upgrade_level;
+			}
+		}
+
+		createHealthBar(renderer, { window_width_px * 0.5, window_height_px * 0.98 });
+		createHealthBarFrame(renderer, { window_width_px * 0.5, window_height_px * 0.98 });
+		createHUDCoin(renderer, { window_width_px * 0.03, window_height_px * 0.06 });
+		renderer->updateCoinNum(std::to_string(coins));
+
+		current_speed = 1.f;
+		std::cout << "Game state loaded from " << filename << std::endl;
+		return true;
+	} catch (...) {
+		std::cout<< "Could not open save.json" << std::endl;
+		return false;
+	}
 }
 
 void WorldSystem::save() {
@@ -1154,9 +1313,28 @@ void WorldSystem::save() {
         if (registry.players.has(entity)) {
 			Player& player = registry.players.get(entity);
             j["player"] = {
-				{"position", {registry.motions.get(entity).position.x, registry.motions.get(entity).position.y}},
-				{"health", player.health}
+                {"position", {registry.motions.get(entity).position.x, registry.motions.get(entity).position.y}}
             };
+			Player& player_stats = registry.players.get(entity);
+			j["player_stats"] = {
+				{"health", player_stats.health},
+				{"max_health", player_stats.max_health},
+				{"armour", player_stats.armour},
+				{"push", {player_stats.push.x, player_stats.push.y}},
+				{"agility", player_stats.agility},
+				{"roulette_reload_counter", player_stats.roulette_reload_counter},
+				{"roulette_reload_time", player_stats.roulette_reload_time},
+				{"roulette_dmg", player_stats.roulette_dmg},
+				{"roulette_bounce", player_stats.roulette_bounce},
+				{"card_reload_counter", player_stats.card_reload_counter},
+				{"card_reload_time", player_stats.card_reload_time},
+				{"card_dmg", player_stats.card_dmg},
+				{"card_pierce", player_stats.card_pierce},
+				{"dart_reload_counter", player_stats.dart_reload_counter},
+				{"dart_reload_time", player_stats.dart_reload_time},
+				{"dart_dmg", player_stats.dart_dmg},
+				{"dart_pierce", player_stats.dart_pierce}
+			};
         }
     }
 	
@@ -1164,10 +1342,13 @@ void WorldSystem::save() {
     j["enemies"] = json::object();
     for (Entity entity : registry.deadlys.entities) {
         if (registry.motions.has(entity)) {
-            j["enemies"][std::to_string(entity)] = {
-                {"position", {registry.motions.get(entity).position.x, registry.motions.get(entity).position.y}},
-				{"enemy_type", registry.deadlys.get(entity).enemy_type}
-            };
+			Motion& motion = registry.motions.get(entity);
+			if (motion.position.x != NULL && motion.position.y != NULL) {
+				j["enemies"][std::to_string(entity)] = {
+					{"position", {motion.position.x, motion.position.y}},
+					{"enemy_type", registry.deadlys.get(entity).enemy_type}
+				};
+			}
         }
     }
     j["coins"] = json::object();
@@ -1254,6 +1435,28 @@ void WorldSystem::save() {
 		{"num_king_clubs", wave.num_king_clubs},
 		{"num_bird_clubs", wave.num_bird_clubs},
 	};
+
+	j["solids"] = json::object();
+	for (Entity entity : registry.solids.entities) {
+        // after adding solid type field, save as appropriate. For now all walls
+		if (registry.motions.has(entity)) {
+            j["solids"][std::to_string(entity)] = {
+                {"position", {registry.motions.get(entity).position.x, registry.motions.get(entity).position.y}}
+            };
+        }
+	}
+
+	j["floor_covers"] = json::object();
+	for (Entity entity : registry.blackRectangles.entities) {
+		if (registry.motions.has(entity)) {
+			Motion &motion = registry.motions.get(entity);
+			j["floor_covers"][std::to_string(entity)] = {
+				{"position", {motion.position.x, motion.position.y}},
+				{"scale", {motion.scale.x, motion.scale.y}}
+			};
+		}
+	}
+
 	std::ofstream o("save.json");
 	    if (o.is_open()) {
         o << j.dump(4) << std::endl; // Pretty print with 4 spaces
@@ -1311,7 +1514,6 @@ void WorldSystem::on_key(int key, int, int action, int mod) {
 		}
 		save();
 		glfwSetWindowShouldClose(window, GL_TRUE);
-
 	}
 
 	

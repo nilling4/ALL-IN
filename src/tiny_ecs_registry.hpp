@@ -38,7 +38,10 @@ public:
 	ComponentContainer<Solid> solids;
 	ComponentContainer<Shop> shopItems;
 	ComponentContainer<LightUp> lightUp;
-	ComponentContainer<HealthBar> healthBar; // psst, if you're adding here, make sure to also add it below in the same place !!!
+	ComponentContainer<HealthBar> healthBar; 
+	ComponentContainer<Floor> floors;
+	ComponentContainer<FloorRenderRequest> floorRenderRequests;
+	ComponentContainer<BlackRectangle> blackRectangles; // psst, if you're adding here, make sure to also add it below in the same place !!!
 
 	// constructor that adds all containers for looping over them
 	// IMPORTANT: Don't forget to add any newly added containers!
@@ -72,6 +75,9 @@ public:
 		registry_list.push_back(&shopItems);
 		registry_list.push_back(&lightUp);
 		registry_list.push_back(&healthBar);
+		registry_list.push_back(&floors);
+		registry_list.push_back(&floorRenderRequests);
+		registry_list.push_back(&blackRectangles);
 	}
 
 	void clear_all_components() {
