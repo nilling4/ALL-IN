@@ -36,6 +36,7 @@ public:
 	ComponentContainer<HUD> hud;
 	ComponentContainer<Coin> coins;
 	ComponentContainer<Solid> solids; 
+  ComponentContainer<LightUp> lightUp;
 	ComponentContainer<HealthBar> healthBar; // psst, if you're adding here, make sure to also add it below in the same place !!!
 
 	// constructor that adds all containers for looping over them
@@ -67,6 +68,7 @@ public:
 		registry_list.push_back(&hud);
 		registry_list.push_back(&coins);
 		registry_list.push_back(&solids);
+    registry_list.push_back(&lightUp);
 		registry_list.push_back(&healthBar);
 	}
 

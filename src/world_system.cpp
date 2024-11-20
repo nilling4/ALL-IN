@@ -565,6 +565,15 @@ bool WorldSystem::step(float elapsed_ms_since_last_update, std::string* game_sta
 	assert(registry.screenStates.components.size() <= 1);
     ScreenState &screen = registry.screenStates.components[0];
 
+	for (Entity entity : registry.lightUp.entities) {
+		LightUp& lightUp = registry.lightUp.get(entity);
+		lightUp.duration_ms -= elapsed_time;
+
+		if (lightUp.duration_ms <= 0.f) {
+			registry.lightUp.remove(entity);
+		}
+	}
+
     float min_counter_ms = 3000.f;
 	for (Entity entity : registry.deathTimers.entities) {
 		// progress timer
@@ -821,6 +830,13 @@ void WorldSystem::handle_collisions() {
 					vec2 push = normalize(your_motion.position - deadly_motion.position);
 					your.push += 100.f*push;
 					deadly_motion.velocity += -10.f*push;
+
+					// add the damage indicator
+					if (!registry.lightUp.has(entity)) {
+						registry.lightUp.emplace(entity);
+					}
+					LightUp& lightUp = registry.lightUp.get(entity);
+					lightUp.duration_ms = 1000.f;
 				}
 
 				if (your.health <= 0) {

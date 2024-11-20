@@ -80,6 +80,15 @@ void RenderSystem::drawTexturedMesh(Entity entity,
 			(void *)sizeof(
 				vec3)); // note the stride to skip the preceeding vertex position
 
+		// Set the light_up uniform
+		GLint light_up_uloc = glGetUniformLocation(program, "light_up");
+		if (registry.lightUp.has(entity)) {
+			glUniform1i(light_up_uloc, 1);
+		}
+		else {
+			glUniform1i(light_up_uloc, 0);
+		}
+
 		// Enabling and binding texture to slot 0
 		glActiveTexture(GL_TEXTURE0);
 		gl_has_errors();
