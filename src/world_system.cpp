@@ -225,7 +225,7 @@ bool WorldSystem::step(float elapsed_ms_since_last_update, std::string* game_sta
 		Motion& health_motion = registry.motions.get(health_bar);
 
 		float full_width = 180.f; // from createHealthBar() in world_init.cpp 
-		float health_ratio = p_you.health / p_you.max_health;
+		float health_ratio = std::max(0.0f, std::min(p_you.health / p_you.max_health, 1.0f)); // ensures 0 <= ratio <=1
 		health_motion.scale.x = health_ratio * full_width;
 		float left_edge_pos = window_width_px * 0.01; // based from createHealthBar in restart_game();
 
