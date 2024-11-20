@@ -136,6 +136,7 @@ public:
 	bool loadCharacters(FT_Face face);
 
 	void updateCoinNum(std::string coins);
+	void updateRenderWaveNum(int wave_num);
 
 private:
 	// Internal drawing functions for each entity type
@@ -153,6 +154,7 @@ private:
 	Entity screen_state_entity;
 
 	std::string num_coins = "0";
+	int wave = 0;
 };
 
 bool loadEffectFromFile(

@@ -227,10 +227,12 @@ bool WorldSystem::step(float elapsed_ms_since_last_update, std::string* game_sta
 		float full_width = 180.f; // from createHealthBar() in world_init.cpp 
 		float health_ratio = std::max(0.0f, std::min(p_you.health / p_you.max_health, 1.0f)); // ensures 0 <= ratio <=1
 		health_motion.scale.x = health_ratio * full_width;
-		float left_edge_pos = window_width_px * 0.01; // based from createHealthBar in restart_game();
+		float left_edge_pos = window_width_px * 0.43; // based from createHealthBar in restart_game();
 
 		health_motion.position.x = left_edge_pos + (health_motion.scale.x / 2);
 	}
+
+	renderer->updateRenderWaveNum(wave.wave_num);
 
 	if (wave.state == "game on") {
 		if (wave.num_king_clubs > 0) {
@@ -641,9 +643,9 @@ void WorldSystem::restart_game() {
 	registry.list_all_components();
 	load();
 
-	createHealthBar(renderer, { window_width_px * 0.08, window_height_px * 0.13 });
-	createHealthBarFrame(renderer, { window_width_px * 0.08, window_height_px * 0.13 });
-	createHUDCoin(renderer, { window_width_px * 0.03, window_height_px * 0.07 });
+	createHealthBar(renderer, { window_width_px * 0.5, window_height_px * 0.98 });
+	createHealthBarFrame(renderer, { window_width_px * 0.5, window_height_px * 0.98 });
+	createHUDCoin(renderer, { window_width_px * 0.03, window_height_px * 0.06 });
 	renderer->updateCoinNum(std::to_string(coins));
 
 	// create a new Protagonist
