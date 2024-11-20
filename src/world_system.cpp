@@ -219,6 +219,18 @@ bool WorldSystem::step(float elapsed_ms_since_last_update, std::string* game_sta
 		}
 	}
 
+	// Update health bar
+	if (!registry.healthBar.entities.empty()) {
+		Entity health_bar = registry.healthBar.entities[0];
+		Motion& health_motion = registry.motions.get(health_bar);
+
+		float full_width = 180.f; // from createHealthBar() in world_init.cpp 
+		float health_ratio = p_you.health / p_you.max_health;
+		health_motion.scale.x = health_ratio * full_width;
+		float left_edge_pos = window_width_px * 0.01; // based from createHealthBar in restart_game();
+
+		health_motion.position.x = left_edge_pos + (health_motion.scale.x / 2);
+	}
 
 	if (wave.state == "game on") {
 		if (wave.num_king_clubs > 0) {
@@ -620,6 +632,8 @@ void WorldSystem::restart_game() {
 	registry.list_all_components();
 	load();
 
+	createHealthBar(renderer, { window_width_px * 0.08, window_height_px * 0.13 });
+	createHealthBarFrame(renderer, { window_width_px * 0.08, window_height_px * 0.13 });
 	createHUDCoin(renderer, { window_width_px * 0.03, window_height_px * 0.07 });
 	renderer->updateCoinNum(std::to_string(coins));
 
@@ -635,7 +649,7 @@ void WorldSystem::restart_game() {
 	}
 	// create a new HUD
 	//createHUD(renderer, { window_width_px / 2, window_height_px }, { window_width_px / 4, window_height_px / 2 });
-
+	
 	// Top Wall
 	
 		createWallBlock(renderer, {84,108});
@@ -735,33 +749,40 @@ void WorldSystem::next_wave() {
 	// wave.state = "game on"
 	if (wave.wave_num == 1) {
 		your.health += 100;
+		your.max_health += 100;
 		your.card_reload_time = 2021;
 	} else if (wave.wave_num == 2) {
 		your.health = 200;
+		your.max_health = 200;
 		your.card_reload_time = 1933;
 		your.roulette_reload_time = 1896;
 	} else if (wave.wave_num == 3) {
 		your.health = 200;
+		your.max_health = 200;
 		your.card_reload_time = 1672;
 		your.roulette_reload_time = 1664;
 		your.dart_reload_time = 3367;
 	} else if (wave.wave_num == 4) {
 		your.health = 300;
+		your.max_health = 300;
 		your.card_reload_time = 1373;
 		your.roulette_reload_time = 1326;
 		your.dart_reload_time = 2900;
 	} else if (wave.wave_num == 5) {
 		your.health = 300;
+		your.max_health = 300;
 		your.card_reload_time = 1042;
 		your.roulette_reload_time = 1326;
 		your.dart_reload_time = 2500;
 	} else if (wave.wave_num == 6) {
 		your.health = 900;
+		your.max_health = 900;
 		your.card_reload_time = 852;
 		your.roulette_reload_time = 1326;
 		your.dart_reload_time = 2200;
 	} else {
 		your.health = 1000;
+		your.max_health = 1000;
 		your.card_reload_time = 549;
 		your.roulette_reload_time = 1326;
 		your.dart_reload_time = 1700;

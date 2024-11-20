@@ -59,6 +59,8 @@ Entity createHUD(RenderSystem* renderer, vec2 position, vec2 size);
 
 Entity createCoin(RenderSystem* renderer, vec2 position);
 Entity createHUDCoin(RenderSystem* renderer, vec2 position);
+Entity createHealthBar(RenderSystem* renderer, vec2 pos);
+Entity createHealthBarFrame(RenderSystem* renderer, vec2 pos);
 
 // a red line for debugging purposes
 Entity createLine(vec2 position, vec2 size);

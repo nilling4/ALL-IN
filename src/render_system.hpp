@@ -75,7 +75,9 @@ class RenderSystem {
 			textures_path("diamond.png"),
 			textures_path("door.png"),
 			textures_path("queenOfHearts.png"),
-			textures_path("heart.png")
+			textures_path("heart.png"),
+			textures_path("health_bar.png"),
+			textures_path("health_bar_frame.png")
 	};
 
 	std::array<GLuint, effect_count> effects;
@@ -126,6 +128,8 @@ public:
 
 	// initialize the HUD geometry
 	void initializeHUDGeometry();
+
+	void initializeHealthBarGeometry();
 
 	bool fontInit(GLFWwindow* window, const std::string& font_filename, unsigned int font_default_size);
 
