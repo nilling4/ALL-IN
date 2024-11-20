@@ -43,6 +43,17 @@ public:
 
 	// Should the game be over ?
 	bool is_over()const;
+
+	// Number of coins collected
+	unsigned int coins = 0;
+
+	std::unordered_map<RenderSystem::UPGRADE_TYPE, RenderSystem::UPGRADE_LEVEL> worldUpgradeLevels =
+	{
+		{RenderSystem::UPGRADE_TYPE::DAMAGE, RenderSystem::UPGRADE_LEVEL::NO_UPGRADES},
+		{RenderSystem::UPGRADE_TYPE::SPEED, RenderSystem::UPGRADE_LEVEL::NO_UPGRADES},
+		{RenderSystem::UPGRADE_TYPE::HEALTH, RenderSystem::UPGRADE_LEVEL::NO_UPGRADES}
+	};
+
 private:
 	// Input callback functions
 	void on_key(int key, int, int action, int mod);
@@ -57,8 +68,6 @@ private:
 	// OpenGL window handle
 	GLFWwindow* window;
 
-	// Number of coins collected
-	unsigned int coins = 0;
 	float texture_num;
 	// Game state
 	RenderSystem* renderer;
@@ -96,4 +105,8 @@ private:
 	// C++ random number generator
 	std::default_random_engine rng;
 	std::uniform_real_distribution<float> uniform_dist; // number between 0..1
+
+	float calculateSpeedMultiplier();
+	float calculateDamageMultiplier();
+	float calculateHealthMultiplier();
 };

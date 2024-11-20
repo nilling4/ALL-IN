@@ -761,42 +761,43 @@ void WorldSystem::next_wave() {
 	}
 
 	// wave.state = "game on"
+	
 	if (wave.wave_num == 1) {
-		your.health += 100;
-		your.max_health += 100;
+		your.health += 100 * calculateHealthMultiplier();
+		your.max_health += 100 * calculateHealthMultiplier();
 		your.card_reload_time = 2021;
 	} else if (wave.wave_num == 2) {
-		your.health = 200;
-		your.max_health = 200;
+		your.health = 200 * calculateHealthMultiplier();
+		your.max_health = 200 * calculateHealthMultiplier();
 		your.card_reload_time = 1933;
 		your.roulette_reload_time = 1896;
 	} else if (wave.wave_num == 3) {
-		your.health = 200;
-		your.max_health = 200;
+		your.health = 200 * calculateHealthMultiplier();
+		your.max_health = 200 * calculateHealthMultiplier();
 		your.card_reload_time = 1672;
 		your.roulette_reload_time = 1664;
 		your.dart_reload_time = 3367;
 	} else if (wave.wave_num == 4) {
-		your.health = 300;
-		your.max_health = 300;
+		your.health = 300 * calculateHealthMultiplier();
+		your.max_health = 300 * calculateHealthMultiplier();
 		your.card_reload_time = 1373;
 		your.roulette_reload_time = 1326;
 		your.dart_reload_time = 2900;
 	} else if (wave.wave_num == 5) {
-		your.health = 300;
-		your.max_health = 300;
+		your.health = 300 * calculateHealthMultiplier();
+		your.max_health = 300 * calculateHealthMultiplier();
 		your.card_reload_time = 1042;
 		your.roulette_reload_time = 1326;
 		your.dart_reload_time = 2500;
 	} else if (wave.wave_num == 6) {
-		your.health = 900;
-		your.max_health = 900;
+		your.health = 900 * calculateHealthMultiplier();
+		your.max_health = 900 * calculateHealthMultiplier();
 		your.card_reload_time = 852;
 		your.roulette_reload_time = 1326;
 		your.dart_reload_time = 2200;
 	} else {
-		your.health = 1000;
-		your.max_health = 1000;
+		your.health = 1000 * calculateHealthMultiplier();
+		your.max_health = 1000 * calculateHealthMultiplier();
 		your.card_reload_time = 549;
 		your.roulette_reload_time = 1326;
 		your.dart_reload_time = 1700;
@@ -892,7 +893,7 @@ void WorldSystem::handle_collisions() {
 			if (registry.deadlys.has(entity_other)) {
 				Deadly& deadly = registry.deadlys.get(entity_other);
 				if (kills.last_touched != &deadly) {
-					deadly.health -= (kills.damage - deadly.armour);
+					deadly.health -= (kills.damage * calculateDamageMultiplier() - deadly.armour);
 					kills.last_touched = &deadly;
 					if (kills.type == PROJECTILE::DART_PROJECTILE) {
 						registry.remove_all_components_of(entity);
@@ -1041,7 +1042,9 @@ void WorldSystem::load() {
 	// Load player position
 	if (j.contains("player")) {
 		player_protagonist = createProtagonist(renderer, { j["player"]["position"][0],j["player"]["position"][1] }, nullptr);
+		Player& player = registry.players.get(player_protagonist);
 		registry.colors.insert(player_protagonist, { 1, 0.8f, 0.8f });
+		player.health = j["player"]["health"];
 	}
 
 	// Load enemies positions
@@ -1101,16 +1104,58 @@ void WorldSystem::load() {
 		}
 	}
 
+	if (j.contains("upgrade_levels")) {
+		for (auto& item : j["upgrade_levels"].items()) {
+			std::string upgrade_type_str = item.key();
+			std::string upgrade_level_str = item.value();
+			RenderSystem::UPGRADE_TYPE upgrade_type;
+			RenderSystem::UPGRADE_LEVEL upgrade_level;
+			printf("load %s\n", upgrade_level_str.c_str());
+			printf("load %s\n", upgrade_type_str.c_str());
+
+			if (upgrade_type_str == "DAMAGE") {
+				upgrade_type = RenderSystem::UPGRADE_TYPE::DAMAGE;
+			}
+			else if (upgrade_type_str == "SPEED") {
+				upgrade_type = RenderSystem::UPGRADE_TYPE::SPEED;
+			}
+			else if (upgrade_type_str == "HEALTH") {
+				upgrade_type = RenderSystem::UPGRADE_TYPE::HEALTH;
+			}
+
+			if (upgrade_level_str == "NO_UPGRADES") {
+				upgrade_level = RenderSystem::UPGRADE_LEVEL::NO_UPGRADES;
+			}
+			else if (upgrade_level_str == "LEVEL_1") {
+				upgrade_level = RenderSystem::UPGRADE_LEVEL::LEVEL_1;
+			}
+			else if (upgrade_level_str == "LEVEL_2") {
+				upgrade_level = RenderSystem::UPGRADE_LEVEL::LEVEL_2;
+			}
+			else if (upgrade_level_str == "LEVEL_3") {
+				upgrade_level = RenderSystem::UPGRADE_LEVEL::LEVEL_3;
+			}
+			else if (upgrade_level_str == "MAX_UPGRADES") {
+				upgrade_level = RenderSystem::UPGRADE_LEVEL::MAX_UPGRADES;
+			}
+			worldUpgradeLevels[upgrade_type] = upgrade_level;
+			renderer->upgradeLevels[upgrade_type] = upgrade_level;
+		}
+	}
+
 	std::cout << "Game state loaded from " << filename << std::endl;
 }
 
 void WorldSystem::save() {
 	json j;
 	j["coin_count"] = coins;
+	
   	for (Entity entity : registry.players.entities) {
         if (registry.players.has(entity)) {
+			Player& player = registry.players.get(entity);
             j["player"] = {
-                {"position", {registry.motions.get(entity).position.x, registry.motions.get(entity).position.y}}
+				{"position", {registry.motions.get(entity).position.x, registry.motions.get(entity).position.y}},
+				{"health", player.health}
             };
         }
     }
@@ -1162,6 +1207,46 @@ void WorldSystem::save() {
             };
         }
     }
+
+	for (const std::pair<RenderSystem::UPGRADE_TYPE, RenderSystem::UPGRADE_LEVEL>& entry : worldUpgradeLevels) {
+		RenderSystem::UPGRADE_TYPE upgrade_type = entry.first;
+		RenderSystem::UPGRADE_LEVEL upgrade_level = entry.second;
+
+		std::string upgrade_type_str;
+		switch (upgrade_type) {
+		case RenderSystem::UPGRADE_TYPE::DAMAGE:
+			upgrade_type_str = "DAMAGE";
+			break;
+		case RenderSystem::UPGRADE_TYPE::SPEED:
+			upgrade_type_str = "SPEED";
+			break;
+		case RenderSystem::UPGRADE_TYPE::HEALTH:
+			upgrade_type_str = "HEALTH";
+			break;
+		}
+
+		std::string upgrade_level_str;
+		switch (upgrade_level) {
+		case RenderSystem::UPGRADE_LEVEL::NO_UPGRADES:
+			upgrade_level_str = "NO_UPGRADES";
+			break;
+		case RenderSystem::UPGRADE_LEVEL::LEVEL_1:
+			upgrade_level_str = "LEVEL_1";
+			break;
+		case RenderSystem::UPGRADE_LEVEL::LEVEL_2:
+			upgrade_level_str = "LEVEL_2";
+			break;
+		case RenderSystem::UPGRADE_LEVEL::LEVEL_3:
+			upgrade_level_str = "LEVEL_3";
+			break;
+		case RenderSystem::UPGRADE_LEVEL::MAX_UPGRADES:
+			upgrade_level_str = "MAX_UPGRADES";
+			break;
+		}
+		printf("save %s\n", upgrade_level_str.c_str());
+		printf("save %s\n", upgrade_type_str.c_str());
+		j["upgrade_levels"][upgrade_type_str] = upgrade_level_str;
+	}
 
 	Wave& wave = registry.waves.get(global_wave);
 	j["wave"] = {
@@ -1377,6 +1462,7 @@ void WorldSystem::handle_movement() {
 				texture_num = 1.0f;
 			}
 		}
+		component.velocity *= calculateSpeedMultiplier();
 	}
 }
 
@@ -1385,4 +1471,70 @@ void WorldSystem::on_mouse_move(vec2 mouse_position) {
 		mouse_x = mouse_position.x;
 		mouse_y = mouse_position.y;
 	}
+}
+
+float WorldSystem::calculateSpeedMultiplier() {
+	float speed_multiplier;
+	switch (worldUpgradeLevels[RenderSystem::UPGRADE_TYPE::SPEED]) {
+	case RenderSystem::UPGRADE_LEVEL::NO_UPGRADES:
+		speed_multiplier = 1.0f;
+		break;
+	case RenderSystem::UPGRADE_LEVEL::LEVEL_1:
+		speed_multiplier = 1.2f;
+		break;
+	case RenderSystem::UPGRADE_LEVEL::LEVEL_2:
+		speed_multiplier = 1.4f;
+		break;
+	case RenderSystem::UPGRADE_LEVEL::LEVEL_3:
+		speed_multiplier = 1.6f;
+		break;
+	case RenderSystem::UPGRADE_LEVEL::MAX_UPGRADES:
+		speed_multiplier = 1.8f;
+		break;
+	}
+	return speed_multiplier;
+}
+
+float WorldSystem::calculateDamageMultiplier() {
+	float damage_multiplier;
+	switch (worldUpgradeLevels[RenderSystem::UPGRADE_TYPE::DAMAGE]) {
+	case RenderSystem::UPGRADE_LEVEL::NO_UPGRADES:
+		damage_multiplier = 1.0f;
+		break;
+	case RenderSystem::UPGRADE_LEVEL::LEVEL_1:
+		damage_multiplier = 1.2f;
+		break;
+	case RenderSystem::UPGRADE_LEVEL::LEVEL_2:
+		damage_multiplier = 1.4f;
+		break;
+	case RenderSystem::UPGRADE_LEVEL::LEVEL_3:
+		damage_multiplier = 1.6f;
+		break;
+	case RenderSystem::UPGRADE_LEVEL::MAX_UPGRADES:
+		damage_multiplier = 1.8f;
+		break;
+	}
+	return damage_multiplier;
+}
+
+float WorldSystem::calculateHealthMultiplier() {
+	float health_multiplier;
+	switch (worldUpgradeLevels[RenderSystem::UPGRADE_TYPE::HEALTH]) {
+	case RenderSystem::UPGRADE_LEVEL::NO_UPGRADES:
+		health_multiplier = 1.0f;
+		break;
+	case RenderSystem::UPGRADE_LEVEL::LEVEL_1:
+		health_multiplier = 1.2f;
+		break;
+	case RenderSystem::UPGRADE_LEVEL::LEVEL_2:
+		health_multiplier = 1.4f;
+		break;
+	case RenderSystem::UPGRADE_LEVEL::LEVEL_3:
+		health_multiplier = 1.6f;
+		break;
+	case RenderSystem::UPGRADE_LEVEL::MAX_UPGRADES:
+		health_multiplier = 1.8f;
+		break;
+	}
+	return health_multiplier;
 }

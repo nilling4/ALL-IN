@@ -79,7 +79,8 @@ class RenderSystem {
 			textures_path("health_bar.png"),
 			textures_path("health_bar_frame.png"),
 			textures_path("slot_machine.png"),
-			textures_path("roulette_table.png")
+			textures_path("roulette_table.png"),
+			textures_path("shop_screen.png"),
 	};
 
 	std::array<GLuint, effect_count> effects;
@@ -139,6 +140,31 @@ public:
 
 	void updateCoinNum(std::string coins);
 	void updateRenderWaveNum(int wave_num);
+
+	// shop screen
+	enum class UPGRADE_LEVEL {
+		NO_UPGRADES = 0,
+		LEVEL_1 = NO_UPGRADES + 1,
+		LEVEL_2 = LEVEL_1 + 1,
+		LEVEL_3 = LEVEL_2 + 1,
+		MAX_UPGRADES = LEVEL_3 + 1
+	};
+
+	enum class UPGRADE_TYPE {
+		DAMAGE = 0,
+		SPEED = DAMAGE + 1,
+		HEALTH = SPEED + 1
+	};
+
+	std::unordered_map<UPGRADE_TYPE, UPGRADE_LEVEL> upgradeLevels = 
+	{
+		{UPGRADE_TYPE::DAMAGE, UPGRADE_LEVEL::NO_UPGRADES},
+		{UPGRADE_TYPE::SPEED, UPGRADE_LEVEL::NO_UPGRADES},
+		{UPGRADE_TYPE::HEALTH, UPGRADE_LEVEL::NO_UPGRADES}
+	};
+
+	int RenderSystem::calculateUpgradeCost(RenderSystem::UPGRADE_TYPE type);
+	bool transactionSuccessful = true;
 
 private:
 	// Internal drawing functions for each entity type

@@ -179,7 +179,6 @@ void RenderSystem::drawTexturedMesh(Entity entity,
 	// Drawing of num_indices/3 triangles specified in the index buffer
 	glDrawElements(GL_TRIANGLES, num_indices, GL_UNSIGNED_SHORT, nullptr);
 	gl_has_errors();
-	
 }
 
 // draw the intermediate texture to the screen, with some distortion to simulate
@@ -368,28 +367,43 @@ void RenderSystem::draw(std::string what)
 			drawTexturedMesh(hud_entity, hud_projection);
 		}
 
-	} else if (what == "the home screen duh" || what == "the tuts") {
+	} else if (what == "the home screen duh" || what == "the tuts" || what == "shop") {
 		mat3 projection_2D = createStaticProjectionMatrix();
-		for (Entity entity : registry.renderRequests.entities)
-		{
-			if (!registry.homeAndTuts.has(entity)) {
-				continue;
-			} else {
-				auto& screen = registry.homeAndTuts.get(entity);
-				if (what == "the home screen duh") {
-					if (screen.type != HomeAndTutType::HOME) {
-						continue;
-					}
-				} else if (what == "the tuts") {
-					if (screen.type != HomeAndTutType::TUT) {
-						continue;
-					}
+		for (Entity entity : registry.homeAndTuts.entities) {
+			if (what == "the home screen duh") {
+				if (registry.homeAndTuts.get(entity).type != HomeAndTutType::HOME) {
+					continue;
 				}
 			}
-
-			// Note, its not very efficient to access elements indirectly via the entity
-			// albeit iterating through all Sprites in sequence. A good point to optimize
+			else if (what == "the tuts") {
+				if (registry.homeAndTuts.get(entity).type != HomeAndTutType::TUT) {
+					continue;
+				}
+			}
+			else if (what == "the shop") {
+				if (registry.homeAndTuts.get(entity).type != HomeAndTutType::SHOP) {
+					continue;
+				}
+			}
 			drawTexturedMesh(entity, projection_2D);
+			if (what == "shop") {
+				glm::vec3 black_font_color = glm::vec3(0.0, 0.0, 0.0);
+				glm::mat4 font_trans = glm::mat4(1.0f);
+				renderText(num_coins, window_width_px * 0.80, window_height_px * 0.86, 1.0f, black_font_color, font_trans); // total coins
+				// upgrade costs
+				float smallText = 0.7f;
+				renderText(std::to_string(calculateUpgradeCost(RenderSystem::UPGRADE_TYPE::DAMAGE)), window_width_px * 0.21, window_height_px * 0.24, smallText, black_font_color, font_trans);
+				renderText(std::to_string(calculateUpgradeCost(RenderSystem::UPGRADE_TYPE::HEALTH)), window_width_px * 0.48, window_height_px * 0.24, smallText, black_font_color, font_trans);
+				renderText(std::to_string(calculateUpgradeCost(RenderSystem::UPGRADE_TYPE::SPEED)), window_width_px * 0.76, window_height_px * 0.24, smallText, black_font_color, font_trans);
+				float smallerText = 0.4f;
+				renderText("Press h to upgrade", window_width_px * 0.13, window_height_px * 0.58, smallerText, black_font_color, font_trans);
+				renderText("Press j to upgrade", window_width_px * 0.41, window_height_px * 0.58, smallerText, black_font_color, font_trans);
+				renderText("Press k to upgrade", window_width_px * 0.68, window_height_px * 0.58, smallerText, black_font_color, font_trans);
+				glm::vec3 red_font_color = glm::vec3(1.0f, 0.0f, 0.0f);
+				if (!transactionSuccessful) {
+					renderText("You're too poor to purchase that!", window_width_px * 0.28, window_height_px * 0.12, 0.6f, red_font_color, font_trans);
+				}
+			}
 		}
 	}
 
@@ -399,6 +413,28 @@ void RenderSystem::draw(std::string what)
 	// flicker-free display with a double buffer
 	glfwSwapBuffers(window);
 	gl_has_errors();
+}
+
+int RenderSystem::calculateUpgradeCost(RenderSystem::UPGRADE_TYPE type) {
+	int baseCost;
+	/*switch (type) {
+	case RenderSystem::UPGRADE_TYPE::DAMAGE: baseCost = 30; break;
+	case RenderSystem::UPGRADE_TYPE::SPEED: baseCost = 20; break;
+	case RenderSystem::UPGRADE_TYPE::HEALTH: baseCost = 40; break;
+	default: baseCost = 0; break;
+	}*/
+	switch (type) {
+	case RenderSystem::UPGRADE_TYPE::DAMAGE: baseCost = 1; break;
+	case RenderSystem::UPGRADE_TYPE::SPEED: baseCost = 2; break;
+	case RenderSystem::UPGRADE_TYPE::HEALTH: baseCost = 3; break;
+	default: baseCost = 0; break;
+	}
+
+	RenderSystem::UPGRADE_LEVEL currentLevel = upgradeLevels[type];
+	int upgradeCount = static_cast<int>(currentLevel);
+
+	int increment = baseCost / 2;
+	return baseCost + (increment * upgradeCount);
 }
 
 void RenderSystem::updateCoinNum(std::string coins) {

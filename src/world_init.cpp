@@ -745,6 +745,59 @@ Entity createTutScreen(RenderSystem* renderer, vec2 position)
 	return entity;
 }
 
+Entity createShopScreen(RenderSystem* renderer, vec2 position)
+{
+	auto entity = Entity();
+
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 0.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2({ window_width_px, window_height_px });
+	auto& screen = registry.homeAndTuts.emplace(entity);
+	screen.type = HomeAndTutType::SHOP;
+
+
+	registry.renderRequests.insert(
+		entity,
+		{
+			TEXTURE_ASSET_ID::SHOP_SCREEN,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE
+		});
+
+	return entity;
+}
+
+Entity createUpgradeLine(vec2 position, vec2 scale)
+{
+	Entity entity = Entity();
+
+	// Store a reference to the potentially re-used mesh object (the value is stored in the resource cache)
+	registry.renderRequests.insert(
+		entity, {
+			TEXTURE_ASSET_ID::TEXTURE_COUNT,
+			EFFECT_ASSET_ID::EGG,
+			GEOMETRY_BUFFER_ID::DEBUG_LINE
+		});
+
+	// Create motion
+	Motion& motion = registry.motions.emplace(entity);
+	motion.angle = 0.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+	motion.scale = scale;
+
+	registry.homeAndTuts.emplace(entity);
+	registry.colors.insert(entity, glm::vec3{ 0.4f, 1.0f, 0.6f });
+	registry.shopItems.emplace(entity);
+	return entity;
+}
+
 Entity createWave() {
 	auto entity = Entity();
 	registry.waves.emplace(entity);

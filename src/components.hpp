@@ -90,7 +90,8 @@ struct Healer
 
 enum class HomeAndTutType {
 	HOME = 0,
-	TUT = HOME + 1
+	TUT = HOME + 1,
+	SHOP = TUT + 1
 };
 
 struct HomeAndTut {
@@ -99,6 +100,10 @@ struct HomeAndTut {
 
 struct Boid {
 	
+};
+
+struct Shop {
+
 };
 
 enum class PROJECTILE {
@@ -271,7 +276,8 @@ enum class TEXTURE_ASSET_ID {
 	HEALTH_BAR_FRAME = HEALTH_BAR + 1,
 	SLOT_MACHINE = HEALTH_BAR_FRAME + 1,
 	ROULETTE_TABLE = SLOT_MACHINE + 1,
-	TEXTURE_COUNT = ROULETTE_TABLE + 1
+	SHOP_SCREEN = ROULETTE_TABLE + 1,
+	TEXTURE_COUNT = SHOP_SCREEN + 1
 };
 const int texture_count = (int)TEXTURE_ASSET_ID::TEXTURE_COUNT;
 

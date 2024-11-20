@@ -4,7 +4,6 @@
 
 // stlib
 #include <chrono>
-
 // internal
 #include "physics_system.hpp"
 #include "render_system.hpp"
@@ -13,11 +12,37 @@
 #include "world_init.hpp"
 
 #include "iostream"
+static bool wasKeyHPressed = false;
+static bool wasKeyJPressed = false;
+static bool wasKeyKPressed = false;
 
 using Clock = std::chrono::high_resolution_clock;
 
 bool is_button_clicked(float xs, float xl, float ys, float yl, float mouse_x, float mouse_y) {
     return mouse_x >= xs && mouse_x <= xl && mouse_y >= ys && mouse_y <= yl;
+}
+
+bool purchaseUpgrade(RenderSystem* r, WorldSystem* w, RenderSystem::UPGRADE_TYPE type) {
+	RenderSystem::UPGRADE_LEVEL currentLevel = w->worldUpgradeLevels[type];
+	if (currentLevel == RenderSystem::UPGRADE_LEVEL::MAX_UPGRADES) {
+		std::cout << "Upgrade already at max level for this type.\n";
+		return false;
+	}
+
+	int cost = r->calculateUpgradeCost(type);
+
+	if (w->coins >= cost) {
+		w->coins -= cost;
+		r->updateCoinNum(std::to_string(w->coins));
+		w->worldUpgradeLevels[type] = static_cast<RenderSystem::UPGRADE_LEVEL>(static_cast<int>(currentLevel) + 1);
+		r->upgradeLevels[type] = static_cast<RenderSystem::UPGRADE_LEVEL>(static_cast<int>(currentLevel) + 1);
+		std::cout << "Upgrade successful! Remaining coins: " << w->coins << "\n";
+		return true;
+	}
+	else {
+		std::cout << "Not enough coins for this upgrade. Need " << cost - w->coins << " more.\n";
+		return false;
+	}
 }
 
 // Entry point
@@ -56,9 +81,10 @@ int main()
 
         glfwGetCursorPos(window, &mouse_x, &mouse_y);
 
-		if (registry.homeAndTuts.entities.size() < 2) {
+		if (registry.homeAndTuts.entities.size() < 3) {
 			createHomeScreen(&renderer, {window_width_px / 2, window_height_px / 2});
 			createTutScreen(&renderer, {window_width_px / 2, window_height_px / 2});
+			createShopScreen(&renderer, { window_width_px / 2, window_height_px / 2 });
 		}
 
 
@@ -89,6 +115,8 @@ int main()
 				frames = 0;
 			}
 		} else if (game_state == "home") {
+			while (registry.shopItems.entities.size() > 0)
+				registry.remove_all_components_of(registry.shopItems.entities.back());
 
 			renderer.draw("the home screen duh");
 			
@@ -96,12 +124,15 @@ int main()
                 if (is_button_clicked(320, 530, 490, 620, mouse_x, mouse_y)) {
                     game_state = "playing";
                 } else if (is_button_clicked(560, 760, 490, 620, mouse_x, mouse_y)) {
-                    game_state = "playing"; // NOEL change this to shop
+                    game_state = "shop";
                 } else if (is_button_clicked(790, 1000, 490, 620, mouse_x, mouse_y)) {
                     game_state = "tutorial";
                 }
             }
+			renderer.transactionSuccessful = true;
 		} else if (game_state == "tutorial") {
+			while (registry.shopItems.entities.size() > 0)
+				registry.remove_all_components_of(registry.shopItems.entities.back());
 			renderer.draw("the tuts");
 			
             if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
@@ -109,6 +140,71 @@ int main()
                     game_state = "home";
                 } 
             }
+		}
+		else if (game_state == "shop") {
+			while (registry.shopItems.entities.size() > 0)
+				registry.remove_all_components_of(registry.shopItems.entities.back());
+			vec2 lineSize = { 50, 5 };
+			float start_x = 185;
+			
+			for (const std::pair<RenderSystem::UPGRADE_TYPE, RenderSystem::UPGRADE_LEVEL>& entry : world.worldUpgradeLevels) {
+				RenderSystem::UPGRADE_TYPE upgrade_type = entry.first;
+				RenderSystem::UPGRADE_LEVEL upgrade_level = entry.second;
+
+				switch (upgrade_type) {
+				case RenderSystem::UPGRADE_TYPE::DAMAGE: start_x = 180; break;
+				case RenderSystem::UPGRADE_TYPE::HEALTH: start_x = 540; break;
+				case RenderSystem::UPGRADE_TYPE::SPEED: start_x = 890; break;
+				}
+
+				int linesToDraw = static_cast<int>(upgrade_level);
+				for (int i = 0; i < linesToDraw; ++i) {
+					createUpgradeLine({ start_x + i * 60, 480 }, lineSize);
+				}
+			}
+			renderer.draw("shop");
+
+			if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+				if (is_button_clicked(30, 240, 30, 120, mouse_x, mouse_y)) {
+					game_state = "home";
+				}
+			}
+			bool isKeyHPressed = glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS;
+			bool isKeyJPressed = glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS;
+			bool isKeyKPressed = glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS;
+
+			if (isKeyHPressed && !wasKeyHPressed) {
+				printf("clicked on DAMAGE\n");
+				if (purchaseUpgrade(&renderer, &world, RenderSystem::UPGRADE_TYPE::DAMAGE)) {
+					renderer.transactionSuccessful = true;
+				}
+				else {
+					renderer.transactionSuccessful = false;
+				}
+			}
+			wasKeyHPressed = isKeyHPressed;
+
+			if (isKeyJPressed && !wasKeyJPressed) {
+				printf("clicked on health\n");
+				if (purchaseUpgrade(&renderer, &world, RenderSystem::UPGRADE_TYPE::HEALTH)) {
+					renderer.transactionSuccessful = true;
+				}
+				else {
+					renderer.transactionSuccessful = false;
+				}
+			}
+			wasKeyJPressed = isKeyJPressed;
+
+			if (isKeyKPressed && !wasKeyKPressed) {
+				printf("clicked on speed\n");
+				if (purchaseUpgrade(&renderer, &world, RenderSystem::UPGRADE_TYPE::SPEED)) {
+					renderer.transactionSuccessful = true;
+				}
+				else {
+					renderer.transactionSuccessful = false;
+				}
+			}
+			wasKeyKPressed = isKeyKPressed;
 		}
 	}
 

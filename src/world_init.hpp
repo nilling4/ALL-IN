@@ -84,5 +84,8 @@ Entity createHomeScreen(RenderSystem* renderer, vec2 position);
 
 Entity createTutScreen(RenderSystem* renderer, vec2 position);
 
+Entity createShopScreen(RenderSystem* renderer, vec2 position);
+Entity createUpgradeLine(vec2 position, vec2 size);
+
 Entity createWave();
 Entity loadWave(int wave_num, int num_king_clubs, int num_bird_clubs);

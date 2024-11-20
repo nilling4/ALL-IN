@@ -35,7 +35,8 @@ public:
 	ComponentContainer<vec3> colors;
 	ComponentContainer<HUD> hud;
 	ComponentContainer<Coin> coins;
-	ComponentContainer<Solid> solids; 
+	ComponentContainer<Solid> solids;
+	ComponentContainer<Shop> shopItems;
 	ComponentContainer<LightUp> lightUp;
 	ComponentContainer<HealthBar> healthBar; // psst, if you're adding here, make sure to also add it below in the same place !!!
 
@@ -67,7 +68,8 @@ public:
 		registry_list.push_back(&colors);
 		registry_list.push_back(&hud);
 		registry_list.push_back(&coins);
-		registry_list.push_back(&solids);
+		registry_list.push_back(&solids); 
+		registry_list.push_back(&shopItems);
 		registry_list.push_back(&lightUp);
 		registry_list.push_back(&healthBar);
 	}
