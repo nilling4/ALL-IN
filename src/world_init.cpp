@@ -19,10 +19,12 @@ Entity createProtagonist(RenderSystem* renderer, vec2 pos, Player* copy_player) 
 	if (copy_player == nullptr) {
 
 		player.health = 10000.f;
+		player.max_health = 10000.f;
 		player.armour = 0.f;
 		player.card_reload_time = 50.f;
 	} else {
 		player.health = copy_player->health;
+		player.max_health = copy_player->max_health;
 
 		player.roulette_reload_time = copy_player->roulette_reload_time;
 		player.card_reload_time = copy_player->card_reload_time;
@@ -538,6 +540,58 @@ Entity createHUDCoin(RenderSystem* renderer, vec2 position) {
 
 	return entity;
 }
+
+Entity createHealthBar(RenderSystem* renderer, vec2 pos) {
+	auto entity = Entity();
+
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 0.f;
+	motion.velocity = { 0.f, 0.f };
+	motion.position = pos;
+
+	motion.scale = vec2({ 180.f, 80.f }); // Size of the health bar
+
+	registry.hud.emplace(entity);
+	registry.healthBar.emplace(entity);
+
+	registry.renderRequests.insert(
+		entity,
+		{ TEXTURE_ASSET_ID::HEALTH_BAR,
+		  EFFECT_ASSET_ID::TEXTURED,
+		  GEOMETRY_BUFFER_ID::HEALTH_BAR
+		});
+
+	return entity;
+}
+
+Entity createHealthBarFrame(RenderSystem* renderer, vec2 pos) {
+	auto entity = Entity();
+
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 0.f;
+	motion.velocity = { 0.f, 0.f };
+	motion.position = pos;
+
+	motion.scale = vec2({ 200.f, 20.f }); // Size of the health bar
+
+	registry.hud.emplace(entity);
+
+	registry.renderRequests.insert(
+		entity,
+		{ TEXTURE_ASSET_ID::HEALTH_BAR_FRAME,
+		  EFFECT_ASSET_ID::TEXTURED,
+		  GEOMETRY_BUFFER_ID::SPRITE
+		});
+
+	return entity;
+}
+
 
 Entity createHUD(RenderSystem* renderer, vec2 position, vec2 size) {
 	auto entity = Entity();

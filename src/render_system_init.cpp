@@ -249,6 +249,7 @@ void RenderSystem::initializeGlGeometryBuffers()
 
 	// Initialize HUD
 	initializeHUDGeometry();
+	initializeHealthBarGeometry();
 	initializeBackgroundQuad();
 	// Counterclockwise as it's the default opengl front winding direction.
 	const std::vector<uint16_t> textured_indices = { 0, 3, 1, 1, 3, 2 };
@@ -335,6 +336,24 @@ void RenderSystem::initializeHUDGeometry()
 
 	bindVBOandIBO(GEOMETRY_BUFFER_ID::HUD, hud_vertices, hud_indices);
 }
+
+void RenderSystem::initializeHealthBarGeometry() {
+	std::vector<TexturedVertex> vertices(4);
+	vertices[0].position = { -0.5f, -0.05f, 0.f }; // bottom left
+	vertices[1].position = { 0.5f, -0.05f, 0.f };  // bottom right
+	vertices[2].position = { 0.5f, 0.05f, 0.f };   // top right
+	vertices[3].position = { -0.5f, 0.05f, 0.f };  // top left
+
+	vertices[0].texcoord = { 0.f, 1.f };
+	vertices[1].texcoord = { 1.f, 1.f };
+	vertices[2].texcoord = { 1.f, 0.f };
+	vertices[3].texcoord = { 0.f, 0.f };
+
+	const std::vector<uint16_t> indices = { 0, 1, 2, 0, 2, 3 };
+
+	bindVBOandIBO(GEOMETRY_BUFFER_ID::HEALTH_BAR, vertices, indices);
+}
+
 
 bool RenderSystem::fontInit(GLFWwindow* window, const std::string& font_filename, unsigned int font_default_size) {
 	// Load shaders using the existing loadEffectFromFile function

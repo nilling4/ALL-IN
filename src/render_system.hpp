@@ -76,6 +76,8 @@ class RenderSystem {
 			textures_path("door.png"),
 			textures_path("queenOfHearts.png"),
 			textures_path("heart.png"),
+			textures_path("health_bar.png"),
+			textures_path("health_bar_frame.png"),
 			textures_path("slot_machine.png"),
 			textures_path("roulette_table.png")
 	};
@@ -129,11 +131,14 @@ public:
 	// initialize the HUD geometry
 	void initializeHUDGeometry();
 
+	void initializeHealthBarGeometry();
+
 	bool fontInit(GLFWwindow* window, const std::string& font_filename, unsigned int font_default_size);
 
 	bool loadCharacters(FT_Face face);
 
 	void updateCoinNum(std::string coins);
+	void updateRenderWaveNum(int wave_num);
 
 private:
 	// Internal drawing functions for each entity type
@@ -151,6 +156,7 @@ private:
 	Entity screen_state_entity;
 
 	std::string num_coins = "0";
+	int wave = 0;
 };
 
 bool loadEffectFromFile(
