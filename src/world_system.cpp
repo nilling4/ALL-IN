@@ -664,6 +664,9 @@ void WorldSystem::restart_game() {
 		createWallBlock(renderer, {1044,564 - i * WALL_BLOCK_BB_HEIGHT});
 		createWallBlock(renderer, {1044-i * WALL_BLOCK_BB_HEIGHT,564});
 	}
+
+	createSlotMachine(renderer, {100, 300} );
+	createRouletteTable(renderer, { 100, 450 });
 }
 
 void WorldSystem::next_wave() {

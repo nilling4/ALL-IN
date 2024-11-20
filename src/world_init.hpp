@@ -32,6 +32,16 @@ const float BIRD_CLUB_BB_HEIGHT = 0.6f * 40.f;
 const float WALL_BLOCK_BB_WIDTH = 24.0f;
 const float WALL_BLOCK_BB_HEIGHT = 24.0f;
 
+//const float SLOT_MACHINE_BB_WIDTH = 19.f * 1.f;
+const float SLOT_MACHINE_BB_WIDTH = 24.f;
+//const float SLOT_MACHINE_BB_HEIGHT = 42.f * 1.f;
+const float SLOT_MACHINE_BB_HEIGHT = 48.f;
+//const float ROULETTE_TABLE_BB_WIDTH = 112.f * 1.f;
+const float ROULETTE_TABLE_BB_WIDTH = 120.f;
+//const float ROULETTE_TABLE_BB_HEIGHT = 60.f * 1.f;
+const float ROULETTE_TABLE_BB_HEIGHT = 72.f;
+
+
 // the new player
 Entity createProtagonist(RenderSystem* renderer, vec2 pos, Player* copy_player);
 
@@ -54,6 +64,8 @@ Entity createLerpProjectile(RenderSystem* renderer, vec2 position, vec2 startpos
 
 Entity createWallBlock(RenderSystem* renderer, vec2 position);
 Entity createDoor(RenderSystem* renderer, vec2 position);
+Entity createSlotMachine(RenderSystem* renderer, vec2 pos);
+Entity createRouletteTable(RenderSystem* renderer, vec2 pos);
 
 Entity createHUD(RenderSystem* renderer, vec2 position, vec2 size);
 
