@@ -69,7 +69,7 @@ Entity createWallBlock(RenderSystem* renderer, vec2 pos) {
 	for (int dy = -4; dy <= 3; dy++) {
 		for (int dx = -3; dx <= 2; dx++) {
 			// Skip the central block
-			if (dy == 0 && dx == 0&&dy == 1 && dx == 1) continue;
+			if ((dy==0||dy==-1)&&(dx==0||dx==-1)) continue;
 
 			
 			int new_y = grid_y + dy;
@@ -103,20 +103,31 @@ Entity createSlotMachine(RenderSystem* renderer, vec2 pos) {
 	motion.angle = 0.f;
 	motion.velocity = { 0.f, 0.f };
 	motion.scale = vec2({ SLOT_MACHINE_BB_WIDTH, SLOT_MACHINE_BB_HEIGHT });
-
+	
 	// Calculate grid indices for slot machine
 	int grid_x = static_cast<int>(pos.x / 12);
 	int grid_y = static_cast<int>(pos.y / 12);
-
+	grid[grid_y][grid_x] = 1;
+	grid[grid_y][grid_x-1] = 1;
+	grid[grid_y-1][grid_x] = 1;
+	grid[grid_y-1][grid_x-1] = 1;
+	grid[grid_y+1][grid_x] = 1;
+	grid[grid_y+1][grid_x-1] = 1;
+	grid[grid_y-2][grid_x] = 1;
+	grid[grid_y-2][grid_x-1] = 1;
 	// Mark grid cells occupied by slot machine
-	for (int dy = -2; dy <= 1; dy++) { // 4 cells high (48px / 12px = 4)
-		for (int dx = -1; dx <= 1; dx++) { // 2 cells wide (24px / 12px = 2)
+	for (int dy = -5; dy <= 4; dy++) {
+		for (int dx = -3; dx <= 2; dx++) {
+			// Skip the central block
+			if ((dy==0||dy==-1||dy==-2||dy==1)&&(dx==0||dx==-1)) continue;
+
+			
 			int new_y = grid_y + dy;
 			int new_x = grid_x + dx;
-
+			
 			// Ensure indices are within grid boundaries
-			if (new_y >= 0 && new_y < GRID_HEIGHT && new_x >= 0 && new_x < GRID_WIDTH) {
-				grid[new_y][new_x] = 1; // Mark as occupied
+			if (new_y >= 0 && new_y < GRID_HEIGHT && new_x >= 0 && new_x < GRID_WIDTH && grid[new_y][new_x] == 0) {
+				grid[new_y][new_x] = 2;
 			}
 		}
 	}
@@ -148,14 +159,20 @@ Entity createRouletteTable(RenderSystem* renderer, vec2 pos) {
 	int grid_y = static_cast<int>(pos.y / 12);
 
 	// Mark grid cells occupied by roulette table
-	for (int dy = -3; dy <= 2; dy++) { // 6 cells high (72px / 12px = 6)
-		for (int dx = -5; dx <= 4; dx++) { // 10 cells wide (120px / 12px = 10)
+	for (int dy = -6; dy <= 5; dy++) {
+		for (int dx = -7; dx <= 6; dx++) {
+			// Skip the central block
+			if ((dy<=2&&dy>=-3)&&(dx<=4&&dx>=-5)) {
+				grid[grid_y + dy][grid_x + dx] = 1;
+			}
+
+			
 			int new_y = grid_y + dy;
 			int new_x = grid_x + dx;
-
+			
 			// Ensure indices are within grid boundaries
-			if (new_y >= 0 && new_y < GRID_HEIGHT && new_x >= 0 && new_x < GRID_WIDTH) {
-				grid[new_y][new_x] = 1; // Mark as occupied
+			if (new_y >= 0 && new_y < GRID_HEIGHT && new_x >= 0 && new_x < GRID_WIDTH && grid[new_y][new_x] == 0) {
+				grid[new_y][new_x] = 2;
 			}
 		}
 	}

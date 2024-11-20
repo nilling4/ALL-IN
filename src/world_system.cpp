@@ -681,8 +681,8 @@ void WorldSystem::restart_game() {
 		createWallBlock(renderer, {1044-i * WALL_BLOCK_BB_HEIGHT,564});
 	}
 
-	createSlotMachine(renderer, {100, 300} );
-	createRouletteTable(renderer, { 100, 450 });
+	createSlotMachine(renderer, {156, 288} );
+	createRouletteTable(renderer, { 204, 444 });
 }
 
 void WorldSystem::next_wave() {
@@ -1216,10 +1216,10 @@ void WorldSystem::on_key(int key, int, int action, int mod) {
 			for (int j = 0; j<160;j++){
 				if (i==static_cast<int>(player_motion->position.y / 12)&&j==static_cast<int>(player_motion->position.x / 12)){
 				std::cout << "K";
-				}  else if (flowField[i][j]==5000){
-				std::cout << "W";
+				}  else if (grid[i][j]==0){
+				std::cout << ".";
 				}   else{
-					std::cout <<".";
+					std::cout << grid[i][j];
 				}  
 			}
 			std::cout << std::endl;
