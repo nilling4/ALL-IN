@@ -92,6 +92,84 @@ Entity createWallBlock(RenderSystem* renderer, vec2 pos) {
 
 }
 
+Entity createSlotMachine(RenderSystem* renderer, vec2 pos) {
+	auto entity = Entity();
+
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	Motion& motion = registry.motions.emplace(entity);
+	motion.position = pos;
+	motion.angle = 0.f;
+	motion.velocity = { 0.f, 0.f };
+	motion.scale = vec2({ SLOT_MACHINE_BB_WIDTH, SLOT_MACHINE_BB_HEIGHT });
+
+	// Calculate grid indices for slot machine
+	int grid_x = static_cast<int>(pos.x / 12);
+	int grid_y = static_cast<int>(pos.y / 12);
+
+	// Mark grid cells occupied by slot machine
+	for (int dy = -2; dy <= 1; dy++) { // 4 cells high (48px / 12px = 4)
+		for (int dx = -1; dx <= 1; dx++) { // 2 cells wide (24px / 12px = 2)
+			int new_y = grid_y + dy;
+			int new_x = grid_x + dx;
+
+			// Ensure indices are within grid boundaries
+			if (new_y >= 0 && new_y < GRID_HEIGHT && new_x >= 0 && new_x < GRID_WIDTH) {
+				grid[new_y][new_x] = 1; // Mark as occupied
+			}
+		}
+	}
+
+	registry.solids.emplace(entity);
+	registry.renderRequests.insert(
+		entity,
+		{ TEXTURE_ASSET_ID::SLOT_MACHINE,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE });
+
+	return entity;
+}
+
+Entity createRouletteTable(RenderSystem* renderer, vec2 pos) {
+	auto entity = Entity();
+
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	Motion& motion = registry.motions.emplace(entity);
+	motion.position = pos;
+	motion.angle = 0.f;
+	motion.velocity = { 0.f, 0.f };
+	motion.scale = vec2({ ROULETTE_TABLE_BB_WIDTH, ROULETTE_TABLE_BB_HEIGHT });
+
+	// Calculate grid indices for roulette table
+	int grid_x = static_cast<int>(pos.x / 12);
+	int grid_y = static_cast<int>(pos.y / 12);
+
+	// Mark grid cells occupied by roulette table
+	for (int dy = -3; dy <= 2; dy++) { // 6 cells high (72px / 12px = 6)
+		for (int dx = -5; dx <= 4; dx++) { // 10 cells wide (120px / 12px = 10)
+			int new_y = grid_y + dy;
+			int new_x = grid_x + dx;
+
+			// Ensure indices are within grid boundaries
+			if (new_y >= 0 && new_y < GRID_HEIGHT && new_x >= 0 && new_x < GRID_WIDTH) {
+				grid[new_y][new_x] = 1; // Mark as occupied
+			}
+		}
+	}
+
+	registry.solids.emplace(entity);
+	registry.renderRequests.insert(
+		entity,
+		{ TEXTURE_ASSET_ID::ROULETTE_TABLE,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE });
+
+	return entity;
+}
+
 Entity createDoor(RenderSystem* renderer, vec2 pos) {
 	auto entity = Entity();
 
