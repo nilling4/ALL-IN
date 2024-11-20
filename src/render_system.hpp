@@ -78,7 +78,7 @@ class RenderSystem {
 			textures_path("heart.png"),
 			textures_path("health_bar.png"),
 			textures_path("health_bar_frame.png"),
-      textures_path("slot_machine.png"),
+			textures_path("slot_machine.png"),
 			textures_path("roulette_table.png")
 	};
 
