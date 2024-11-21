@@ -94,21 +94,8 @@ vec2 move(int row, int col) {
     }
 
     if (hasInvalidTile && minFlowValue < std::numeric_limits<float>::max()) {
-        // Apply 1/x to the selected direction vector
-        float weight = 1.0f / minFlowValue;
-        vec2 selectedMovement = { minDirection.x * weight, minDirection.y * weight };
 
-        // Normalize the movement vector to ensure consistent speed
-        float magnitude = std::sqrt(selectedMovement.x * selectedMovement.x + selectedMovement.y * selectedMovement.y);
-        if (magnitude > 0.0f) {
-            selectedMovement.x /= magnitude;
-            selectedMovement.y /= magnitude;
-        }
-
-        // Optionally, cap the velocity to a maximum speed
-        selectedMovement = cap_velocity(selectedMovement, MAX_SPEED);
-
-        return selectedMovement;
+        return cap_velocity(minDirection, MAX_SPEED);
     }
     // Normalize the accumulated movement vector to ensure consistent speed
     float totalMagnitude = std::sqrt(movement.x * movement.x + movement.y * movement.y);

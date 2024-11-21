@@ -308,8 +308,8 @@ bool WorldSystem::step(float elapsed_ms_since_last_update, std::string* game_sta
 
                 int grid_x = static_cast<int>(spawnX / 12);
                 int grid_y = static_cast<int>(spawnY / 12);
-                for (int dy = -3; dy <= 3 && valid_spawn; ++dy) {
-                    for (int dx = -2; dx <= 2 && valid_spawn; ++dx) {
+                for (int dy = -12; dy <= 12 && valid_spawn; ++dy) {
+                    for (int dx = -8; dx <= 8 && valid_spawn; ++dx) {
 
                         int check_x = grid_x + dx;
                         int check_y = grid_y + dy;
