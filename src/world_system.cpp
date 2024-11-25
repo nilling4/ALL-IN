@@ -427,6 +427,62 @@ bool WorldSystem::step(float elapsed_ms_since_last_update, std::string* game_sta
 		wave.state = "limbo";
 	}
 
+	if (wave.state == "create select door popup") {
+		next_wave();
+		*game_state = "select doors";
+		wave.state = "apply buffs and nerfs";
+	}
+
+	if (wave.state == "applied buffs and nerfs1" || wave.state == "applied buffs and nerfs2" || wave.state == "applied buffs and nerfs3") {
+		Player& your = registry.players.get(player_protagonist);
+		for (Entity entity : registry.buffNerfs.entities) {
+			BuffNerf& bn = registry.buffNerfs.get(entity);
+			if (bn.selected == 1) {
+				if (bn.affect == "health") {
+					your.max_health *= bn.amt;
+				} else if (bn.affect == "roulette_reload_time") {
+					your.roulette_reload_time *= bn.amt;
+				} else if (bn.affect == "card_reload_time") {
+					your.card_reload_time *= bn.amt;
+				} else if (bn.affect == "dart_reload_time") {
+					your.dart_reload_time *= bn.amt;
+				} else if (bn.affect == "ninja_reload_time") {
+					your.ninja_reload_time *= bn.amt;
+				} else if (bn.affect == "get ball" || bn.affect == "lose ball") {
+					your.roulette_reload_time = bn.amt;
+				} else if (bn.affect == "get card" || bn.affect == "lose card") {
+					your.card_reload_time = bn.amt;
+				} else if (bn.affect == "get dart" || bn.affect == "lose dart") {
+					your.dart_reload_time = bn.amt;
+				} else if (bn.affect == "get ninja" || bn.affect == "lose ninja") {
+					your.ninja_reload_time = bn.amt;
+				} else if (bn.affect == "increase ball" || bn.affect == "slow ball") {
+					your.roulette_speed *= bn.amt;
+				} else if (bn.affect == "increase card" || bn.affect == "slow card") {
+					your.card_speed *= bn.amt;
+				} else if (bn.affect == "increase dart" || bn.affect == "slow dart") {
+					your.dart_speed *= bn.amt;
+				} else if (bn.affect == "increase ninja" || bn.affect == "slow ninja") {
+					your.ninja_speed *= bn.amt;
+				}
+			}
+			bn.amt = 1;
+			bn.show_d1 = 0;
+			bn.show_d2 = 0;
+			bn.show_d3 = 0;
+			bn.selected = 0;
+		}
+		if (wave.state == "applied buffs and nerfs1") {
+			your.luck -= 0.2;
+		} else if (wave.state == "applied buffs and nerfs2") {
+			your.luck -= 0.05;
+		} else if (wave.state == "applied buffs and nerfs3") {
+			your.luck += 0.5;
+		}
+		wave.state = "game on";
+		your.health = your.max_health;
+	}
+
 
 	float dx = mouse_x - window_width_px / 2.0f;
 	float dy = mouse_y - window_height_px / 2.0f;
@@ -473,7 +529,7 @@ bool WorldSystem::step(float elapsed_ms_since_last_update, std::string* game_sta
 				if (p_you.roulette_reload_counter >= p_you.roulette_reload_time) {
 					p_you.roulette_reload_counter = 0;
 
-					float speed = 300.f;
+					float speed = p_you.roulette_speed;
 
 					float velocity_x = speed * std::cos(angle);
 					float velocity_y = speed * std::sin(angle);
@@ -486,7 +542,7 @@ bool WorldSystem::step(float elapsed_ms_since_last_update, std::string* game_sta
 				if (p_you.card_reload_counter >= p_you.card_reload_time) {
 					p_you.card_reload_counter = 0;
 
-					float speed = 400.f;
+					float speed = p_you.card_speed;
 
 					float velocity_x = speed * std::cos(angle);
 					float velocity_y = speed * std::sin(angle);
@@ -500,7 +556,7 @@ bool WorldSystem::step(float elapsed_ms_since_last_update, std::string* game_sta
 				if (p_you.dart_reload_counter >= p_you.dart_reload_time) {
 					p_you.dart_reload_counter = 0;
 
-					float speed = 380.f;
+					float speed = p_you.dart_speed;
 
 					float velocity_x = speed * std::cos(angle);
 					float velocity_y = speed * std::sin(angle);
@@ -509,16 +565,18 @@ bool WorldSystem::step(float elapsed_ms_since_last_update, std::string* game_sta
 				}
 			}
 
-			next_diamond_spawn -= elapsed_ms_since_last_update * current_speed;
-			if (next_diamond_spawn < 0.f) {
-				next_diamond_spawn = DIAMOND_SPAWN_DELAY;
+			if (p_you.ninja_reload_time > 0) {
+				p_you.ninja_reload_counter += elapsed_ms_since_last_update * current_speed;
+				if (p_you.ninja_reload_counter >= p_you.ninja_reload_time) {
+					p_you.ninja_reload_counter = 0;
 
-				float speed = 250.f;
+					float speed = p_you.ninja_speed;
 
-				float velocity_x = speed * std::cos(angle);
-				float velocity_y = speed * std::sin(angle);
+					float velocity_x = speed * std::cos(angle);
+					float velocity_y = speed * std::sin(angle);
 
-				createDiamondProjectile(renderer, vec2(p_motion.position.x, p_motion.position.y), vec2(velocity_x, velocity_y), angle);
+					createDiamondProjectile(renderer, vec2(p_motion.position.x, p_motion.position.y), vec2(velocity_x, velocity_y), angle);
+				}
 			}
 		}
 	}
@@ -683,6 +741,7 @@ void WorldSystem::restart_game() {
 
 	createSlotMachine(renderer, {156, 288} );
 	createRouletteTable(renderer, { 204, 444 });
+
 }
 
 void WorldSystem::next_wave() {
@@ -694,6 +753,327 @@ void WorldSystem::next_wave() {
 	int num_of_enemies[] = {
 		0, 6, 8, 13, 18, 24, 27, 28, 28, 29, 33, 34, 36, 39, 41, 44, 47, 50, 53, 56
 	};
+
+	if (registry.buffNerfs.size() < 1) {
+		createBuffNerf(1.2, "health", 1, "Health x1.2");
+		createBuffNerf(2.0, "health", 1, "Health x2");
+		createBuffNerf(0.8, "health", 0, "Health x0.8");
+		createBuffNerf(1.2, "card_reload_time", 0, "Reload (card) x1.2");
+		createBuffNerf(1.5, "card_reload_time", 0, "Reload (card) x1.5");
+		createBuffNerf(0.8, "card_reload_time", 1, "Reload (card) x0.8");
+		createBuffNerf(0.5, "card_reload_time", 1, "Reload (card) x0.5");
+		createBuffNerf(0.2, "card_reload_time", 1, "Reload (card) x0.2");
+		createBuffNerf(0.6, "card_reload_time", 1, "Reload (card) x0.6");
+		createBuffNerf(0.7, "card_reload_time", 1, "Reload (card) x0.7");
+		createBuffNerf(0.9, "card_reload_time", 1, "Reload (card) x0.9");
+		createBuffNerf(0.95, "card_reload_time", 1, "Reload (card) x0.95");
+		createBuffNerf(1.5, "card_reload_time", 0, "Reload (card) x1.5");
+		createBuffNerf(2.0, "card_reload_time", 0, "Reload (card) x2.0");
+		createBuffNerf(3.0, "card_reload_time", 0, "Reload (card) x3.0");
+		createBuffNerf(0.5, "roulette_reload_time", 1, "Reload (ball) x0.5");
+		createBuffNerf(0.8, "roulette_reload_time", 1, "Reload (ball) x0.8");
+		createBuffNerf(1.2, "roulette_reload_time", 0, "Reload (ball) x1.2");
+		createBuffNerf(1.5, "roulette_reload_time", 0, "Reload (ball) x1.5");
+		createBuffNerf(0.2, "roulette_reload_time", 1, "Reload (ball) x0.2");
+		createBuffNerf(0.6, "roulette_reload_time", 1, "Reload (ball) x0.6");
+		createBuffNerf(0.7, "roulette_reload_time", 1, "Reload (ball) x0.7");
+		createBuffNerf(0.9, "roulette_reload_time", 1, "Reload (ball) x0.9");
+		createBuffNerf(0.95, "roulette_reload_time", 1, "Reload (ball) x0.95");
+		createBuffNerf(1.5, "roulette_reload_time", 0, "Reload (ball) x1.5");
+		createBuffNerf(2.0, "roulette_reload_time", 0, "Reload (ball) x2.0");
+		createBuffNerf(3.0, "roulette_reload_time", 0, "Reload (ball) x3.0");
+		createBuffNerf(0.5, "dart_reload_time", 1, "Reload (dart) x0.5");
+		createBuffNerf(0.8, "dart_reload_time", 1, "Reload (dart) x0.8");
+		createBuffNerf(1.2, "dart_reload_time", 0, "Reload (dart) x1.2");
+		createBuffNerf(1.5, "dart_reload_time", 0, "Reload (dart) x1.5");
+		createBuffNerf(0.2, "dart_reload_time", 1, "Reload (dart) x0.2");
+		createBuffNerf(0.6, "dart_reload_time", 1, "Reload (dart) x0.6");
+		createBuffNerf(0.7, "dart_reload_time", 1, "Reload (dart) x0.7");
+		createBuffNerf(0.9, "dart_reload_time", 1, "Reload (dart) x0.9");
+		createBuffNerf(0.95, "dart_reload_time", 1, "Reload (dart) x0.95");
+		createBuffNerf(1.5, "dart_reload_time", 0, "Reload (dart) x1.5");
+		createBuffNerf(2.0, "dart_reload_time", 0, "Reload (dart) x2.0");
+		createBuffNerf(3.0, "dart_reload_time", 0, "Reload (dart) x3.0");
+		createBuffNerf(0.8, "ninja_reload_time", 1, "Reload (ninja) x0.8");
+		createBuffNerf(0.5, "ninja_reload_time", 1, "Reload (ninja) x0.5");
+		createBuffNerf(1.2, "ninja_reload_time", 0, "Reload (ninja) x1.2");
+		createBuffNerf(0.2, "ninja_reload_time", 1, "Reload (ninja) x0.2");
+		createBuffNerf(0.6, "ninja_reload_time", 1, "Reload (ninja) x0.6");
+		createBuffNerf(0.7, "ninja_reload_time", 1, "Reload (ninja) x0.7");
+		createBuffNerf(0.9, "ninja_reload_time", 1, "Reload (ninja) x0.9");
+		createBuffNerf(0.95, "ninja_reload_time", 1, "Reload (ninja) x0.95");
+		createBuffNerf(1.5, "ninja_reload_time", 0, "Reload (ninja) x1.5");
+		createBuffNerf(2.0, "ninja_reload_time", 0, "Reload (ninja) x2.0");
+		createBuffNerf(3.0, "ninja_reload_time", 0, "Reload (ninja) x3.0");
+		createBuffNerf(900.f, "get ball", 1, "unlock ball");
+		createBuffNerf(1100.f, "get card", 1, "unlock card");
+		createBuffNerf(1500.f, "get dart", 1, "unlock dart");
+		createBuffNerf(2500.f, "get ninja", 1, "unlock ninja");
+		createBuffNerf(0.f, "lose ball", 0, "lose ball");
+		createBuffNerf(0.f, "lose card", 0, "lose card");
+		createBuffNerf(0.f, "lose dart", 0, "lose dart");
+		createBuffNerf(0.f, "lose ninja", 0, "lose ninja");
+		createBuffNerf(1.3, "increase ball", 1, "+ speed (ball) x1.3");
+		createBuffNerf(1.3, "increase dart", 1, "+ speed (dart) x1.3");
+		createBuffNerf(1.3, "increase ninja", 1, "+ speed (ninja) x1.3");
+		createBuffNerf(1.3, "increase card", 1, "+ speed (card) x1.3");
+		createBuffNerf(1.7, "increase ball", 1, "+ speed (ball) x1.7");
+		createBuffNerf(1.7, "increase dart", 1, "+ speed (dart) x1.7");
+		createBuffNerf(1.7, "increase ninja", 1, "+ speed (ninja) x1.7");
+		createBuffNerf(1.7, "increase card", 1, "+ speed (card) x1.7");
+		createBuffNerf(0.7, "slow ball", 0, "- speed (ball) x0.7");
+		createBuffNerf(0.7, "slow dart", 0, "- speed (dart) x0.7");
+		createBuffNerf(0.7, "slow ninja", 0, "- speed (ninja) x0.7");
+		createBuffNerf(0.7, "slow card", 0, "- speed (card) x0.7");
+	}
+
+	std::vector<BuffNerf*> buffs = {};
+	std::vector<BuffNerf*> nerfs = {};
+
+	for (Entity entity : registry.buffNerfs.entities) {
+		BuffNerf& bn = registry.buffNerfs.get(entity);
+		if (bn.is_buff == 1) {
+			buffs.push_back(&bn);
+		} else {
+			nerfs.push_back(&bn);
+		}
+	}
+
+	std::random_device rd;
+    std::mt19937 gen(rd());
+	std::shuffle(buffs.begin(), buffs.end(), gen);
+	std::shuffle(nerfs.begin(), nerfs.end(), gen);
+
+	int buff_idx = 0;
+	int nerf_idx = 0;
+
+	int count1b = 3;
+	int count2b = 2;
+	int count2n = 1;
+	int count3b = 1;
+	int count3n = 2;
+
+	while (count3b > 0) {
+		if (buffs[buff_idx]->affect == "get ball") {
+			if (your.roulette_reload_time > 0) {
+				buff_idx += 1;
+				if (buff_idx >= buffs.size()) {
+					buff_idx = 0;
+				}
+				continue;
+			}
+		} else if (buffs[buff_idx]->affect == "get card") {
+			if (your.card_reload_time > 0) {
+				buff_idx += 1;
+				if (buff_idx >= buffs.size()) {
+					buff_idx = 0;
+				}
+				continue;
+			}
+		} else if (buffs[buff_idx]->affect == "get dart") {
+			if (your.dart_reload_time > 0) {
+				buff_idx += 1;
+				if (buff_idx >= buffs.size()) {
+					buff_idx = 0;
+				}
+				continue;
+			}
+		} else if (buffs[buff_idx]->affect == "get ninja") {
+			if (your.ninja_reload_time > 0) {
+				buff_idx += 1;
+				if (buff_idx >= buffs.size()) {
+					buff_idx = 0;
+				}
+				continue;
+			}
+		}
+		if (your.roulette_reload_time == 0) {
+			if (buffs[buff_idx]->affect == "roulette_reload_time") {
+				buff_idx += 1;
+				if (buff_idx >= buffs.size()) {
+					buff_idx = 0;
+				}
+				continue;
+			}
+			if (buffs[buff_idx]->affect == "increase ball" || buffs[buff_idx]->affect == "slow ball") {
+				buff_idx += 1;
+				if (buff_idx >= buffs.size()) {
+					buff_idx = 0;
+				}
+				continue;
+			}
+		}
+		if (your.card_reload_time == 0) {
+			if (buffs[buff_idx]->affect == "card_reload_time") {
+				buff_idx += 1;
+				if (buff_idx >= buffs.size()) {
+					buff_idx = 0;
+				}
+				continue;
+			}
+			if (buffs[buff_idx]->affect == "increase card" || buffs[buff_idx]->affect == "slow card") {
+				buff_idx += 1;
+				if (buff_idx >= buffs.size()) {
+					buff_idx = 0;
+				}
+				continue;
+			}
+		}
+		if (your.dart_reload_time == 0) {
+			if (buffs[buff_idx]->affect == "dart_reload_time") {
+				buff_idx += 1;
+				if (buff_idx >= buffs.size()) {
+					buff_idx = 0;
+				}
+				continue;
+			}
+			if (buffs[buff_idx]->affect == "increase dart" || buffs[buff_idx]->affect == "slow dart") {
+				buff_idx += 1;
+				if (buff_idx >= buffs.size()) {
+					buff_idx = 0;
+				}
+				continue;
+			}
+		}
+		if (your.ninja_reload_time == 0) {
+			if (buffs[buff_idx]->affect == "ninja_reload_time") {
+				buff_idx += 1;
+				if (buff_idx >= buffs.size()) {
+					buff_idx = 0;
+				}
+				continue;
+			}
+			if (buffs[buff_idx]->affect == "increase ninja" || buffs[buff_idx]->affect == "slow ninja") {
+				buff_idx += 1;
+				if (buff_idx >= buffs.size()) {
+					buff_idx = 0;
+				}
+				continue;
+			}
+		}
+		if (count1b > 0) {
+			count1b -= 1;
+			buffs[buff_idx]->show_d1 = 1;
+		} else if (count2b > 0) {
+			count2b -= 1;
+			buffs[buff_idx]->show_d2 = 1;
+		} else if (count3b > 0) {
+			count3b -= 1;
+			buffs[buff_idx]->show_d3 = 1;			
+		}
+		buffs[buff_idx]->amt = buffs[buff_idx]->base_amt;
+		buff_idx += 1;
+		if (buff_idx >= buffs.size()) {
+			buff_idx = 0;
+		}
+	}
+
+	while (count3n > 0) {
+		if (your.roulette_reload_time == 0) {
+			if (nerfs[nerf_idx]->affect == "lose ball") {
+				nerf_idx += 1;
+				if (nerf_idx >= nerfs.size()) {
+					nerf_idx = 0;
+				}
+				continue;
+			}
+			if (nerfs[nerf_idx]->affect == "roulette_reload_time") {
+				nerf_idx += 1;
+				if (nerf_idx >= nerfs.size()) {
+					nerf_idx = 0;
+				}
+				continue;
+			}
+			if (nerfs[nerf_idx]->affect == "slow ball") {
+				nerf_idx += 1;
+				if (nerf_idx >= nerfs.size()) {
+					nerf_idx = 0;
+				}
+				continue;
+			}
+		}
+		if (your.dart_reload_time == 0) {
+			if (nerfs[nerf_idx]->affect == "lose dart") {
+				nerf_idx += 1;
+				if (nerf_idx >= nerfs.size()) {
+					nerf_idx = 0;
+				}
+				continue;
+			}
+			if (nerfs[nerf_idx]->affect == "dart_reload_time") {
+				nerf_idx += 1;
+				if (nerf_idx >= nerfs.size()) {
+					nerf_idx = 0;
+				}
+				continue;
+			}
+			if (nerfs[nerf_idx]->affect == "slow dart") {
+				nerf_idx += 1;
+				if (nerf_idx >= nerfs.size()) {
+					nerf_idx = 0;
+				}
+				continue;
+			}
+		}
+		if (your.card_reload_time == 0) {
+			if (nerfs[nerf_idx]->affect == "lose card") {
+				nerf_idx += 1;
+				if (nerf_idx >= nerfs.size()) {
+					nerf_idx = 0;
+				}
+				continue;
+			}
+			if (nerfs[nerf_idx]->affect == "card_reload_time") {
+				nerf_idx += 1;
+				if (nerf_idx >= nerfs.size()) {
+					nerf_idx = 0;
+				}
+				continue;
+			}
+			if (nerfs[nerf_idx]->affect == "slow card") {
+				nerf_idx += 1;
+				if (nerf_idx >= nerfs.size()) {
+					nerf_idx = 0;
+				}
+				continue;
+			}
+		}
+		if (your.ninja_reload_time == 0) {
+			if (nerfs[nerf_idx]->affect == "lose ninja") {
+				nerf_idx += 1;
+				if (nerf_idx >= nerfs.size()) {
+					nerf_idx = 0;
+				}
+				continue;
+			}
+			if (nerfs[nerf_idx]->affect == "ninja_reload_time") {
+				nerf_idx += 1;
+				if (nerf_idx >= nerfs.size()) {
+					nerf_idx = 0;
+				}
+				continue;
+			}
+			if (nerfs[nerf_idx]->affect == "slow ninja") {
+				nerf_idx += 1;
+				if (nerf_idx >= nerfs.size()) {
+					nerf_idx = 0;
+				}
+				continue;
+			}
+		}
+		if (count2n > 0) {
+			count2n -= 1;
+			nerfs[nerf_idx]->show_d2 = 1;
+		} else if (count3n > 0) {
+			count3n -= 1;
+			nerfs[nerf_idx]->show_d3 = 1;
+		} 
+		nerfs[nerf_idx]->amt = nerfs[nerf_idx]->base_amt;
+		nerf_idx += 1;
+		if (nerf_idx >= nerfs.size()) {
+			nerf_idx = 0;
+		}
+	}
 
 	if (wave.wave_num < 3) {
 		Mix_PlayChannel(2, m3_sfx_door_b, 0);
@@ -722,7 +1102,7 @@ void WorldSystem::next_wave() {
 			wave.num_bird_clubs = 0;			
 			wave.num_bird_boss = 1;
 		} else {
-			int total_num_enemies = num_of_enemies[wave.wave_num]*3;
+			int total_num_enemies = num_of_enemies[wave.wave_num]*2;
 			int num_birds = ceil(total_num_enemies * 0.70);
 			int num_healers = ceil(total_num_enemies * 0.05);
 			int num_kings = total_num_enemies - num_birds - num_healers;
@@ -763,46 +1143,46 @@ void WorldSystem::next_wave() {
 
 	// wave.state = "game on"
 	
-	if (wave.wave_num == 1) {
-		your.health += 100 * calculateHealthMultiplier();
-		your.max_health += 100 * calculateHealthMultiplier();
-		your.card_reload_time = 2021;
-	} else if (wave.wave_num == 2) {
-		your.health = 200 * calculateHealthMultiplier();
-		your.max_health = 200 * calculateHealthMultiplier();
-		your.card_reload_time = 1933;
-		your.roulette_reload_time = 1896;
-	} else if (wave.wave_num == 3) {
-		your.health = 200 * calculateHealthMultiplier();
-		your.max_health = 200 * calculateHealthMultiplier();
-		your.card_reload_time = 1672;
-		your.roulette_reload_time = 1664;
-		your.dart_reload_time = 3367;
-	} else if (wave.wave_num == 4) {
-		your.health = 300 * calculateHealthMultiplier();
-		your.max_health = 300 * calculateHealthMultiplier();
-		your.card_reload_time = 1373;
-		your.roulette_reload_time = 1326;
-		your.dart_reload_time = 2900;
-	} else if (wave.wave_num == 5) {
-		your.health = 300 * calculateHealthMultiplier();
-		your.max_health = 300 * calculateHealthMultiplier();
-		your.card_reload_time = 1042;
-		your.roulette_reload_time = 1326;
-		your.dart_reload_time = 2500;
-	} else if (wave.wave_num == 6) {
-		your.health = 900 * calculateHealthMultiplier();
-		your.max_health = 900 * calculateHealthMultiplier();
-		your.card_reload_time = 852;
-		your.roulette_reload_time = 1326;
-		your.dart_reload_time = 2200;
-	} else {
-		your.health = 1000 * calculateHealthMultiplier();
-		your.max_health = 1000 * calculateHealthMultiplier();
-		your.card_reload_time = 549;
-		your.roulette_reload_time = 1326;
-		your.dart_reload_time = 1700;
-	}
+	// if (wave.wave_num == 1) {
+	// 	your.health += 100 * calculateHealthMultiplier();
+	// 	your.max_health += 100 * calculateHealthMultiplier();
+	// 	your.card_reload_time = 2021;
+	// } else if (wave.wave_num == 2) {
+	// 	your.health = 200 * calculateHealthMultiplier();
+	// 	your.max_health = 200 * calculateHealthMultiplier();
+	// 	your.card_reload_time = 1933;
+	// 	your.roulette_reload_time = 1896;
+	// } else if (wave.wave_num == 3) {
+	// 	your.health = 200 * calculateHealthMultiplier();
+	// 	your.max_health = 200 * calculateHealthMultiplier();
+	// 	your.card_reload_time = 1672;
+	// 	your.roulette_reload_time = 1664;
+	// 	your.dart_reload_time = 3367;
+	// } else if (wave.wave_num == 4) {
+	// 	your.health = 300 * calculateHealthMultiplier();
+	// 	your.max_health = 300 * calculateHealthMultiplier();
+	// 	your.card_reload_time = 1373;
+	// 	your.roulette_reload_time = 1326;
+	// 	your.dart_reload_time = 2900;
+	// } else if (wave.wave_num == 5) {
+	// 	your.health = 300 * calculateHealthMultiplier();
+	// 	your.max_health = 300 * calculateHealthMultiplier();
+	// 	your.card_reload_time = 1042;
+	// 	your.roulette_reload_time = 1326;
+	// 	your.dart_reload_time = 2500;
+	// } else if (wave.wave_num == 6) {
+	// 	your.health = 900 * calculateHealthMultiplier();
+	// 	your.max_health = 900 * calculateHealthMultiplier();
+	// 	your.card_reload_time = 852;
+	// 	your.roulette_reload_time = 1326;
+	// 	your.dart_reload_time = 2200;
+	// } else {
+	// 	your.health = 1000 * calculateHealthMultiplier();
+	// 	your.max_health = 1000 * calculateHealthMultiplier();
+	// 	your.card_reload_time = 549;
+	// 	your.roulette_reload_time = 1326;
+	// 	your.dart_reload_time = 1700;
+	// }
 	// remove all projectiles
 	while (registry.killsEnemys.entities.size() > 0)
 		registry.remove_all_components_of(registry.killsEnemys.entities.back());
@@ -916,12 +1296,14 @@ void WorldSystem::next_wave() {
 	}
 
 	registry.list_all_components();
-	wave.state = "game on";
+	// wave.state = "game on";
 } 
 
 // Compute collisions between entities
 void WorldSystem::handle_collisions() {
 	// Loop over all collisions detected by the physics system
+	Wave& wave = registry.waves.get(global_wave);
+	Player& your = registry.players.get(player_protagonist);
 	auto& collisionsRegistry = registry.collisions;
 	for (uint i = 0; i < collisionsRegistry.components.size(); i++) {
 		// The entity and its collider
@@ -987,7 +1369,10 @@ void WorldSystem::handle_collisions() {
 				// Player - Wall collision handled in physics system for now, move here later.
 			} else if (registry.doors.has(entity_other)) {
 				// Player touches door, proceed to next wave
-				next_wave();
+				if (wave.state == "limbo") {
+					wave.state = "create select door popup";
+				}
+				// next_wave();
 			}
 		}
 
@@ -1057,7 +1442,17 @@ void WorldSystem::handle_collisions() {
 					}
 					
 					if (deadly.health < 0.f) {
-						createCoin(renderer, registry.motions.get(entity_other).position);
+						float luck = your.luck;
+						while (luck > 0.f) {
+							float random_angle = (rand() % 360) * M_PI / 180.0f; 
+							float dice_roll = uniform_dist(rng);
+							vec2 random_pos = {cos(random_angle), sin(random_angle)};
+							if (dice_roll < luck) {
+								createCoin(renderer, registry.motions.get(entity_other).position + (random_pos * 50.f * uniform_dist(rng)));
+							} 
+							luck -= dice_roll;
+						}
+						
 						registry.remove_all_components_of(entity_other);
 					}
 					Mix_PlayChannel(9, roulette_hit_sound, 0);
@@ -1177,6 +1572,15 @@ bool WorldSystem::load() {
 			player_stats.dart_reload_time = j["player_stats"]["dart_reload_time"];
 			player_stats.dart_dmg = j["player_stats"]["dart_dmg"];
 			player_stats.dart_pierce = j["player_stats"]["dart_pierce"];
+			player_stats.ninja_reload_counter = j["player_stats"]["ninja_reload_counter"];
+			player_stats.ninja_reload_time = j["player_stats"]["ninja_reload_time"];
+			player_stats.ninja_dmg = j["player_stats"]["ninja_dmg"];
+			player_stats.ninja_pierce = j["player_stats"]["ninja_pierce"];
+			player_stats.roulette_speed = j["player_stats"]["roulette_speed"];
+			player_stats.dart_speed = j["player_stats"]["dart_speed"];
+			player_stats.card_speed = j["player_stats"]["card_speed"];
+			player_stats.ninja_speed = j["player_stats"]["ninja_speed"];
+			player_stats.luck = j["player_stats"]["luck"];
 		}
 
 		// Load enemies positions
@@ -1218,16 +1622,17 @@ bool WorldSystem::load() {
 				double velocity_x = value["velocity"][0];
 				double velocity_y = value["velocity"][1];
 				double velocity_magnitude = std::sqrt(velocity_x * velocity_x + velocity_y * velocity_y);
-				if (velocity_magnitude <= 260) {
+				std::string name = value["name"];
+				if (name == "ninja") {
 					createDiamondProjectile(renderer, vec2(value["position"][0], value["position"][1]), vec2(velocity_x, velocity_y), value["angle"]);
 				}
-				else if (velocity_magnitude <= 300) {
+				else if (name == "ball") {
 					createRouletteBall(renderer, vec2(value["position"][0], value["position"][1]), vec2(velocity_x, velocity_y));
 				}
-				else if (velocity_magnitude <= 380) {
+				else if (name == "dart") {
 					createDartProjectile(renderer, vec2(value["position"][0], value["position"][1]), vec2(velocity_x, velocity_y), value["angle"]);
 				}
-				else {
+				else if (name == "card") {
 					createCardProjectile(renderer, vec2(value["position"][0], value["position"][1]), vec2(velocity_x, velocity_y));
 				}
 			}
@@ -1333,7 +1738,16 @@ void WorldSystem::save() {
 				{"dart_reload_counter", player_stats.dart_reload_counter},
 				{"dart_reload_time", player_stats.dart_reload_time},
 				{"dart_dmg", player_stats.dart_dmg},
-				{"dart_pierce", player_stats.dart_pierce}
+				{"dart_pierce", player_stats.dart_pierce},
+				{"ninja_reload_counter", player_stats.ninja_reload_counter},
+				{"ninja_reload_time", player_stats.ninja_reload_time},
+				{"ninja_dmg", player_stats.ninja_dmg},
+				{"ninja_pierce", player_stats.ninja_pierce},
+				{"roulette_speed", player_stats.roulette_speed},
+				{"dart_speed", player_stats.dart_speed},
+				{"card_speed", player_stats.card_speed},
+				{"ninja_speed", player_stats.ninja_speed},
+				{"luck", player_stats.luck},
 			};
         }
     }
@@ -1363,11 +1777,13 @@ void WorldSystem::save() {
     j["projectiles"] = json::object();
     for (Entity entity : registry.killsEnemys.entities) {
         if (registry.motions.has(entity)) {
+			KillsEnemy& ke = registry.killsEnemys.get(entity);
             Motion ent = registry.motions.get(entity);
             j["projectiles"][std::to_string(entity)] = {
                 {"position", {ent.position.x, ent.position.y}},
                 {"velocity", {ent.velocity.x, ent.velocity.y}},
 				{"angle", ent.angle},
+				{"name", ke.name},
             };
         }
     }

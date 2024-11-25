@@ -32,6 +32,7 @@ public:
 	ComponentContainer<HomeAndTut> homeAndTuts;
 	ComponentContainer<Wave> waves;
 	ComponentContainer<Door> doors;
+	ComponentContainer<BuffNerf> buffNerfs;
 	ComponentContainer<vec3> colors;
 	ComponentContainer<HUD> hud;
 	ComponentContainer<Coin> coins;
@@ -68,6 +69,7 @@ public:
 		registry_list.push_back(&homeAndTuts);
 		registry_list.push_back(&waves);
 		registry_list.push_back(&doors);
+		registry_list.push_back(&buffNerfs);
 		registry_list.push_back(&colors);
 		registry_list.push_back(&hud);
 		registry_list.push_back(&coins);

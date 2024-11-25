@@ -18,20 +18,43 @@ struct Player
 	float roulette_reload_time = 0;
 	float roulette_dmg = 0;
 	float roulette_bounce = 0;
+	float roulette_speed = 300.f;
 
 	float card_reload_counter = 0;
 	float card_reload_time = 0;
 	float card_dmg = 0;
 	float card_pierce = 0;
+	float card_speed = 400.f;
 
 	float dart_reload_counter = 0;
 	float dart_reload_time = 0;
 	float dart_dmg = 0;
 	float dart_pierce = 0;
+	float dart_speed = 380.f;
+
+	float ninja_reload_counter = 0;
+	float ninja_reload_time = 0;
+	float ninja_dmg = 0;
+	float ninja_pierce = 0;
+	float ninja_speed = 250.f;
+
+	float luck = 0.5f;
 };
 
 struct Door {
 
+};
+
+struct BuffNerf {
+	float amt = 1;
+	float base_amt = 1; // usually do this
+	std::string affect = ""; // "health", "roulette_reload_time", etc
+	int is_buff = 1; // 1 is buff, 0 is nerf
+	std::string text = ""; // this is what is rendered in the doors screen
+	int show_d1 = 0; // show on door 1
+	int show_d2 = 0; // show on d2
+	int show_d3 = 0; // show on d3
+	int selected = 0;
 };
 
 struct Wave {
@@ -91,7 +114,8 @@ struct Healer
 enum class HomeAndTutType {
 	HOME = 0,
 	TUT = HOME + 1,
-	SHOP = TUT + 1
+	SHOP = TUT + 1,
+	DOORS = SHOP + 1
 };
 
 struct HomeAndTut {
@@ -121,6 +145,7 @@ struct KillsEnemy {
 	unsigned int bounce_left = 0;
 	PROJECTILE type;
 	void* last_touched = nullptr;
+	std::string name = "";
 };
 
 struct KillsEnemyLerpyDerp { 				
@@ -286,7 +311,8 @@ enum class TEXTURE_ASSET_ID {
 	SLOT_MACHINE = HEALTH_BAR_FRAME + 1,
 	ROULETTE_TABLE = SLOT_MACHINE + 1,
 	SHOP_SCREEN = ROULETTE_TABLE + 1,
-	TEXTURE_COUNT = SHOP_SCREEN + 1
+	DOORS_SCREEN = SHOP_SCREEN + 1,
+	TEXTURE_COUNT = DOORS_SCREEN + 1
 };
 const int texture_count = (int)TEXTURE_ASSET_ID::TEXTURE_COUNT;
 

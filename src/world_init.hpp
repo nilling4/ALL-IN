@@ -65,6 +65,7 @@ Entity createLerpProjectile(RenderSystem* renderer, vec2 position, vec2 startpos
 Entity createWallBlock(RenderSystem* renderer, vec2 position);
 Entity createFloorBlock(RenderSystem* renderer, vec2 position);
 Entity createDoor(RenderSystem* renderer, vec2 position);
+Entity createBuffNerf(float base_amt, std::string affect, int is_buff, std::string text);
 Entity createSlotMachine(RenderSystem* renderer, vec2 pos);
 Entity createRouletteTable(RenderSystem* renderer, vec2 pos);
 
@@ -86,6 +87,7 @@ Entity createEgg(vec2 pos, vec2 size);
 Entity createHomeScreen(RenderSystem* renderer, vec2 position);
 
 Entity createTutScreen(RenderSystem* renderer, vec2 position);
+Entity createDoorScreen(RenderSystem* renderer, vec2 position);
 
 Entity createShopScreen(RenderSystem* renderer, vec2 position);
 Entity createUpgradeLine(vec2 position, vec2 size);

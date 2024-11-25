@@ -82,6 +82,7 @@ class RenderSystem {
 			textures_path("slot_machine.png"),
 			textures_path("roulette_table.png"),
 			textures_path("shop_screen.png"),
+			textures_path("door_screen.png")
 	};
 
 	std::array<GLuint, effect_count> effects;

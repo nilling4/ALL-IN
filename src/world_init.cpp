@@ -18,10 +18,11 @@ Entity createProtagonist(RenderSystem* renderer, vec2 pos, Player* copy_player) 
 	Player& player = registry.players.emplace(entity);
 	if (copy_player == nullptr) {
 
-		player.health = 10000.f;
-		player.max_health = 10000.f;
+		player.health = 100.f;
+		player.max_health = 100.f;
 		player.armour = 0.f;
-		player.card_reload_time = 50.f;
+		// player.card_reload_time = 50.f;
+		player.roulette_reload_time = 900.f;
 	} else {
 		player.health = copy_player->health;
 		player.max_health = copy_player->max_health;
@@ -232,6 +233,22 @@ Entity createDoor(RenderSystem* renderer, vec2 pos) {
 
 }
 
+Entity createBuffNerf(float base_amt, std::string affect, int is_buff, std::string text) {
+	auto entity = Entity();
+
+	BuffNerf& bn = registry.buffNerfs.emplace(entity);
+	bn.amt = 1;
+	bn.base_amt = base_amt;
+	bn.affect = affect;
+	bn.is_buff = is_buff;
+	bn.text = text;
+	bn.show_d1 = 0;
+	bn.show_d2 = 0;
+	bn.show_d3 = 0;
+
+	return entity;
+}
+
 Entity createQueenHearts(RenderSystem* renderer, vec2 position, int wave_num)
 {
 	auto entity = Entity();
@@ -433,6 +450,7 @@ Entity createRouletteBall(RenderSystem* renderer, vec2 position, vec2 velocity)
 	kills.damage = 150.f;
 	kills.bounce_left = 2;
 	kills.type = PROJECTILE::ROULETTE_BALL;
+	kills.name = "ball";
 	registry.renderRequests.insert(
 		entity,
 		{ TEXTURE_ASSET_ID::TEXTURE_COUNT, 
@@ -461,6 +479,7 @@ Entity createCardProjectile(RenderSystem* renderer, vec2 position, vec2 velocity
 	kills.damage = 100.f;
 	kills.pierce_left = 2;
 	kills.type = PROJECTILE::CARD_PROJECTILE;
+	kills.name = "card";
 	registry.renderRequests.insert(
 		entity,
 		{
@@ -489,6 +508,7 @@ Entity createDartProjectile(RenderSystem* renderer, vec2 position, vec2 velocity
 	auto& kills = registry.killsEnemys.emplace(entity);
 	kills.damage = 300.f;
 	kills.type = PROJECTILE::DART_PROJECTILE;
+	kills.name = "dart";
 	registry.renderRequests.insert(
 		entity,
 		{
@@ -517,6 +537,7 @@ Entity createDiamondProjectile(RenderSystem* renderer, vec2 position, vec2 veloc
 	auto& kills = registry.killsEnemys.emplace(entity);
 	kills.damage = 200.f;
 	kills.type = PROJECTILE::DIAMOND_STAR_PROJECTILE;
+	kills.name = "ninja";
 	registry.renderRequests.insert(
 		entity,
 		{
@@ -789,6 +810,34 @@ Entity createTutScreen(RenderSystem* renderer, vec2 position)
 
 	return entity;
 }
+
+Entity createDoorScreen(RenderSystem* renderer, vec2 position)
+{
+	auto entity = Entity();
+
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 0.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2({ window_width_px, window_height_px });
+	auto& screen = registry.homeAndTuts.emplace(entity);
+	screen.type = HomeAndTutType::DOORS;
+
+	registry.renderRequests.insert(
+		entity,
+		{
+			TEXTURE_ASSET_ID::DOORS_SCREEN,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE
+		});
+
+	return entity;
+}
+
 
 Entity createShopScreen(RenderSystem* renderer, vec2 position)
 {

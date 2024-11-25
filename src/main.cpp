@@ -81,10 +81,11 @@ int main()
 
         glfwGetCursorPos(window, &mouse_x, &mouse_y);
 
-		if (registry.homeAndTuts.entities.size() < 3) {
+		if (registry.homeAndTuts.entities.size() < 4) {
 			createHomeScreen(&renderer, {window_width_px / 2, window_height_px / 2});
 			createTutScreen(&renderer, {window_width_px / 2, window_height_px / 2});
 			createShopScreen(&renderer, { window_width_px / 2, window_height_px / 2 });
+			createDoorScreen(&renderer, { window_width_px / 2, window_height_px / 2 });
 		}
 
 
@@ -139,6 +140,52 @@ int main()
             if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
                 if (is_button_clicked(0, 180, 0, 80, mouse_x, mouse_y)) {
                     game_state = "home";
+                } 
+            }
+		} else if (game_state == "select doors") {
+			while (registry.shopItems.entities.size() > 0)
+				registry.remove_all_components_of(registry.shopItems.entities.back());
+			renderer.draw("the doors");
+			
+            if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+                if (is_button_clicked(120, 410, 600, 680, mouse_x, mouse_y)) {
+                    game_state = "playing";
+					for (Entity entity : registry.waves.entities) {
+						Wave& wave = registry.waves.get(entity);
+						wave.state = "applied buffs and nerfs1";
+					}
+					for (Entity entity : registry.buffNerfs.entities) {
+						BuffNerf& bn = registry.buffNerfs.get(entity);
+						if (bn.show_d1 == 1) {
+							bn.selected = 1;
+						}
+					}
+                } 
+				if (is_button_clicked(500, 780, 600, 680, mouse_x, mouse_y)) {
+                    game_state = "playing";
+					for (Entity entity : registry.waves.entities) {
+						Wave& wave = registry.waves.get(entity);
+						wave.state = "applied buffs and nerfs2";
+					}
+					for (Entity entity : registry.buffNerfs.entities) {
+						BuffNerf& bn = registry.buffNerfs.get(entity);
+						if (bn.show_d2 == 1) {
+							bn.selected = 1;
+						}
+					}
+                } 
+				if (is_button_clicked(860, 1130, 600, 680, mouse_x, mouse_y)) {
+                    game_state = "playing";
+					for (Entity entity : registry.waves.entities) {
+						Wave& wave = registry.waves.get(entity);
+						wave.state = "applied buffs and nerfs3";
+					}
+					for (Entity entity : registry.buffNerfs.entities) {
+						BuffNerf& bn = registry.buffNerfs.get(entity);
+						if (bn.show_d3 == 1) {
+							bn.selected = 1;
+						}
+					}
                 } 
             }
 		}

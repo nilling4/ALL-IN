@@ -483,7 +483,7 @@ void RenderSystem::draw(std::string what)
 			drawTexturedMesh(hud_entity, hud_projection);
 		}
 
-	} else if (what == "the home screen duh" || what == "the tuts" || what == "shop") {
+	} else if (what == "the home screen duh" || what == "the tuts" || what == "shop" || what == "the doors") {
 		mat3 projection_2D = createStaticProjectionMatrix();
 		for (Entity entity : registry.homeAndTuts.entities) {
 			if (what == "the home screen duh") {
@@ -496,7 +496,12 @@ void RenderSystem::draw(std::string what)
 					continue;
 				}
 			}
-			else if (what == "the shop") {
+			else if (what == "the doors") {
+				if (registry.homeAndTuts.get(entity).type != HomeAndTutType::DOORS) {
+					continue;
+				}
+			}
+			else if (what == "shop") {
 				if (registry.homeAndTuts.get(entity).type != HomeAndTutType::SHOP) {
 					continue;
 				}
@@ -518,6 +523,55 @@ void RenderSystem::draw(std::string what)
 				glm::vec3 red_font_color = glm::vec3(1.0f, 0.0f, 0.0f);
 				if (!transactionSuccessful) {
 					renderText("You're too poor to purchase that!", window_width_px * 0.28, window_height_px * 0.12, 0.6f, red_font_color, font_trans);
+				}
+			}
+			if (what == "the doors") {
+				glm::vec3 red_font_color = glm::vec3(1.0, 0.0, 0.0);
+				glm::vec3 green_font_color = glm::vec3(0.0, 1.0, 0.0);
+				glm::vec3 black_font_color = glm::vec3(0.0, 0.0, 0.0);
+				glm::mat4 font_trans = glm::mat4(1.0f);
+				float d1x = 150.f;
+				float d2x = 515.f;
+				float d3x = 875.f;
+
+				float d1y = 310.f;
+				float d2y = 310.f;
+				float d3y = 310.f;
+
+				float inc = 25.f;
+				
+				for (Entity entity : registry.buffNerfs.entities) {
+					BuffNerf& bn = registry.buffNerfs.get(entity);
+					if (bn.show_d1 == 1) {
+						if (bn.is_buff) {
+							renderText(bn.text, d1x, d1y, 0.4f, green_font_color, font_trans);
+						} else {
+							renderText(bn.text, d1x, d1y, 0.4f, red_font_color, font_trans);
+						}
+						d1y += inc;
+					}
+					if (bn.show_d2 == 1) {
+						if (bn.is_buff) {
+							renderText(bn.text, d2x, d2y, 0.4f, green_font_color, font_trans);
+						} else {
+							renderText(bn.text, d2x, d2y, 0.4f, red_font_color, font_trans);
+						}
+						d2y += inc;
+					}
+					if (bn.show_d3 == 1) {
+						if (bn.is_buff) {
+							renderText(bn.text, d3x, d3y, 0.4f, green_font_color, font_trans);
+						} else {
+							renderText(bn.text, d3x, d3y, 0.4f, red_font_color, font_trans);
+						}
+						d3y += inc;
+					}
+				}
+				for (Entity entity : registry.players.entities) {
+					Player& your = registry.players.get(entity);
+					renderText("luck-0.2 -> " + std::to_string(your.luck - 0.2).substr(0, 5), d1x, d1y, 0.4f, black_font_color, font_trans);
+					renderText("luck-0.05 -> " + std::to_string(your.luck - 0.05).substr(0, 5), d2x, d2y, 0.4f, black_font_color, font_trans);
+					renderText("luck+0.5 -> " + std::to_string(your.luck + 0.5).substr(0, 5), d3x, d3y, 0.4f, black_font_color, font_trans);
 				}
 			}
 		}
