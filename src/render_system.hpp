@@ -158,6 +158,12 @@ public:
 		HEALTH = SPEED + 1
 	};
 
+	enum class PurchaseResult {
+    	SUCCESS,
+    	INSUFFICIENT_COINS,
+    	MAX_UPGRADE_REACHED,
+	};
+
 	std::unordered_map<UPGRADE_TYPE, UPGRADE_LEVEL> upgradeLevels = 
 	{
 		{UPGRADE_TYPE::DAMAGE, UPGRADE_LEVEL::NO_UPGRADES},
@@ -166,7 +172,7 @@ public:
 	};
 
 	int calculateUpgradeCost(RenderSystem::UPGRADE_TYPE type);
-	bool transactionSuccessful = true;
+	PurchaseResult transactionSuccessful = PurchaseResult::SUCCESS;
 
 private:
 	// Internal drawing functions for each entity type

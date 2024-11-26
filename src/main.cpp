@@ -22,11 +22,11 @@ bool is_button_clicked(float xs, float xl, float ys, float yl, float mouse_x, fl
     return mouse_x >= xs && mouse_x <= xl && mouse_y >= ys && mouse_y <= yl;
 }
 
-bool purchaseUpgrade(RenderSystem* r, WorldSystem* w, RenderSystem::UPGRADE_TYPE type) {
+RenderSystem::PurchaseResult purchaseUpgrade(RenderSystem* r, WorldSystem* w, RenderSystem::UPGRADE_TYPE type) {
 	RenderSystem::UPGRADE_LEVEL currentLevel = w->worldUpgradeLevels[type];
 	if (currentLevel == RenderSystem::UPGRADE_LEVEL::MAX_UPGRADES) {
 		std::cout << "Upgrade already at max level for this type.\n";
-		return false;
+		return RenderSystem::PurchaseResult::MAX_UPGRADE_REACHED;
 	}
 
 	int cost = r->calculateUpgradeCost(type);
@@ -37,11 +37,11 @@ bool purchaseUpgrade(RenderSystem* r, WorldSystem* w, RenderSystem::UPGRADE_TYPE
 		w->worldUpgradeLevels[type] = static_cast<RenderSystem::UPGRADE_LEVEL>(static_cast<int>(currentLevel) + 1);
 		r->upgradeLevels[type] = static_cast<RenderSystem::UPGRADE_LEVEL>(static_cast<int>(currentLevel) + 1);
 		std::cout << "Upgrade successful! Remaining coins: " << w->coins << "\n";
-		return true;
+		return RenderSystem::PurchaseResult::SUCCESS;
 	}
 	else {
 		std::cout << "Not enough coins for this upgrade. Need " << cost - w->coins << " more.\n";
-		return false;
+		return RenderSystem::PurchaseResult::INSUFFICIENT_COINS;
 	}
 }
 
@@ -131,7 +131,7 @@ int main()
                     game_state = "tutorial";
                 }
             }
-			renderer.transactionSuccessful = true;
+			renderer.transactionSuccessful = RenderSystem::PurchaseResult::SUCCESS;
 		} else if (game_state == "tutorial") {
 			while (registry.shopItems.entities.size() > 0)
 				registry.remove_all_components_of(registry.shopItems.entities.back());
@@ -223,34 +223,19 @@ int main()
 
 			if (isKeyHPressed && !wasKeyHPressed) {
 				printf("clicked on DAMAGE\n");
-				if (purchaseUpgrade(&renderer, &world, RenderSystem::UPGRADE_TYPE::DAMAGE)) {
-					renderer.transactionSuccessful = true;
-				}
-				else {
-					renderer.transactionSuccessful = false;
-				}
+				renderer.transactionSuccessful = purchaseUpgrade(&renderer, &world, RenderSystem::UPGRADE_TYPE::DAMAGE);
 			}
 			wasKeyHPressed = isKeyHPressed;
 
 			if (isKeyJPressed && !wasKeyJPressed) {
 				printf("clicked on health\n");
-				if (purchaseUpgrade(&renderer, &world, RenderSystem::UPGRADE_TYPE::HEALTH)) {
-					renderer.transactionSuccessful = true;
-				}
-				else {
-					renderer.transactionSuccessful = false;
-				}
+				renderer.transactionSuccessful = purchaseUpgrade(&renderer, &world, RenderSystem::UPGRADE_TYPE::HEALTH);
 			}
 			wasKeyJPressed = isKeyJPressed;
 
 			if (isKeyKPressed && !wasKeyKPressed) {
 				printf("clicked on speed\n");
-				if (purchaseUpgrade(&renderer, &world, RenderSystem::UPGRADE_TYPE::SPEED)) {
-					renderer.transactionSuccessful = true;
-				}
-				else {
-					renderer.transactionSuccessful = false;
-				}
+				renderer.transactionSuccessful = purchaseUpgrade(&renderer, &world, RenderSystem::UPGRADE_TYPE::SPEED);
 			}
 			wasKeyKPressed = isKeyKPressed;
 		}

@@ -886,7 +886,8 @@ Entity createUpgradeLine(vec2 position, vec2 scale)
 	motion.position = position;
 	motion.scale = scale;
 
-	registry.homeAndTuts.emplace(entity);
+	auto& screen = registry.homeAndTuts.emplace(entity);
+	screen.type = HomeAndTutType::SHOP;
 	registry.colors.insert(entity, glm::vec3{ 0.4f, 1.0f, 0.6f });
 	registry.shopItems.emplace(entity);
 	return entity;

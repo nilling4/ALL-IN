@@ -521,8 +521,10 @@ void RenderSystem::draw(std::string what)
 				renderText("Press j to upgrade", window_width_px * 0.41, window_height_px * 0.58, smallerText, black_font_color, font_trans);
 				renderText("Press k to upgrade", window_width_px * 0.68, window_height_px * 0.58, smallerText, black_font_color, font_trans);
 				glm::vec3 red_font_color = glm::vec3(1.0f, 0.0f, 0.0f);
-				if (!transactionSuccessful) {
+				if (transactionSuccessful == PurchaseResult::INSUFFICIENT_COINS) {
 					renderText("You're too poor to purchase that!", window_width_px * 0.28, window_height_px * 0.12, 0.6f, red_font_color, font_trans);
+				} else if (transactionSuccessful == PurchaseResult::MAX_UPGRADE_REACHED) {
+					renderText("You already have the max upgrade!", window_width_px * 0.28, window_height_px * 0.12, 0.6f, red_font_color, font_trans);
 				}
 			}
 			if (what == "the doors") {
