@@ -464,6 +464,20 @@ bool WorldSystem::step(float elapsed_ms_since_last_update, std::string* game_sta
 					your.dart_speed *= bn.amt;
 				} else if (bn.affect == "increase ninja" || bn.affect == "slow ninja") {
 					your.ninja_speed *= bn.amt;
+				} else if (bn.affect == "collect") {
+					your.collect_dist *= bn.amt;
+				} else if (bn.affect == "roulette dmg") {
+					your.roulette_dmg *= bn.amt;
+				} else if (bn.affect == "card dmg") {
+					your.card_dmg *= bn.amt;
+				} else if (bn.affect == "dart dmg") {
+					your.dart_dmg *= bn.amt;
+				} else if (bn.affect == "ninja dmg") {
+					your.ninja_dmg *= bn.amt;
+				} else if (bn.affect == "card pierce") {
+					your.card_pierce += bn.amt;
+				} else if (bn.affect == "roulette bounce") {
+					your.roulette_bounce += bn.amt;
 				}
 			}
 			bn.amt = 1;
@@ -534,7 +548,7 @@ bool WorldSystem::step(float elapsed_ms_since_last_update, std::string* game_sta
 					float velocity_x = speed * std::cos(angle);
 					float velocity_y = speed * std::sin(angle);
 
-					createRouletteBall(renderer, vec2(p_motion.position.x, p_motion.position.y), vec2(velocity_x, velocity_y));
+					createRouletteBall(renderer, vec2(p_motion.position.x, p_motion.position.y), vec2(velocity_x, velocity_y), p_you.roulette_dmg, p_you.roulette_bounce);
 				}
 			}
 			if (p_you.card_reload_time > 0) {
@@ -547,7 +561,7 @@ bool WorldSystem::step(float elapsed_ms_since_last_update, std::string* game_sta
 					float velocity_x = speed * std::cos(angle);
 					float velocity_y = speed * std::sin(angle);
 
-					createCardProjectile(renderer, vec2(p_motion.position.x, p_motion.position.y), vec2(velocity_x, velocity_y));
+					createCardProjectile(renderer, vec2(p_motion.position.x, p_motion.position.y), vec2(velocity_x, velocity_y), p_you.card_dmg, p_you.card_pierce);
 				}
 			}
 
@@ -561,7 +575,7 @@ bool WorldSystem::step(float elapsed_ms_since_last_update, std::string* game_sta
 					float velocity_x = speed * std::cos(angle);
 					float velocity_y = speed * std::sin(angle);
 
-					createDartProjectile(renderer, vec2(p_motion.position.x, p_motion.position.y), vec2(velocity_x, velocity_y), angle);
+					createDartProjectile(renderer, vec2(p_motion.position.x, p_motion.position.y), vec2(velocity_x, velocity_y), angle, p_you.dart_dmg);
 				}
 			}
 
@@ -575,7 +589,7 @@ bool WorldSystem::step(float elapsed_ms_since_last_update, std::string* game_sta
 					float velocity_x = speed * std::cos(angle);
 					float velocity_y = speed * std::sin(angle);
 
-					createDiamondProjectile(renderer, vec2(p_motion.position.x, p_motion.position.y), vec2(velocity_x, velocity_y), angle);
+					createDiamondProjectile(renderer, vec2(p_motion.position.x, p_motion.position.y), vec2(velocity_x, velocity_y), angle, p_you.ninja_dmg);
 				}
 			}
 		}
@@ -755,11 +769,16 @@ void WorldSystem::next_wave() {
 	};
 
 	if (registry.buffNerfs.size() < 1) {
+		createBuffNerf(1.3, "collect", 1, "Coin magnet x1.3");
+		createBuffNerf(1.5, "collect", 1, "Coin magnet x1.5");
+		createBuffNerf(2.0, "collect", 1, "Coin magnet x2.0");
+		createBuffNerf(0.8, "collect", 0, "Coin magnet x0.8");
 		createBuffNerf(1.2, "health", 1, "Health x1.2");
+		createBuffNerf(1.5, "health", 1, "Health x1.5");
 		createBuffNerf(2.0, "health", 1, "Health x2");
 		createBuffNerf(0.8, "health", 0, "Health x0.8");
+		createBuffNerf(0.6, "health", 0, "Health x0.6");
 		createBuffNerf(1.2, "card_reload_time", 0, "Reload (card) x1.2");
-		createBuffNerf(1.5, "card_reload_time", 0, "Reload (card) x1.5");
 		createBuffNerf(0.8, "card_reload_time", 1, "Reload (card) x0.8");
 		createBuffNerf(0.5, "card_reload_time", 1, "Reload (card) x0.5");
 		createBuffNerf(0.2, "card_reload_time", 1, "Reload (card) x0.2");
@@ -770,22 +789,27 @@ void WorldSystem::next_wave() {
 		createBuffNerf(1.5, "card_reload_time", 0, "Reload (card) x1.5");
 		createBuffNerf(2.0, "card_reload_time", 0, "Reload (card) x2.0");
 		createBuffNerf(3.0, "card_reload_time", 0, "Reload (card) x3.0");
+		createBuffNerf(1.2, "card dmg", 1, "Damage (card) x1.2");
+		createBuffNerf(1.5, "card dmg", 1, "Damage (card) x1.5");
+		createBuffNerf(0.9, "card dmg", 0, "Damage (card) x0.9");
+		createBuffNerf(0.7, "card dmg", 0, "Damage (card) x0.7");
+		createBuffNerf(1, "card pierce", 1, "Pierce (card) +1");
+		createBuffNerf(2, "card pierce", 1, "Pierce (card) +2");
 		createBuffNerf(0.5, "roulette_reload_time", 1, "Reload (ball) x0.5");
-		createBuffNerf(0.8, "roulette_reload_time", 1, "Reload (ball) x0.8");
 		createBuffNerf(1.2, "roulette_reload_time", 0, "Reload (ball) x1.2");
-		createBuffNerf(1.5, "roulette_reload_time", 0, "Reload (ball) x1.5");
-		createBuffNerf(0.2, "roulette_reload_time", 1, "Reload (ball) x0.2");
 		createBuffNerf(0.6, "roulette_reload_time", 1, "Reload (ball) x0.6");
-		createBuffNerf(0.7, "roulette_reload_time", 1, "Reload (ball) x0.7");
+		createBuffNerf(0.8, "roulette_reload_time", 1, "Reload (ball) x0.8");
 		createBuffNerf(0.9, "roulette_reload_time", 1, "Reload (ball) x0.9");
-		createBuffNerf(0.95, "roulette_reload_time", 1, "Reload (ball) x0.95");
 		createBuffNerf(1.5, "roulette_reload_time", 0, "Reload (ball) x1.5");
 		createBuffNerf(2.0, "roulette_reload_time", 0, "Reload (ball) x2.0");
-		createBuffNerf(3.0, "roulette_reload_time", 0, "Reload (ball) x3.0");
+		createBuffNerf(1.2, "roulette dmg", 1, "Damage (ball) x1.2");
+		createBuffNerf(1.5, "roulette dmg", 1, "Damage (ball) x1.5");
+		createBuffNerf(0.9, "roulette dmg", 0, "Damage (ball) x0.9");
+		createBuffNerf(0.7, "roulette dmg", 0, "Damage (ball) x0.7");
+		createBuffNerf(1, "roulette bounce", 1, "Bounce (ball) +1");
 		createBuffNerf(0.5, "dart_reload_time", 1, "Reload (dart) x0.5");
 		createBuffNerf(0.8, "dart_reload_time", 1, "Reload (dart) x0.8");
 		createBuffNerf(1.2, "dart_reload_time", 0, "Reload (dart) x1.2");
-		createBuffNerf(1.5, "dart_reload_time", 0, "Reload (dart) x1.5");
 		createBuffNerf(0.2, "dart_reload_time", 1, "Reload (dart) x0.2");
 		createBuffNerf(0.6, "dart_reload_time", 1, "Reload (dart) x0.6");
 		createBuffNerf(0.7, "dart_reload_time", 1, "Reload (dart) x0.7");
@@ -794,6 +818,12 @@ void WorldSystem::next_wave() {
 		createBuffNerf(1.5, "dart_reload_time", 0, "Reload (dart) x1.5");
 		createBuffNerf(2.0, "dart_reload_time", 0, "Reload (dart) x2.0");
 		createBuffNerf(3.0, "dart_reload_time", 0, "Reload (dart) x3.0");
+		createBuffNerf(2.0, "dart dmg", 1, "Damage (dart) x2.0");
+		createBuffNerf(3.0, "dart dmg", 1, "Damage (dart) x3.0");
+		createBuffNerf(1.3, "dart dmg", 1, "Damage (dart) x1.3");
+		createBuffNerf(1.6, "dart dmg", 1, "Damage (dart) x1.6");
+		createBuffNerf(0.9, "dart dmg", 0, "Damage (dart) x0.9");
+		createBuffNerf(0.75, "dart dmg", 0, "Damage (dart) x0.75");
 		createBuffNerf(0.8, "ninja_reload_time", 1, "Reload (ninja) x0.8");
 		createBuffNerf(0.5, "ninja_reload_time", 1, "Reload (ninja) x0.5");
 		createBuffNerf(1.2, "ninja_reload_time", 0, "Reload (ninja) x1.2");
@@ -805,6 +835,10 @@ void WorldSystem::next_wave() {
 		createBuffNerf(1.5, "ninja_reload_time", 0, "Reload (ninja) x1.5");
 		createBuffNerf(2.0, "ninja_reload_time", 0, "Reload (ninja) x2.0");
 		createBuffNerf(3.0, "ninja_reload_time", 0, "Reload (ninja) x3.0");
+		createBuffNerf(1.2, "ninja dmg", 1, "Damage (ninja) x1.2");
+		createBuffNerf(1.5, "ninja dmg", 1, "Damage (ninja) x1.5");
+		createBuffNerf(0.9, "ninja dmg", 0, "Damage (ninja) x0.9");
+		createBuffNerf(0.7, "ninja dmg", 0, "Damage (ninja) x0.7");
 		createBuffNerf(900.f, "get ball", 1, "unlock ball");
 		createBuffNerf(1100.f, "get card", 1, "unlock card");
 		createBuffNerf(1500.f, "get dart", 1, "unlock dart");
@@ -813,18 +847,18 @@ void WorldSystem::next_wave() {
 		createBuffNerf(0.f, "lose card", 0, "lose card");
 		createBuffNerf(0.f, "lose dart", 0, "lose dart");
 		createBuffNerf(0.f, "lose ninja", 0, "lose ninja");
-		createBuffNerf(1.3, "increase ball", 1, "+ speed (ball) x1.3");
-		createBuffNerf(1.3, "increase dart", 1, "+ speed (dart) x1.3");
-		createBuffNerf(1.3, "increase ninja", 1, "+ speed (ninja) x1.3");
-		createBuffNerf(1.3, "increase card", 1, "+ speed (card) x1.3");
-		createBuffNerf(1.7, "increase ball", 1, "+ speed (ball) x1.7");
-		createBuffNerf(1.7, "increase dart", 1, "+ speed (dart) x1.7");
-		createBuffNerf(1.7, "increase ninja", 1, "+ speed (ninja) x1.7");
-		createBuffNerf(1.7, "increase card", 1, "+ speed (card) x1.7");
-		createBuffNerf(0.7, "slow ball", 0, "- speed (ball) x0.7");
-		createBuffNerf(0.7, "slow dart", 0, "- speed (dart) x0.7");
-		createBuffNerf(0.7, "slow ninja", 0, "- speed (ninja) x0.7");
-		createBuffNerf(0.7, "slow card", 0, "- speed (card) x0.7");
+		createBuffNerf(1.3, "increase ball", 1, "speed (ball) x1.3");
+		createBuffNerf(1.3, "increase dart", 1, "speed (dart) x1.3");
+		createBuffNerf(1.3, "increase ninja", 1, "speed (ninja) x1.3");
+		createBuffNerf(1.3, "increase card", 1, "speed (card) x1.3");
+		createBuffNerf(1.7, "increase ball", 1, "speed (ball) x1.7");
+		createBuffNerf(1.7, "increase dart", 1, "speed (dart) x1.7");
+		createBuffNerf(1.7, "increase ninja", 1, "speed (ninja) x1.7");
+		createBuffNerf(1.7, "increase card", 1, "speed (card) x1.7");
+		createBuffNerf(0.7, "slow ball", 0, "speed (ball) x0.7");
+		createBuffNerf(0.7, "slow dart", 0, "speed (dart) x0.7");
+		createBuffNerf(0.7, "slow ninja", 0, "speed (ninja) x0.7");
+		createBuffNerf(0.7, "slow card", 0, "speed (card) x0.7");
 	}
 
 	std::vector<BuffNerf*> buffs = {};
@@ -854,100 +888,83 @@ void WorldSystem::next_wave() {
 	int count3n = 2;
 
 	while (count3b > 0) {
+		if (buff_idx >= buffs.size()) {
+			buff_idx = 0;
+		}
 		if (buffs[buff_idx]->affect == "get ball") {
 			if (your.roulette_reload_time > 0) {
 				buff_idx += 1;
-				if (buff_idx >= buffs.size()) {
-					buff_idx = 0;
-				}
 				continue;
 			}
 		} else if (buffs[buff_idx]->affect == "get card") {
 			if (your.card_reload_time > 0) {
 				buff_idx += 1;
-				if (buff_idx >= buffs.size()) {
-					buff_idx = 0;
-				}
 				continue;
 			}
 		} else if (buffs[buff_idx]->affect == "get dart") {
 			if (your.dart_reload_time > 0) {
 				buff_idx += 1;
-				if (buff_idx >= buffs.size()) {
-					buff_idx = 0;
-				}
 				continue;
 			}
 		} else if (buffs[buff_idx]->affect == "get ninja") {
 			if (your.ninja_reload_time > 0) {
 				buff_idx += 1;
-				if (buff_idx >= buffs.size()) {
-					buff_idx = 0;
-				}
 				continue;
 			}
 		}
 		if (your.roulette_reload_time == 0) {
 			if (buffs[buff_idx]->affect == "roulette_reload_time") {
 				buff_idx += 1;
-				if (buff_idx >= buffs.size()) {
-					buff_idx = 0;
-				}
 				continue;
 			}
 			if (buffs[buff_idx]->affect == "increase ball" || buffs[buff_idx]->affect == "slow ball") {
 				buff_idx += 1;
-				if (buff_idx >= buffs.size()) {
-					buff_idx = 0;
-				}
+				continue;
+			}
+			if (buffs[buff_idx]->affect == "roulette dmg" || buffs[buff_idx]->affect == "roulette bounce") {
+				buff_idx += 1;
 				continue;
 			}
 		}
 		if (your.card_reload_time == 0) {
 			if (buffs[buff_idx]->affect == "card_reload_time") {
 				buff_idx += 1;
-				if (buff_idx >= buffs.size()) {
-					buff_idx = 0;
-				}
 				continue;
 			}
 			if (buffs[buff_idx]->affect == "increase card" || buffs[buff_idx]->affect == "slow card") {
 				buff_idx += 1;
-				if (buff_idx >= buffs.size()) {
-					buff_idx = 0;
-				}
+				continue;
+			}
+			if (buffs[buff_idx]->affect == "card dmg" || buffs[buff_idx]->affect == "card pierce") {
+				buff_idx += 1;
 				continue;
 			}
 		}
 		if (your.dart_reload_time == 0) {
 			if (buffs[buff_idx]->affect == "dart_reload_time") {
 				buff_idx += 1;
-				if (buff_idx >= buffs.size()) {
-					buff_idx = 0;
-				}
 				continue;
 			}
 			if (buffs[buff_idx]->affect == "increase dart" || buffs[buff_idx]->affect == "slow dart") {
 				buff_idx += 1;
-				if (buff_idx >= buffs.size()) {
-					buff_idx = 0;
-				}
+				continue;
+			}
+			if (buffs[buff_idx]->affect == "dart dmg") {
+				buff_idx += 1;
 				continue;
 			}
 		}
 		if (your.ninja_reload_time == 0) {
 			if (buffs[buff_idx]->affect == "ninja_reload_time") {
 				buff_idx += 1;
-				if (buff_idx >= buffs.size()) {
-					buff_idx = 0;
-				}
 				continue;
 			}
 			if (buffs[buff_idx]->affect == "increase ninja" || buffs[buff_idx]->affect == "slow ninja") {
 				buff_idx += 1;
-				if (buff_idx >= buffs.size()) {
-					buff_idx = 0;
-				}
+				continue;
+			}
+			if (buffs[buff_idx]->affect == "ninja dmg") {
+				buff_idx += 1;
 				continue;
 			}
 		}
@@ -969,95 +986,78 @@ void WorldSystem::next_wave() {
 	}
 
 	while (count3n > 0) {
+		if (nerf_idx >= nerfs.size()) {
+			nerf_idx = 0;
+		}
 		if (your.roulette_reload_time == 0) {
 			if (nerfs[nerf_idx]->affect == "lose ball") {
 				nerf_idx += 1;
-				if (nerf_idx >= nerfs.size()) {
-					nerf_idx = 0;
-				}
 				continue;
 			}
 			if (nerfs[nerf_idx]->affect == "roulette_reload_time") {
 				nerf_idx += 1;
-				if (nerf_idx >= nerfs.size()) {
-					nerf_idx = 0;
-				}
 				continue;
 			}
 			if (nerfs[nerf_idx]->affect == "slow ball") {
 				nerf_idx += 1;
-				if (nerf_idx >= nerfs.size()) {
-					nerf_idx = 0;
-				}
+				continue;
+			}
+			if (nerfs[nerf_idx]->affect == "roulette dmg") {
+				nerf_idx += 1;
 				continue;
 			}
 		}
 		if (your.dart_reload_time == 0) {
 			if (nerfs[nerf_idx]->affect == "lose dart") {
 				nerf_idx += 1;
-				if (nerf_idx >= nerfs.size()) {
-					nerf_idx = 0;
-				}
 				continue;
 			}
 			if (nerfs[nerf_idx]->affect == "dart_reload_time") {
 				nerf_idx += 1;
-				if (nerf_idx >= nerfs.size()) {
-					nerf_idx = 0;
-				}
 				continue;
 			}
 			if (nerfs[nerf_idx]->affect == "slow dart") {
 				nerf_idx += 1;
-				if (nerf_idx >= nerfs.size()) {
-					nerf_idx = 0;
-				}
+				continue;
+			}
+			if (nerfs[nerf_idx]->affect == "dart dmg") {
+				nerf_idx += 1;
 				continue;
 			}
 		}
 		if (your.card_reload_time == 0) {
 			if (nerfs[nerf_idx]->affect == "lose card") {
 				nerf_idx += 1;
-				if (nerf_idx >= nerfs.size()) {
-					nerf_idx = 0;
-				}
 				continue;
 			}
 			if (nerfs[nerf_idx]->affect == "card_reload_time") {
 				nerf_idx += 1;
-				if (nerf_idx >= nerfs.size()) {
-					nerf_idx = 0;
-				}
 				continue;
 			}
 			if (nerfs[nerf_idx]->affect == "slow card") {
 				nerf_idx += 1;
-				if (nerf_idx >= nerfs.size()) {
-					nerf_idx = 0;
-				}
+				continue;
+			}
+			if (nerfs[nerf_idx]->affect == "card dmg") {
+				nerf_idx += 1;
 				continue;
 			}
 		}
 		if (your.ninja_reload_time == 0) {
 			if (nerfs[nerf_idx]->affect == "lose ninja") {
 				nerf_idx += 1;
-				if (nerf_idx >= nerfs.size()) {
-					nerf_idx = 0;
-				}
 				continue;
 			}
 			if (nerfs[nerf_idx]->affect == "ninja_reload_time") {
 				nerf_idx += 1;
-				if (nerf_idx >= nerfs.size()) {
-					nerf_idx = 0;
-				}
 				continue;
 			}
 			if (nerfs[nerf_idx]->affect == "slow ninja") {
 				nerf_idx += 1;
-				if (nerf_idx >= nerfs.size()) {
-					nerf_idx = 0;
-				}
+				continue;
+			}
+			if (nerfs[nerf_idx]->affect == "ninja dmg") {
+				nerf_idx += 1;
 				continue;
 			}
 		}
@@ -1293,6 +1293,8 @@ void WorldSystem::next_wave() {
 			}
 		}
 		player_motion.position = vec2(WALL_BLOCK_BB_WIDTH * outerWidth / 2, 84);
+		player_motion.velocity *= 0.f;
+		your.push *= 0;
 	}
 
 	registry.list_all_components();
@@ -1448,7 +1450,7 @@ void WorldSystem::handle_collisions() {
 							float dice_roll = uniform_dist(rng);
 							vec2 random_pos = {cos(random_angle), sin(random_angle)};
 							if (dice_roll < luck) {
-								createCoin(renderer, registry.motions.get(entity_other).position + (random_pos * 50.f * uniform_dist(rng)));
+								createCoin(renderer, registry.motions.get(entity_other).position + (random_pos * 30.f * uniform_dist(rng)));
 							} 
 							luck -= dice_roll;
 						}
@@ -1581,6 +1583,7 @@ bool WorldSystem::load() {
 			player_stats.card_speed = j["player_stats"]["card_speed"];
 			player_stats.ninja_speed = j["player_stats"]["ninja_speed"];
 			player_stats.luck = j["player_stats"]["luck"];
+			player_stats.collect_dist = j["player_stats"]["collect_dist"];
 		}
 
 		// Load enemies positions
@@ -1624,16 +1627,16 @@ bool WorldSystem::load() {
 				double velocity_magnitude = std::sqrt(velocity_x * velocity_x + velocity_y * velocity_y);
 				std::string name = value["name"];
 				if (name == "ninja") {
-					createDiamondProjectile(renderer, vec2(value["position"][0], value["position"][1]), vec2(velocity_x, velocity_y), value["angle"]);
+					createDiamondProjectile(renderer, vec2(value["position"][0], value["position"][1]), vec2(velocity_x, velocity_y), value["angle"], value["dmg"]);
 				}
 				else if (name == "ball") {
-					createRouletteBall(renderer, vec2(value["position"][0], value["position"][1]), vec2(velocity_x, velocity_y));
+					createRouletteBall(renderer, vec2(value["position"][0], value["position"][1]), vec2(velocity_x, velocity_y), value["dmg"], value["b_left"]);
 				}
 				else if (name == "dart") {
-					createDartProjectile(renderer, vec2(value["position"][0], value["position"][1]), vec2(velocity_x, velocity_y), value["angle"]);
+					createDartProjectile(renderer, vec2(value["position"][0], value["position"][1]), vec2(velocity_x, velocity_y), value["angle"], value["dmg"]);
 				}
 				else if (name == "card") {
-					createCardProjectile(renderer, vec2(value["position"][0], value["position"][1]), vec2(velocity_x, velocity_y));
+					createCardProjectile(renderer, vec2(value["position"][0], value["position"][1]), vec2(velocity_x, velocity_y), value["dmg"], value["p_left"]);
 				}
 			}
 		}
@@ -1748,6 +1751,7 @@ void WorldSystem::save() {
 				{"card_speed", player_stats.card_speed},
 				{"ninja_speed", player_stats.ninja_speed},
 				{"luck", player_stats.luck},
+				{"collect_dist", player_stats.collect_dist},
 			};
         }
     }
@@ -1784,6 +1788,9 @@ void WorldSystem::save() {
                 {"velocity", {ent.velocity.x, ent.velocity.y}},
 				{"angle", ent.angle},
 				{"name", ke.name},
+				{"dmg", ke.damage},
+				{"p_left", ke.pierce_left},
+				{"b_left", ke.bounce_left},
             };
         }
     }
@@ -1971,7 +1978,13 @@ void WorldSystem::on_key(int key, int, int action, int mod) {
 }
 
 void WorldSystem::handle_movement() {
+	Wave& wave = registry.waves.get(global_wave);
 	auto& component = registry.motions.get(player_protagonist);
+	if (wave.state != "game on" && wave.state != "limbo") {
+		component.velocity.x = 0.f;
+		component.velocity.y = 0.f;
+		return;
+	}
 	if (!registry.deathTimers.has(player_protagonist)) {
 		bool up = pressed_keys.find(GLFW_KEY_W) != pressed_keys.end();
 		bool down = pressed_keys.find(GLFW_KEY_S) != pressed_keys.end();

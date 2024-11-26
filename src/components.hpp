@@ -16,29 +16,30 @@ struct Player
 
 	float roulette_reload_counter = 0;
 	float roulette_reload_time = 0;
-	float roulette_dmg = 0;
-	float roulette_bounce = 0;
+	float roulette_dmg = 90.f;
+	int roulette_bounce = 1;
 	float roulette_speed = 300.f;
 
 	float card_reload_counter = 0;
 	float card_reload_time = 0;
-	float card_dmg = 0;
-	float card_pierce = 0;
+	float card_dmg = 100.f;
+	int card_pierce = 1;
 	float card_speed = 400.f;
 
 	float dart_reload_counter = 0;
 	float dart_reload_time = 0;
-	float dart_dmg = 0;
+	float dart_dmg = 750.f;
 	float dart_pierce = 0;
 	float dart_speed = 380.f;
 
 	float ninja_reload_counter = 0;
 	float ninja_reload_time = 0;
-	float ninja_dmg = 0;
+	float ninja_dmg = 200.f;
 	float ninja_pierce = 0;
 	float ninja_speed = 250.f;
 
 	float luck = 0.5f;
+	float collect_dist = 100.f; // if you want to add here, make sure to add in json load and write to json
 };
 
 struct Door {
@@ -115,7 +116,9 @@ enum class HomeAndTutType {
 	HOME = 0,
 	TUT = HOME + 1,
 	SHOP = TUT + 1,
-	DOORS = SHOP + 1
+	DOORS = SHOP + 1,
+	DOORS1 = DOORS + 1,
+	DOORS2 = DOORS1 + 1
 };
 
 struct HomeAndTut {
@@ -312,7 +315,9 @@ enum class TEXTURE_ASSET_ID {
 	ROULETTE_TABLE = SLOT_MACHINE + 1,
 	SHOP_SCREEN = ROULETTE_TABLE + 1,
 	DOORS_SCREEN = SHOP_SCREEN + 1,
-	TEXTURE_COUNT = DOORS_SCREEN + 1
+	DOORS_SCREEN1 = DOORS_SCREEN + 1,
+	DOORS_SCREEN2 = DOORS_SCREEN1 + 1,
+	TEXTURE_COUNT = DOORS_SCREEN2 + 1
 };
 const int texture_count = (int)TEXTURE_ASSET_ID::TEXTURE_COUNT;
 

@@ -5,7 +5,7 @@
 #include <queue>
 #include <utility>
 using namespace std;
-const float COLLECT_DIST = 100.0f;  
+// const float COLLECT_DIST = 100.0f;  
 const int dRow[] = {-1, -1, 0, 1, 1, 1, 0, -1}; // Up, Up-Right, Right, Down-Right, Down, Down-Left, Left, Up-Left
 const int dCol[] = {0, 1, 1, 1, 0, -1, -1, -1}; // Corresponding columns
 
@@ -134,6 +134,12 @@ void PhysicsSystem::step(float elapsed_ms)
 {
 	// Move fish based on how much time has passed, this is to (partially) avoid
 	// having entities move at different speed based on the machine.
+	for (Entity entity : registry.waves.entities) {
+		Wave& wave = registry.waves.get(entity);
+		if (wave.state != "game on" && wave.state != "limbo") {
+			return;
+		} 
+	}
 	auto& motion_registry = registry.motions;
 	float step_seconds = elapsed_ms / 1000.f;
 	for (Entity entity : registry.players.entities) {
@@ -210,29 +216,29 @@ void PhysicsSystem::step(float elapsed_ms)
         // Update the previous position
         player_motion.previous_position = player_motion.position;
         // Handle eatable entities
-        for (Entity entity : registry.eatables.entities) {
-            Motion& motion = registry.motions.get(entity);
-            float dist = length(player_motion.position - motion.position);
-            if (dist < COLLECT_DIST && dist > 0.f) {
-                motion.velocity = 100.f * (COLLECT_DIST / (dist + COLLECT_DIST)) * normalize(player_motion.position - motion.position);
-            } else {
-                motion.velocity = {0, 0};
-            }
-        }
+        // for (Entity entity : registry.eatables.entities) {
+        //     Motion& motion = registry.motions.get(entity);
+        //     float dist = length(player_motion.position - motion.position);
+        //     if (dist < COLLECT_DIST && dist > 0.f) {
+        //         motion.velocity = 100.f * (COLLECT_DIST / (dist + COLLECT_DIST)) * normalize(player_motion.position - motion.position);
+        //     } else {
+        //         motion.velocity = {0, 0};
+        //     }
+        // }
 		your.push *= 0.5f;
 
 
 		for (Entity entity : registry.eatables.entities) {
 			Motion& motion = registry.motions.get(entity);
 			float dist = length(player_motion.position - motion.position);
-			if (dist < COLLECT_DIST && dist > 0.f) {
-				motion.velocity = 100.f*(COLLECT_DIST / (dist + COLLECT_DIST)) * normalize(player_motion.position - motion.position);
+			if (dist < your.collect_dist && dist > 0.f) {
+				motion.velocity = 100.f*(your.collect_dist / (dist + your.collect_dist)) * normalize(player_motion.position - motion.position);
 			} else {
 				motion.velocity = {0, 0};
 			}
 		}
 	}
-	
+
 	for(Entity entity : registry.killsEnemys.entities){ {
 		Motion& motion = motion_registry.get(entity);
 		KillsEnemy& kills = registry.killsEnemys.get(entity);

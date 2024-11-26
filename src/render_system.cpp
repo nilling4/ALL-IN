@@ -483,7 +483,7 @@ void RenderSystem::draw(std::string what)
 			drawTexturedMesh(hud_entity, hud_projection);
 		}
 
-	} else if (what == "the home screen duh" || what == "the tuts" || what == "shop" || what == "the doors") {
+	} else if (what == "the home screen duh" || what == "the tuts" || what == "shop" || what == "the doors" || what == "the doors1" || what == "the doors2") {
 		mat3 projection_2D = createStaticProjectionMatrix();
 		for (Entity entity : registry.homeAndTuts.entities) {
 			if (what == "the home screen duh") {
@@ -498,6 +498,16 @@ void RenderSystem::draw(std::string what)
 			}
 			else if (what == "the doors") {
 				if (registry.homeAndTuts.get(entity).type != HomeAndTutType::DOORS) {
+					continue;
+				}
+			}
+			else if (what == "the doors1") {
+				if (registry.homeAndTuts.get(entity).type != HomeAndTutType::DOORS1) {
+					continue;
+				}
+			}
+			else if (what == "the doors2") {
+				if (registry.homeAndTuts.get(entity).type != HomeAndTutType::DOORS2) {
 					continue;
 				}
 			}
@@ -527,7 +537,7 @@ void RenderSystem::draw(std::string what)
 					renderText("You already have the max upgrade!", window_width_px * 0.28, window_height_px * 0.12, 0.6f, red_font_color, font_trans);
 				}
 			}
-			if (what == "the doors") {
+			if (what == "the doors" || what == "the doors1" || what == "the doors2") {
 				glm::vec3 red_font_color = glm::vec3(1.0, 0.0, 0.0);
 				glm::vec3 green_font_color = glm::vec3(0.0, 1.0, 0.0);
 				glm::vec3 black_font_color = glm::vec3(0.0, 0.0, 0.0);

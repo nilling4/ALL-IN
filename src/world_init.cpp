@@ -431,7 +431,7 @@ Entity createHeartProjectile(RenderSystem* renderer, vec2 position, vec2 velocit
 	return entity;
 }
 
-Entity createRouletteBall(RenderSystem* renderer, vec2 position, vec2 velocity) 
+Entity createRouletteBall(RenderSystem* renderer, vec2 position, vec2 velocity, float dmg, int bounce) 
 {
 	auto entity = Entity();
 
@@ -447,8 +447,8 @@ Entity createRouletteBall(RenderSystem* renderer, vec2 position, vec2 velocity)
 	motion.scale = mesh.original_size * 60.f;
 
 	auto& kills = registry.killsEnemys.emplace(entity);
-	kills.damage = 150.f;
-	kills.bounce_left = 2;
+	kills.damage = dmg;
+	kills.bounce_left = bounce;
 	kills.type = PROJECTILE::ROULETTE_BALL;
 	kills.name = "ball";
 	registry.renderRequests.insert(
@@ -461,7 +461,7 @@ Entity createRouletteBall(RenderSystem* renderer, vec2 position, vec2 velocity)
 	return entity;
 }
 
-Entity createCardProjectile(RenderSystem* renderer, vec2 position, vec2 velocity)
+Entity createCardProjectile(RenderSystem* renderer, vec2 position, vec2 velocity, float dmg, int pierce)
 {
 	auto entity = Entity();
 
@@ -476,8 +476,8 @@ Entity createCardProjectile(RenderSystem* renderer, vec2 position, vec2 velocity
 	motion.scale = vec2({ CARD_PROJECTILE_BB_WIDTH, CARD_PROJECTILE_BB_HEIGHT });
 
 	auto& kills = registry.killsEnemys.emplace(entity);
-	kills.damage = 100.f;
-	kills.pierce_left = 2;
+	kills.damage = dmg;
+	kills.pierce_left = pierce;
 	kills.type = PROJECTILE::CARD_PROJECTILE;
 	kills.name = "card";
 	registry.renderRequests.insert(
@@ -491,7 +491,7 @@ Entity createCardProjectile(RenderSystem* renderer, vec2 position, vec2 velocity
 	return entity;
 }
 
-Entity createDartProjectile(RenderSystem* renderer, vec2 position, vec2 velocity, float angle)
+Entity createDartProjectile(RenderSystem* renderer, vec2 position, vec2 velocity, float angle, float dmg)
 {
 	auto entity = Entity();
 
@@ -506,7 +506,7 @@ Entity createDartProjectile(RenderSystem* renderer, vec2 position, vec2 velocity
 	motion.scale = vec2({ DART_PROJECTILE_BB_WIDTH, DART_PROJECTILE_BB_HEIGHT });
 
 	auto& kills = registry.killsEnemys.emplace(entity);
-	kills.damage = 300.f;
+	kills.damage = dmg;
 	kills.type = PROJECTILE::DART_PROJECTILE;
 	kills.name = "dart";
 	registry.renderRequests.insert(
@@ -520,7 +520,7 @@ Entity createDartProjectile(RenderSystem* renderer, vec2 position, vec2 velocity
 	return entity;
 }
 
-Entity createDiamondProjectile(RenderSystem* renderer, vec2 position, vec2 velocity, float angle)
+Entity createDiamondProjectile(RenderSystem* renderer, vec2 position, vec2 velocity, float angle, float dmg)
 {
 	auto entity = Entity();
 
@@ -535,7 +535,7 @@ Entity createDiamondProjectile(RenderSystem* renderer, vec2 position, vec2 veloc
 	motion.scale = vec2({ DIAMOND_PROJECTILE_BB_HEIGHT, DIAMOND_PROJECTILE_BB_HEIGHT });
 
 	auto& kills = registry.killsEnemys.emplace(entity);
-	kills.damage = 200.f;
+	kills.damage = dmg;
 	kills.type = PROJECTILE::DIAMOND_STAR_PROJECTILE;
 	kills.name = "ninja";
 	registry.renderRequests.insert(
@@ -811,7 +811,7 @@ Entity createTutScreen(RenderSystem* renderer, vec2 position)
 	return entity;
 }
 
-Entity createDoorScreen(RenderSystem* renderer, vec2 position)
+Entity createDoorScreen(RenderSystem* renderer, vec2 position, int door_type)
 {
 	auto entity = Entity();
 
@@ -825,17 +825,43 @@ Entity createDoorScreen(RenderSystem* renderer, vec2 position)
 
 	motion.scale = vec2({ window_width_px, window_height_px });
 	auto& screen = registry.homeAndTuts.emplace(entity);
-	screen.type = HomeAndTutType::DOORS;
+	if (door_type == 0) {
+		screen.type = HomeAndTutType::DOORS;
 
-	registry.renderRequests.insert(
-		entity,
-		{
-			TEXTURE_ASSET_ID::DOORS_SCREEN,
-			EFFECT_ASSET_ID::TEXTURED,
-			GEOMETRY_BUFFER_ID::SPRITE
-		});
+		registry.renderRequests.insert(
+			entity,
+			{
+				TEXTURE_ASSET_ID::DOORS_SCREEN,
+				EFFECT_ASSET_ID::TEXTURED,
+				GEOMETRY_BUFFER_ID::SPRITE
+			});
 
-	return entity;
+		return entity;
+	} else if (door_type == 1) {
+		screen.type = HomeAndTutType::DOORS1;
+
+		registry.renderRequests.insert(
+			entity,
+			{
+				TEXTURE_ASSET_ID::DOORS_SCREEN1,
+				EFFECT_ASSET_ID::TEXTURED,
+				GEOMETRY_BUFFER_ID::SPRITE
+			});
+
+		return entity;
+	} else {
+		screen.type = HomeAndTutType::DOORS2;
+
+		registry.renderRequests.insert(
+			entity,
+			{
+				TEXTURE_ASSET_ID::DOORS_SCREEN2,
+				EFFECT_ASSET_ID::TEXTURED,
+				GEOMETRY_BUFFER_ID::SPRITE
+			});
+
+		return entity;
+	}
 }
 
 

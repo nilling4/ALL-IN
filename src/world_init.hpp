@@ -52,12 +52,12 @@ Entity createBossBirdClubs(RenderSystem* renderer, vec2 position, int wave_num);
 
 Entity createHeartProjectile(RenderSystem* renderer, vec2 position, vec2 velocity, Entity* target_entity, int wave_num);
 
-Entity createRouletteBall(RenderSystem* renderer, vec2 position, vec2 velocity);
+Entity createRouletteBall(RenderSystem* renderer, vec2 position, vec2 velocity, float dmg, int bounce);
 
-Entity createCardProjectile(RenderSystem* renderer, vec2 position, vec2 velocity);
+Entity createCardProjectile(RenderSystem* renderer, vec2 position, vec2 velocity, float dmg, int pierce);
 
-Entity createDartProjectile(RenderSystem* renderer, vec2 position, vec2 velocity, float angle);
-Entity createDiamondProjectile(RenderSystem* renderer, vec2 position, vec2 velocity, float angle);
+Entity createDartProjectile(RenderSystem* renderer, vec2 position, vec2 velocity, float angle, float dmg);
+Entity createDiamondProjectile(RenderSystem* renderer, vec2 position, vec2 velocity, float angle, float dmg);
 
 Entity createLerpProjectile(RenderSystem* renderer, vec2 position, vec2 startpos, vec2 endpos, float time, float angle);
 
@@ -87,7 +87,7 @@ Entity createEgg(vec2 pos, vec2 size);
 Entity createHomeScreen(RenderSystem* renderer, vec2 position);
 
 Entity createTutScreen(RenderSystem* renderer, vec2 position);
-Entity createDoorScreen(RenderSystem* renderer, vec2 position);
+Entity createDoorScreen(RenderSystem* renderer, vec2 position, int door_type);
 
 Entity createShopScreen(RenderSystem* renderer, vec2 position);
 Entity createUpgradeLine(vec2 position, vec2 size);

@@ -81,19 +81,21 @@ int main()
 
         glfwGetCursorPos(window, &mouse_x, &mouse_y);
 
-		if (registry.homeAndTuts.entities.size() < 4) {
+		if (registry.homeAndTuts.entities.size() < 6) {
 			createHomeScreen(&renderer, {window_width_px / 2, window_height_px / 2});
 			createTutScreen(&renderer, {window_width_px / 2, window_height_px / 2});
 			createShopScreen(&renderer, { window_width_px / 2, window_height_px / 2 });
-			createDoorScreen(&renderer, { window_width_px / 2, window_height_px / 2 });
+			createDoorScreen(&renderer, { window_width_px / 2, window_height_px / 2 }, 0);
+			createDoorScreen(&renderer, { window_width_px / 2, window_height_px / 2 }, 1);
+			createDoorScreen(&renderer, { window_width_px / 2, window_height_px / 2 }, 2);
 		}
 
-
+		auto now = Clock::now();
+		float elapsed_ms =
+			(float)(std::chrono::duration_cast<std::chrono::microseconds>(now - t)).count() / 1000;
 		if (game_state == "playing") {
 			// Calculating elapsed times in milliseconds from the previous iteration
-			auto now = Clock::now();
-			float elapsed_ms =
-				(float)(std::chrono::duration_cast<std::chrono::microseconds>(now - t)).count() / 1000;
+			// auto now = Clock::now();
 			
 			t = now;
 			world.step(elapsed_ms, &game_state);
@@ -123,6 +125,7 @@ int main()
 			
             if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
                 if (is_button_clicked(320, 530, 490, 620, mouse_x, mouse_y)) {
+					t = now;
                     game_state = "playing";
 					// world.init(&renderer);
                 } else if (is_button_clicked(560, 760, 490, 620, mouse_x, mouse_y)) {
@@ -145,37 +148,58 @@ int main()
 		} else if (game_state == "select doors") {
 			while (registry.shopItems.entities.size() > 0)
 				registry.remove_all_components_of(registry.shopItems.entities.back());
-			renderer.draw("the doors");
+			int doors_state = 0;
+			for (Entity entity : registry.players.entities) {
+				Player& player = registry.players.get(entity);
+				if (player.luck < 0.05) {
+					doors_state = 2;
+				} else if (player.luck < 0.2) {
+					doors_state = 1;
+				}
+			}
+			if (doors_state == 0) {
+				renderer.draw("the doors");
+			} else if (doors_state == 1) {
+				renderer.draw("the doors1");
+			} else if (doors_state == 2) {
+				renderer.draw("the doors2");
+			}
+			
 			
             if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-                if (is_button_clicked(120, 410, 600, 680, mouse_x, mouse_y)) {
-                    game_state = "playing";
-					for (Entity entity : registry.waves.entities) {
-						Wave& wave = registry.waves.get(entity);
-						wave.state = "applied buffs and nerfs1";
-					}
-					for (Entity entity : registry.buffNerfs.entities) {
-						BuffNerf& bn = registry.buffNerfs.get(entity);
-						if (bn.show_d1 == 1) {
-							bn.selected = 1;
+				if (doors_state == 0) {
+					if (is_button_clicked(120, 410, 600, 680, mouse_x, mouse_y)) {
+						for (Entity entity : registry.waves.entities) {
+							Wave& wave = registry.waves.get(entity);
+							wave.state = "applied buffs and nerfs1";
 						}
-					}
-                } 
-				if (is_button_clicked(500, 780, 600, 680, mouse_x, mouse_y)) {
-                    game_state = "playing";
-					for (Entity entity : registry.waves.entities) {
-						Wave& wave = registry.waves.get(entity);
-						wave.state = "applied buffs and nerfs2";
-					}
-					for (Entity entity : registry.buffNerfs.entities) {
-						BuffNerf& bn = registry.buffNerfs.get(entity);
-						if (bn.show_d2 == 1) {
-							bn.selected = 1;
+						for (Entity entity : registry.buffNerfs.entities) {
+							BuffNerf& bn = registry.buffNerfs.get(entity);
+							if (bn.show_d1 == 1) {
+								bn.selected = 1;
+							}
 						}
-					}
-                } 
+						game_state = "playing";
+						t = now;
+					} 
+				}
+				if (doors_state <= 1) {
+					if (is_button_clicked(500, 780, 600, 680, mouse_x, mouse_y)) {
+						for (Entity entity : registry.waves.entities) {
+							Wave& wave = registry.waves.get(entity);
+							wave.state = "applied buffs and nerfs2";
+						}
+						for (Entity entity : registry.buffNerfs.entities) {
+							BuffNerf& bn = registry.buffNerfs.get(entity);
+							if (bn.show_d2 == 1) {
+								bn.selected = 1;
+							}
+						}
+						game_state = "playing";
+						t = now;
+					} 
+				}
 				if (is_button_clicked(860, 1130, 600, 680, mouse_x, mouse_y)) {
-                    game_state = "playing";
 					for (Entity entity : registry.waves.entities) {
 						Wave& wave = registry.waves.get(entity);
 						wave.state = "applied buffs and nerfs3";
@@ -186,6 +210,8 @@ int main()
 							bn.selected = 1;
 						}
 					}
+					game_state = "playing";
+					t = now;
                 } 
             }
 		}
