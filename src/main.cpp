@@ -221,7 +221,7 @@ int main()
 			vec2 lineSize = { 50, 5 };
 			float start_x = 185;
 			
-			for (const std::pair<RenderSystem::UPGRADE_TYPE, RenderSystem::UPGRADE_LEVEL>& entry : world.worldUpgradeLevels) {
+			for (const auto& entry : world.worldUpgradeLevels) {
 				RenderSystem::UPGRADE_TYPE upgrade_type = entry.first;
 				RenderSystem::UPGRADE_LEVEL upgrade_level = entry.second;
 

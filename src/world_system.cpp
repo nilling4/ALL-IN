@@ -1550,7 +1550,6 @@ bool WorldSystem::load() {
 		// Load player position
 		if (j.contains("player")) {
 			player_protagonist = createProtagonist(renderer, { j["player"]["position"][0],j["player"]["position"][1] }, nullptr);
-			Player& player = registry.players.get(player_protagonist);
 			registry.colors.insert(player_protagonist, { 1, 0.8f, 0.8f });
 		}
 
@@ -1661,42 +1660,48 @@ bool WorldSystem::load() {
 		}
 
 		if (j.contains("upgrade_levels")) {
-			for (auto& item : j["upgrade_levels"].items()) {
-				std::string upgrade_type_str = item.key();
-				std::string upgrade_level_str = item.value();
-				RenderSystem::UPGRADE_TYPE upgrade_type;
-				RenderSystem::UPGRADE_LEVEL upgrade_level;
-				printf("load %s\n", upgrade_level_str.c_str());
-				printf("load %s\n", upgrade_type_str.c_str());
+    		for (auto& item : j["upgrade_levels"].items()) {
+        		std::string upgrade_type_str = item.key();
+       			std::string upgrade_level_str = item.value();
+        		RenderSystem::UPGRADE_TYPE upgrade_type;
+        		RenderSystem::UPGRADE_LEVEL upgrade_level = RenderSystem::UPGRADE_LEVEL::NO_UPGRADES;
+       			printf("load %s\n", upgrade_level_str.c_str());
+        		printf("load %s\n", upgrade_type_str.c_str());
 
-				if (upgrade_type_str == "DAMAGE") {
-					upgrade_type = RenderSystem::UPGRADE_TYPE::DAMAGE;
-				}
+        		if (upgrade_type_str == "DAMAGE") {
+            		upgrade_type = RenderSystem::UPGRADE_TYPE::DAMAGE;
+        		} 
 				else if (upgrade_type_str == "SPEED") {
-					upgrade_type = RenderSystem::UPGRADE_TYPE::SPEED;
-				}
+           			upgrade_type = RenderSystem::UPGRADE_TYPE::SPEED;
+        		} 
 				else if (upgrade_type_str == "HEALTH") {
-					upgrade_type = RenderSystem::UPGRADE_TYPE::HEALTH;
-				}
+            		upgrade_type = RenderSystem::UPGRADE_TYPE::HEALTH;
+        		} 
+				else {
+            		printf("Warning: Unknown upgrade type '%s'\n", upgrade_type_str.c_str());
+            	continue;
+        		}
 
-				if (upgrade_level_str == "NO_UPGRADES") {
-					upgrade_level = RenderSystem::UPGRADE_LEVEL::NO_UPGRADES;
-				}
+        		if (upgrade_level_str == "NO_UPGRADES") {
+            		upgrade_level = RenderSystem::UPGRADE_LEVEL::NO_UPGRADES;
+        		} 
 				else if (upgrade_level_str == "LEVEL_1") {
-					upgrade_level = RenderSystem::UPGRADE_LEVEL::LEVEL_1;
-				}
+            		upgrade_level = RenderSystem::UPGRADE_LEVEL::LEVEL_1;
+        		} 
 				else if (upgrade_level_str == "LEVEL_2") {
-					upgrade_level = RenderSystem::UPGRADE_LEVEL::LEVEL_2;
-				}
+            		upgrade_level = RenderSystem::UPGRADE_LEVEL::LEVEL_2;
+        		} 
 				else if (upgrade_level_str == "LEVEL_3") {
-					upgrade_level = RenderSystem::UPGRADE_LEVEL::LEVEL_3;
-				}
+           			upgrade_level = RenderSystem::UPGRADE_LEVEL::LEVEL_3;
+        		} 
 				else if (upgrade_level_str == "MAX_UPGRADES") {
-					upgrade_level = RenderSystem::UPGRADE_LEVEL::MAX_UPGRADES;
-				}
-				worldUpgradeLevels[upgrade_type] = upgrade_level;
-				renderer->upgradeLevels[upgrade_type] = upgrade_level;
-			}
+            		upgrade_level = RenderSystem::UPGRADE_LEVEL::MAX_UPGRADES;
+        		} else {
+            		printf("Warning: Unknown upgrade level '%s'\n", upgrade_level_str.c_str());
+        		}
+        		worldUpgradeLevels[upgrade_type] = upgrade_level;
+        		renderer->upgradeLevels[upgrade_type] = upgrade_level;
+    		}
 		}
 
 		createHealthBar(renderer, { window_width_px * 0.5, window_height_px * 0.98 });
@@ -1719,7 +1724,6 @@ void WorldSystem::save() {
 	
   	for (Entity entity : registry.players.entities) {
         if (registry.players.has(entity)) {
-			Player& player = registry.players.get(entity);
             j["player"] = {
                 {"position", {registry.motions.get(entity).position.x, registry.motions.get(entity).position.y}}
             };
@@ -1761,12 +1765,10 @@ void WorldSystem::save() {
     for (Entity entity : registry.deadlys.entities) {
         if (registry.motions.has(entity)) {
 			Motion& motion = registry.motions.get(entity);
-			if (motion.position.x != NULL && motion.position.y != NULL) {
-				j["enemies"][std::to_string(entity)] = {
-					{"position", {motion.position.x, motion.position.y}},
-					{"enemy_type", registry.deadlys.get(entity).enemy_type}
-				};
-			}
+			j["enemies"][std::to_string(entity)] = {
+				{"position", {motion.position.x, motion.position.y}},
+				{"enemy_type", registry.deadlys.get(entity).enemy_type}
+			};
         }
     }
     j["coins"] = json::object();
@@ -1812,7 +1814,7 @@ void WorldSystem::save() {
         }
     }
 
-	for (const std::pair<RenderSystem::UPGRADE_TYPE, RenderSystem::UPGRADE_LEVEL>& entry : worldUpgradeLevels) {
+	for (const auto& entry : worldUpgradeLevels) {
 		RenderSystem::UPGRADE_TYPE upgrade_type = entry.first;
 		RenderSystem::UPGRADE_LEVEL upgrade_level = entry.second;
 
