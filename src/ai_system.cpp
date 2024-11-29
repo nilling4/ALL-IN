@@ -467,7 +467,6 @@ void AISystem::cloneJoker(Entity joker, int num_splits) {
 
     Entity new_joker = createJoker(renderer, original_motion.position, wave->wave_num);
 
-    Motion& new_motion = registry.motions.get(new_joker);
     Joker& new_joker_component = registry.jokers.get(new_joker);
     Deadly& new_deadly = registry.deadlys.get(new_joker);
 
