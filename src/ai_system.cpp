@@ -344,7 +344,66 @@ void AISystem::step(float elapsed_ms)
                 (motion.position.x < player_motion->position.x && motion.scale.y > 0)) {
                 motion.scale.y *= -1;
             }
-        }        
+        }
+        else if (deadly.enemy_type == ENEMIES::JOKER) {
+            vec2 separation_force = { 0.f, 0.f };
+            int separation_count = 0;
+
+            for (Entity other : registry.deadlys.entities) {
+                Deadly& deadly_other = registry.deadlys.get(entity);
+
+                if (deadly_other.enemy_type != ENEMIES::JOKER) {
+                    continue;
+                }
+                if (other == entity) {
+                    continue;
+                }
+
+                Motion& other_motion = registry.motions.get(other);
+                vec2 other_position = { other_motion.position.x, other_motion.position.y };
+
+                float dist = length(other_position - motion.position);
+
+                if (dist < SEPARATION_DIST && dist > 0) {
+                    vec2 diff = (dist > 0) ? normalize(motion.position - other_position) : vec2(1.0f, 0.0f);
+                    float scale = (SEPARATION_DIST - dist) / SEPARATION_DIST;
+                    separation_force += diff * scale;
+                    separation_count++;
+                }
+            }
+
+            if (separation_count > 0) {
+                separation_force /= (float)separation_count;
+                separation_force *= 69420.f;
+                separation_force = cap_velocity(separation_force, MAX_PUSH);
+            }
+
+
+            int startRow = static_cast<int>(motion.position.y) / 12;
+            int startCol = static_cast<int>(motion.position.x) / 12;
+            motion.velocity = move(startRow, startCol);
+            motion.velocity *= 120;
+            motion.velocity = cap_velocity(motion.velocity + separation_force, 120);
+
+            Joker& joker = registry.jokers.get(entity);
+            joker.teleport_timer -= elapsed_ms;
+            float distanceToPlayer = length(player_motion->position - motion.position);
+
+            if (joker.teleport_timer <= 0 && distanceToPlayer < 300.0f) {
+                joker.teleport_timer = 2000.0f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / 1000.0f)); // Random timer between 2-3 seconds
+                vec2 teleportPosition = findTeleportPosition(player_motion->position, motion.position);
+                motion.position = teleportPosition;
+
+                joker_teleport = Mix_LoadWAV(audio_path("joker_teleport.wav").c_str());
+                Mix_PlayChannel(7, joker_teleport, 0);
+            }
+
+
+            if ((motion.position.x > player_motion->position.x && motion.scale.x < 0) ||
+                (motion.position.x < player_motion->position.x && motion.scale.x > 0)) {
+                motion.scale.x *= -1;
+            }
+        }
 	}
 
     for (Entity heart_entity : registry.healsEnemies.entities) {
@@ -358,4 +417,24 @@ void AISystem::step(float elapsed_ms)
             heart_motion.velocity = { heart_velocity_x, heart_velocity_y };
         }
     }
+}
+
+vec2 AISystem::findTeleportPosition(vec2 playerPosition, vec2 enemyPosition) {
+    const float teleportRadius = 300.0f;  // Maximum distance around the player for teleport
+    const float bufferDistance = 100.0f; // Minimum distance from the player
+    const int maxAttempts = 10;
+
+    for (int attempt = 0; attempt < maxAttempts; ++attempt) {
+        float angle = static_cast<float>(rand()) / RAND_MAX * 2.0f * M_PI;
+        float distance = bufferDistance + (static_cast<float>(rand()) / RAND_MAX * (teleportRadius - bufferDistance));
+        vec2 candidatePosition = playerPosition + vec2(cos(angle), sin(angle)) * distance;
+
+        int row = static_cast<int>(candidatePosition.y) / 12;
+        int col = static_cast<int>(candidatePosition.x) / 12;
+        if (row >= 0 && col >= 0 && row < 80 && col < 160 && grid[row][col] == 0) {
+            return candidatePosition;
+        }
+    }
+
+    return enemyPosition;
 }

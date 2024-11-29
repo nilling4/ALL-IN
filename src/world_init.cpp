@@ -395,6 +395,47 @@ Entity createBossBirdClubs(RenderSystem* renderer, vec2 position, int wave_num)
 	return entity;
 }
 
+Entity createJoker(RenderSystem* renderer, vec2 position, int wave_num)
+{
+	auto entity = Entity();
+
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 0.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2({ FISH_BB_WIDTH, FISH_BB_HEIGHT });
+
+	registry.melees.emplace(entity);
+	registry.jokers.emplace(entity);
+	auto& deadly = registry.deadlys.emplace(entity);
+
+	if (wave_num >= 1 && wave_num <= 9) {
+		deadly.health = 150 + 100 * (wave_num - 1);
+	}
+	else {
+		deadly.health = 150 + 100 * (8);
+		for (int r = 10; r <= wave_num; r++) {
+			deadly.health *= 1.1f;
+		}
+	}
+	deadly.max_health = deadly.health; // needed for joker's split ability
+	deadly.armour = 0;
+	deadly.enemy_type = ENEMIES::JOKER;
+	registry.renderRequests.insert(
+		entity,
+		{
+			TEXTURE_ASSET_ID::JOKER,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE
+		});
+
+	return entity;
+}
+
 Entity createHeartProjectile(RenderSystem* renderer, vec2 position, vec2 velocity, Entity* target_entity, int wave_num) {
 	auto entity = Entity();
 
@@ -925,11 +966,12 @@ Entity createWave() {
 	return entity;
 }
 
-Entity loadWave(int wave_num, int num_king_clubs, int num_bird_clubs) {
+Entity loadWave(int wave_num, int num_king_clubs, int num_bird_clubs, int num_jokers) {
 	auto entity = Entity();
 	Wave& wave = registry.waves.emplace(entity);
 	wave.wave_num = wave_num;
 	wave.num_king_clubs = num_king_clubs;
 	wave.num_bird_clubs = num_bird_clubs;
+	wave.num_jokers = num_jokers;
 	return entity;
 }

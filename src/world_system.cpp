@@ -126,8 +126,8 @@ GLFWwindow* WorldSystem::create_window() {
 	- 3: coin sounds
 	- 4: taking damage sounds
 	- 5: ambient_sounds (nothing for now)
-	- 6: nothing for now
-	- 7: nothing for now
+	- 6: Joker Split
+	- 7: Joker Teleport
 	- 8: nothing for now
 	- 9: roulette ball sounds
 	- 10: other projectile sounds  (nothing for now)
@@ -155,6 +155,9 @@ GLFWwindow* WorldSystem::create_window() {
 	m3_sfx_door_s =  Mix_LoadWAV(audio_path("m3_door_shocking_stab.wav").c_str());
 	m3_amb_eerie = Mix_LoadWAV(audio_path("m3_ambience_eerie1.wav").c_str());
 	m3_amb_heartbeats = Mix_LoadWAV(audio_path("m3_ambience_heartbeats.wav").c_str());
+	joker_teleport = Mix_LoadWAV(audio_path("joker_teleport.wav").c_str());
+	joker_split = Mix_LoadWAV(audio_path("joker_split.wav").c_str());
+
 
 	if (background_music == nullptr || salmon_dead_sound == nullptr || roulette_hit_sound == nullptr) {
 		if (!roulette_hit_sound) {
@@ -410,6 +413,48 @@ bool WorldSystem::step(float elapsed_ms_since_last_update, std::string* game_sta
 
 			}
 		}
+
+		if (wave.num_jokers > 0) {
+			wave.progress_joker += elapsed_time;
+			if (wave.progress_joker > wave.delay_for_all_entities) {
+				wave.progress_joker = 0;
+				wave.num_jokers -= 1;
+
+				vec2 player_position = p_motion.position;
+				float min_distance_from_player = 300.0f;
+
+				float spawnX, spawnY;
+				bool valid_spawn;
+				do {
+					spawnX = uniform_dist(rng) * (right_bound - left_bound) + left_bound;
+					spawnY = uniform_dist(rng) * (bottom_bound - top_bound) + top_bound;
+					valid_spawn = true;
+
+					// Check distance from player
+					if (sqrt(pow(spawnX - player_position.x, 2) + pow(spawnY - player_position.y, 2)) < min_distance_from_player) {
+						valid_spawn = false;
+					}
+
+					// Check distance from walls
+
+					int grid_x = static_cast<int>(spawnX / 12);
+					int grid_y = static_cast<int>(spawnY / 12);
+					for (int dy = -3; dy <= 3 && valid_spawn; ++dy) {
+						for (int dx = -2; dx <= 2 && valid_spawn; ++dx) {
+
+							int check_x = grid_x + dx;
+							int check_y = grid_y + dy;
+							if (check_x >= 0 && check_x < GRID_WIDTH && check_y >= 0 && check_y < GRID_HEIGHT) {
+								if (grid[check_y][check_x] == 1) {
+									valid_spawn = false;
+								}
+							}
+						}
+					}
+				} while (!valid_spawn);
+				createJoker(renderer, vec2(spawnX, spawnY), wave.wave_num);
+			}
+		}
 	}
 	
 
@@ -417,7 +462,8 @@ bool WorldSystem::step(float elapsed_ms_since_last_update, std::string* game_sta
 		registry.deadlys.entities.size() == 0 && 
 		(wave.num_king_clubs == 0) &&
 		(wave.num_bird_boss == 0) &&
-		(wave.num_bird_clubs == 0)
+		(wave.num_bird_clubs == 0) &&
+		(wave.num_jokers == 0)
 		) {
 		wave.state = "spawn doors";
 	}
@@ -1080,7 +1126,8 @@ void WorldSystem::next_wave() {
 		if (!Mix_Playing(1)) {
 			Mix_PlayChannel(1, m3_mus_w1, 0);
 		}		
-		wave.num_king_clubs = num_of_enemies[wave.wave_num];
+		wave.num_jokers = 3;
+		//wave.num_king_clubs = num_of_enemies[wave.wave_num];
 
 	} else if (wave.wave_num >=3 && wave.wave_num <7) {
 		if ((wave.wave_num == 3) || !Mix_Playing(1)) {
@@ -1386,6 +1433,23 @@ void WorldSystem::handle_collisions() {
 				if (kills.last_touched != &deadly) {
 					deadly.health -= (kills.damage * calculateDamageMultiplier() - deadly.armour);
 					kills.last_touched = &deadly;
+
+					if (deadly.enemy_type == ENEMIES::JOKER) {
+						if ((deadly.health < deadly.max_health / 2) && (deadly.health > 0) && (registry.jokers.get(entity_other).num_splits < 1)) {
+							float random_angle = (rand() % 360) * M_PI / 180.0f;
+							float dice_roll = uniform_dist(rng);
+							vec2 random_pos = { cos(random_angle), sin(random_angle) };
+
+
+							Entity new_joker = createJoker(renderer, registry.motions.get(entity_other).position + (random_pos * 30.f * uniform_dist(rng)), wave.wave_num);
+							registry.deadlys.get(new_joker).health = deadly.health;
+							registry.jokers.get(entity_other).num_splits = 1;
+							registry.jokers.get(new_joker).num_splits = 1;
+
+							Mix_PlayChannel(6, joker_split, 0);
+						}
+					}
+
 					if (kills.type == PROJECTILE::DART_PROJECTILE) {
 						registry.remove_all_components_of(entity);
 					} else if (kills.type == PROJECTILE::CARD_PROJECTILE) {
@@ -1543,7 +1607,7 @@ bool WorldSystem::load() {
 
 
 		if (j.contains("wave")) {
-			global_wave = loadWave(j["wave"]["wave_num"], j["wave"]["num_king_clubs"], j["wave"]["num_bird_clubs"]);
+			global_wave = loadWave(j["wave"]["wave_num"], j["wave"]["num_king_clubs"], j["wave"]["num_bird_clubs"], j["wave"]["num_jokers"]);
 		}
 		Wave& wave = registry.waves.get(global_wave);
 
@@ -1597,6 +1661,8 @@ bool WorldSystem::load() {
 					createBossBirdClubs(renderer, vec2(value["position"][0], value["position"][1]), wave.wave_num);
 				} else if (value["enemy_type"] == ENEMIES::QUEEN_HEARTS) {
 					createQueenHearts(renderer, vec2(value["position"][0], value["position"][1]), wave.wave_num);
+				}  else if (value["enemy_type"] == ENEMIES::JOKER) {
+					createJoker(renderer, vec2(value["position"][0], value["position"][1]), wave.wave_num);
 				}
 			}
 		}
@@ -1859,6 +1925,7 @@ void WorldSystem::save() {
 		{"wave_num", wave.wave_num},
 		{"num_king_clubs", wave.num_king_clubs},
 		{"num_bird_clubs", wave.num_bird_clubs},
+		{"num_jokers", wave.num_jokers},
 	};
 
 	j["solids"] = json::object();
