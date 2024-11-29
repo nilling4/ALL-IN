@@ -156,7 +156,7 @@ GLFWwindow* WorldSystem::create_window() {
 	m3_amb_eerie = Mix_LoadWAV(audio_path("m3_ambience_eerie1.wav").c_str());
 	m3_amb_heartbeats = Mix_LoadWAV(audio_path("m3_ambience_heartbeats.wav").c_str());
 	joker_teleport = Mix_LoadWAV(audio_path("joker_teleport.wav").c_str());
-	joker_split = Mix_LoadWAV(audio_path("joker_split.wav").c_str());
+	joker_clone = Mix_LoadWAV(audio_path("joker_split.wav").c_str());
 
 
 	if (background_music == nullptr || salmon_dead_sound == nullptr || roulette_hit_sound == nullptr) {
@@ -1433,22 +1433,6 @@ void WorldSystem::handle_collisions() {
 				if (kills.last_touched != &deadly) {
 					deadly.health -= (kills.damage * calculateDamageMultiplier() - deadly.armour);
 					kills.last_touched = &deadly;
-
-					if (deadly.enemy_type == ENEMIES::JOKER) {
-						if ((deadly.health < deadly.max_health / 2) && (deadly.health > 0) && (registry.jokers.get(entity_other).num_splits < 1)) {
-							float random_angle = (rand() % 360) * M_PI / 180.0f;
-							float dice_roll = uniform_dist(rng);
-							vec2 random_pos = { cos(random_angle), sin(random_angle) };
-
-
-							Entity new_joker = createJoker(renderer, registry.motions.get(entity_other).position + (random_pos * 30.f * uniform_dist(rng)), wave.wave_num);
-							registry.deadlys.get(new_joker).health = deadly.health;
-							registry.jokers.get(entity_other).num_splits = 1;
-							registry.jokers.get(new_joker).num_splits = 1;
-
-							Mix_PlayChannel(6, joker_split, 0);
-						}
-					}
 
 					if (kills.type == PROJECTILE::DART_PROJECTILE) {
 						registry.remove_all_components_of(entity);

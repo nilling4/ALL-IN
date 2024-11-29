@@ -210,7 +210,7 @@ void AISystem::step(float elapsed_ms)
         motion.angle = atan2(new_velocity.y, new_velocity.x) + 0.5 * M_PI;
     }
 
-
+    std::vector<Entity> jokers_to_clone;
 	for (Entity entity : registry.deadlys.entities) { // root of decision tree
 		Motion& motion = registry.motions.get(entity);
 		Deadly& deadly = registry.deadlys.get(entity);
@@ -387,15 +387,27 @@ void AISystem::step(float elapsed_ms)
 
             Joker& joker = registry.jokers.get(entity);
             joker.teleport_timer -= elapsed_ms;
+            joker.clone_timer -= elapsed_ms;
             float distanceToPlayer = length(player_motion->position - motion.position);
 
             if (joker.teleport_timer <= 0 && distanceToPlayer < 300.0f) {
-                joker.teleport_timer = 2000.0f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / 1000.0f)); // Random timer between 2-3 seconds
+                joker.teleport_timer = 3000.0f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / 3000.0f)); // Random timer between 3-6 seconds
                 vec2 teleportPosition = findTeleportPosition(player_motion->position, motion.position);
                 motion.position = teleportPosition;
 
                 joker_teleport = Mix_LoadWAV(audio_path("joker_teleport.wav").c_str());
                 Mix_PlayChannel(7, joker_teleport, 0);
+            }
+
+            if (joker.clone_timer <= 0 && joker.num_splits < 1) {
+                std::cout << "Joker Clone Count before: " << joker.num_splits << std::endl;
+                joker.num_splits++;
+                joker.clone_timer = 4000.0f;
+                
+                jokers_to_clone.push_back(entity);
+                
+                joker_clone = Mix_LoadWAV(audio_path("joker_clone.wav").c_str());
+                Mix_PlayChannel(6, joker_clone, 0);
             }
 
 
@@ -405,6 +417,10 @@ void AISystem::step(float elapsed_ms)
             }
         }
 	}
+    for (Entity joker : jokers_to_clone) {
+        Joker& original_joker = registry.jokers.get(joker);
+        cloneJoker(joker, original_joker.num_splits);
+    }
 
     for (Entity heart_entity : registry.healsEnemies.entities) {
         Motion& heart_motion = registry.motions.get(heart_entity);
@@ -437,4 +453,28 @@ vec2 AISystem::findTeleportPosition(vec2 playerPosition, vec2 enemyPosition) {
     }
 
     return enemyPosition;
+}
+
+void AISystem::cloneJoker(Entity joker, int num_splits) {
+    Motion& original_motion = registry.motions.get(joker);
+    Joker& original_joker = registry.jokers.get(joker);
+    Deadly& original_deadly = registry.deadlys.get(joker);
+
+    Wave* wave;
+    for (Entity entity : registry.waves.entities) {
+        wave = &registry.waves.get(entity);
+    }
+
+    Entity new_joker = createJoker(renderer, original_motion.position, wave->wave_num);
+
+    Motion& new_motion = registry.motions.get(new_joker);
+    Joker& new_joker_component = registry.jokers.get(new_joker);
+    Deadly& new_deadly = registry.deadlys.get(new_joker);
+
+    new_joker_component.num_splits = num_splits;
+
+    new_joker_component.teleport_timer = original_joker.teleport_timer;
+    new_joker_component.clone_timer = 4000.0f;
+
+    new_deadly.health = original_deadly.health;
 }

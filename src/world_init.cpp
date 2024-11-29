@@ -410,7 +410,11 @@ Entity createJoker(RenderSystem* renderer, vec2 position, int wave_num)
 	motion.scale = vec2({ FISH_BB_WIDTH, FISH_BB_HEIGHT });
 
 	registry.melees.emplace(entity);
-	registry.jokers.emplace(entity);
+	Joker& joker = registry.jokers.emplace(entity);
+	joker.num_splits = 0;
+	joker.teleport_timer = 3000.0f; // 3 second initial cooldown
+	joker.clone_timer = 4000.f; // 4 seconds initially
+
 	auto& deadly = registry.deadlys.emplace(entity);
 
 	if (wave_num >= 1 && wave_num <= 9) {
@@ -422,7 +426,6 @@ Entity createJoker(RenderSystem* renderer, vec2 position, int wave_num)
 			deadly.health *= 1.1f;
 		}
 	}
-	deadly.max_health = deadly.health; // needed for joker's split ability
 	deadly.armour = 0;
 	deadly.enemy_type = ENEMIES::JOKER;
 	registry.renderRequests.insert(

@@ -88,7 +88,6 @@ enum class ENEMIES {
 struct Deadly
 {
 	float health = 0;
-	float max_health = 0; // needed for Joker's split ability
 	float armour = 0;
 	ENEMIES enemy_type;
 	// float melee damage
@@ -118,8 +117,9 @@ struct Healer
 
 struct Joker
 {
-	int num_splits = 0;
-	float teleport_timer = 1000.0f; // 1 second initial cooldown
+	int num_splits;
+	float teleport_timer;
+	float clone_timer;
 };
 
 enum class HomeAndTutType {

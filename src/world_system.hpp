@@ -102,7 +102,7 @@ private:
 	Mix_Chunk* m3_amb_eerie;
 	Mix_Chunk* m3_amb_heartbeats;
 	Mix_Chunk* joker_teleport;
-	Mix_Chunk* joker_split;
+	Mix_Chunk* joker_clone;
 
 	// C++ random number generator
 	std::default_random_engine rng;
