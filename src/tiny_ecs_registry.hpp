@@ -42,7 +42,8 @@ public:
 	ComponentContainer<HealthBar> healthBar; 
 	ComponentContainer<Floor> floors;
 	ComponentContainer<FloorRenderRequest> floorRenderRequests;
-	ComponentContainer<BlackRectangle> blackRectangles; // psst, if you're adding here, make sure to also add it below in the same place !!!
+	ComponentContainer<BlackRectangle> blackRectangles; 
+	ComponentContainer<Joker> jokers; // psst, if you're adding here, make sure to also add it below in the same place !!!
 
 	// constructor that adds all containers for looping over them
 	// IMPORTANT: Don't forget to add any newly added containers!
@@ -80,6 +81,7 @@ public:
 		registry_list.push_back(&floors);
 		registry_list.push_back(&floorRenderRequests);
 		registry_list.push_back(&blackRectangles);
+		registry_list.push_back(&jokers);
 	}
 
 	void clear_all_components() {

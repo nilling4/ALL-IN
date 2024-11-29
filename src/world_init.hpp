@@ -49,6 +49,7 @@ Entity createQueenHearts(RenderSystem* renderer, vec2 position, int wave_num);
 Entity createKingClubs(RenderSystem* renderer, vec2 position, int wave_num);
 Entity createBirdClubs(RenderSystem* renderer, vec2 position, int wave_num);
 Entity createBossBirdClubs(RenderSystem* renderer, vec2 position, int wave_num);
+Entity createJoker(RenderSystem* renderer, vec2 position, int wave_num);
 
 Entity createHeartProjectile(RenderSystem* renderer, vec2 position, vec2 velocity, Entity* target_entity, int wave_num);
 
@@ -93,4 +94,4 @@ Entity createShopScreen(RenderSystem* renderer, vec2 position);
 Entity createUpgradeLine(vec2 position, vec2 size);
 
 Entity createWave();
-Entity loadWave(int wave_num, int num_king_clubs, int num_bird_clubs);
+Entity loadWave(int wave_num, int num_king_clubs, int num_bird_clubs, int num_jokers);
