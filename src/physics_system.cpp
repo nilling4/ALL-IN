@@ -383,7 +383,24 @@ void PhysicsSystem::step(float elapsed_ms)
 
 	for (Entity entity : registry.healsEnemies.entities) {
 		Motion& motion = motion_registry.get(entity);
-		motion.position += motion.velocity * step_seconds;
+		float new_position_x = motion.position.x + (motion.velocity.x) * step_seconds;
+		float new_position_y = motion.position.y + (motion.velocity.y) * step_seconds;
+		bool can_move_x = grid[(int)motion.position.y / 12][(int)new_position_x / 12] != 1;
+    	bool can_move_y = grid[(int)new_position_y / 12][(int)motion.position.x / 12] != 1;
+
+    	if (can_move_x && !can_move_y) {
+        	motion.position.x = new_position_x;
+        	motion.velocity.y = 0;
+   		} else if (!can_move_x && can_move_y) {
+        	motion.position.y = new_position_y;
+        	motion.velocity.x = 0;
+    	} else if (can_move_x && can_move_y) {
+        	motion.position.x = new_position_x;
+       		motion.position.y = new_position_y;
+    	} else {
+        	motion.velocity.x = 0;
+        	motion.velocity.y = 0;
+    	}
 	}
 	if (debugging.in_debug_mode){
 		for (Entity entity : registry.motions.entities) {

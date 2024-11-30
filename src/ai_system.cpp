@@ -221,11 +221,11 @@ void AISystem::step(float elapsed_ms)
             Entity* closest_enemy = nullptr;
             float min_dist = healing_radius;
 
-            for (Entity enemy : registry.melees.entities) {
+            for (Entity& enemy : registry.melees.entities) {
                 Deadly& heal_deadly = registry.deadlys.get(enemy);
                 Motion& enemy_motion = registry.motions.get(enemy);
 
-                if (heal_deadly.enemy_type == ENEMIES::KING_CLUBS && heal_deadly.health < 25.f) { 
+                if (heal_deadly.enemy_type == ENEMIES::KING_CLUBS) { 
                     float dist = glm::distance(motion.position, enemy_motion.position);
 
                     if (dist < min_dist) { // level 1
@@ -240,20 +240,17 @@ void AISystem::step(float elapsed_ms)
                 float dist_to_target = glm::distance(motion.position, target_motion.position);
 
 				if (dist_to_target > min_follow_distance) { // level 2
-                    glm::vec2 direction = glm::normalize(target_motion.position - motion.position);
-                    motion.velocity = direction * 50.f; 
                     if (next_hearts_spawn <= 0) { // level 3
-                        next_hearts_spawn = 100.0f;
+                        next_hearts_spawn = 1000.0f;
                         float angle = atan2(target_motion.position.x - motion.position.x, target_motion.position.y - motion.position.y);
-                        float heart_velocity_x = sin(angle) * 100;
-                        float heart_velocity_y = cos(angle) * 100;
+                        float heart_velocity_x = sin(angle) * 200;
+                        float heart_velocity_y = cos(angle) * 200;
                         createHeartProjectile(renderer, motion.position, glm::vec2({ heart_velocity_x, heart_velocity_y }), closest_enemy, wave->wave_num);
                     }
                     else {
                         next_hearts_spawn -= elapsed_ms;
                     }
                 }
-                continue;
             }
             vec2 separation_force = { 0.f, 0.f };
             int separation_count = 0;
@@ -261,7 +258,7 @@ void AISystem::step(float elapsed_ms)
             for (Entity other : registry.deadlys.entities) {
                 Deadly& deadly_other = registry.deadlys.get(entity);
 
-                if (deadly_other.enemy_type != ENEMIES::KING_CLUBS) {
+                if (deadly_other.enemy_type != ENEMIES::KING_CLUBS && deadly_other.enemy_type != ENEMIES::QUEEN_HEARTS) {
                     continue;
                 }
                 if (other == entity) {
@@ -287,11 +284,11 @@ void AISystem::step(float elapsed_ms)
             }
  
 
-            int startRow = static_cast<int>(motion.position.y)/12;
-            int startCol = static_cast<int>(motion.position.x)/12;
-            motion.velocity = move(startRow,startCol);
-            motion.velocity*=40;
-            motion.velocity = cap_velocity(motion.velocity + separation_force, 40);
+                int startRow = static_cast<int>(motion.position.y)/12;
+                int startCol = static_cast<int>(motion.position.x)/12;
+                motion.velocity = move(startRow,startCol);
+                motion.velocity*=50;
+                motion.velocity = cap_velocity(motion.velocity + separation_force, 50);
 
             
             if ((motion.position.x > player_motion->position.x && motion.scale.y < 0) ||
@@ -307,7 +304,7 @@ void AISystem::step(float elapsed_ms)
             for (Entity other : registry.deadlys.entities) {
                 Deadly& deadly_other = registry.deadlys.get(entity);
 
-                if (deadly_other.enemy_type != ENEMIES::KING_CLUBS) {
+                if (deadly_other.enemy_type != ENEMIES::KING_CLUBS && deadly_other.enemy_type != ENEMIES::QUEEN_HEARTS) {
                     continue;
                 }
                 if (other == entity) {
@@ -428,8 +425,8 @@ void AISystem::step(float elapsed_ms)
         if (heart.target_entity != nullptr && registry.deadlys.has(*heart.target_entity)) {
             Motion& deadly_motion = registry.motions.get(*heart.target_entity);
             float angle = atan2(deadly_motion.position.x - heart_motion.position.x, deadly_motion.position.y - heart_motion.position.y);
-            float heart_velocity_x = sin(angle) * 100;
-            float heart_velocity_y = cos(angle) * 100;
+            float heart_velocity_x = sin(angle) * 200;
+            float heart_velocity_y = cos(angle) * 200;
             heart_motion.velocity = { heart_velocity_x, heart_velocity_y };
         }
     }

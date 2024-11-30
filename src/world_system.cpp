@@ -205,6 +205,13 @@ bool WorldSystem::step(float elapsed_ms_since_last_update, std::string* game_sta
 	// Removing out of screen entities
 	auto& motions_registry = registry.motions;
 
+	// remove heart projectiles if kings are all dead
+	if (registry.melees.entities.size() == 0) {
+		while (registry.healsEnemies.entities.size() > 0) {
+			registry.remove_all_components_of(registry.healsEnemies.entities.back());
+		}
+	}
+
 	// Remove entities that leave the screen on the left side
 	// Iterate backwards to be able to remove without unterfering with the next object to visit
 	// (the containers exchange the last element with the current)
@@ -1249,6 +1256,14 @@ void WorldSystem::next_wave() {
 	// remove all walls
 	while (registry.solids.entities.size() > 0)
 		registry.remove_all_components_of(registry.solids.entities.back());
+
+	// remove all hearts
+	while (registry.healsEnemies.entities.size() > 0)
+		registry.remove_all_components_of(registry.healsEnemies.entities.back());
+
+	// remove all coins
+	while (registry.eatables.entities.size() > 0)
+		registry.remove_all_components_of(registry.eatables.entities.back());
 
 	// randomly pick room type
 	float roomType = uniform_dist(rng);
