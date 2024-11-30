@@ -145,6 +145,7 @@ public:
 
 	void updateCoinNum(std::string coins);
 	void updateRenderWaveNum(int wave_num);
+	void updateWaveOverText(bool isWaveOver);
 
 	// shop screen
 	enum class UPGRADE_LEVEL {
@@ -195,6 +196,7 @@ private:
 
 	std::string num_coins = "0";
 	int wave = 0;
+	bool isWaveOver = false;
 };
 
 bool loadEffectFromFile(

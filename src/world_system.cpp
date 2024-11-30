@@ -128,7 +128,7 @@ GLFWwindow* WorldSystem::create_window() {
 	- 5: ambient_sounds (nothing for now)
 	- 6: Joker Split
 	- 7: Joker Teleport
-	- 8: nothing for now
+	- 8: Wave Complete
 	- 9: roulette ball sounds
 	- 10: other projectile sounds  (nothing for now)
 	- 11: other projectile sounds  (nothing for now)
@@ -157,6 +157,7 @@ GLFWwindow* WorldSystem::create_window() {
 	m3_amb_heartbeats = Mix_LoadWAV(audio_path("m3_ambience_heartbeats.wav").c_str());
 	joker_teleport = Mix_LoadWAV(audio_path("joker_teleport.wav").c_str());
 	joker_clone = Mix_LoadWAV(audio_path("joker_split.wav").c_str());
+	wave_over = Mix_LoadWAV(audio_path("wave_over.wav").c_str());
 
 
 	if (background_music == nullptr || salmon_dead_sound == nullptr || roulette_hit_sound == nullptr) {
@@ -239,6 +240,12 @@ bool WorldSystem::step(float elapsed_ms_since_last_update, std::string* game_sta
 	}
 
 	renderer->updateRenderWaveNum(wave.wave_num);
+	if (wave_over_text_counter > 0) {
+		wave_over_text_counter -= elapsed_time;
+	}
+	else {
+		renderer->updateWaveOverText(false);
+	}
 
 	if (wave.state == "game on") {
 		if (wave.num_king_clubs > 0) {
@@ -466,6 +473,9 @@ bool WorldSystem::step(float elapsed_ms_since_last_update, std::string* game_sta
 		(wave.num_jokers == 0)
 		) {
 		wave.state = "spawn doors";
+		Mix_PlayChannel(8, wave_over, 0);
+		wave_over_text_counter = 3000.f;
+		renderer->updateWaveOverText(true);
 	}
 
 	if (wave.state == "spawn doors") {
@@ -477,6 +487,7 @@ bool WorldSystem::step(float elapsed_ms_since_last_update, std::string* game_sta
 		next_wave();
 		*game_state = "select doors";
 		wave.state = "apply buffs and nerfs";
+		renderer->updateWaveOverText(false);
 	}
 
 	if (wave.state == "applied buffs and nerfs1" || wave.state == "applied buffs and nerfs2" || wave.state == "applied buffs and nerfs3") {

@@ -64,6 +64,7 @@ private:
 
 	// start next wave
 	void next_wave();
+	float wave_over_text_counter;
 
 	// OpenGL window handle
 	GLFWwindow* window;
@@ -103,6 +104,7 @@ private:
 	Mix_Chunk* m3_amb_heartbeats;
 	Mix_Chunk* joker_teleport;
 	Mix_Chunk* joker_clone;
+	Mix_Chunk* wave_over;
 
 	// C++ random number generator
 	std::default_random_engine rng;
