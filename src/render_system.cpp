@@ -476,6 +476,9 @@ void RenderSystem::draw(std::string what)
 
 		renderText(num_coins, window_width_px * 0.05, window_height_px * 0.91, 1.0f, font_color, font_trans);
 		renderText("Wave: " + std::to_string(wave), window_width_px * 0.01, window_height_px * 0.86, 0.6f, font_color, font_trans);
+		if (isWaveOver) {
+			renderText("Wave: " + std::to_string(wave) + " Complete!", window_width_px * 0.35, window_height_px * 0.75, 0.8f, font_color, font_trans);
+		}
 
 		//// draw the hud at the end so it stays on top and use a separate projection matrix to lock it to screen
 		mat3 hud_projection = createHUDProjectionMatrix();
@@ -625,6 +628,10 @@ void RenderSystem::updateCoinNum(std::string coins) {
 
 void RenderSystem::updateRenderWaveNum(int wave_num) {
 	wave = wave_num;
+}
+
+void RenderSystem::updateWaveOverText(bool waveOver) {
+	isWaveOver = waveOver;
 }
 
 void RenderSystem::renderText(const std::string& text, float x, float y, float scale, const glm::vec3& color, const glm::mat4& trans) {
