@@ -440,6 +440,46 @@ Entity createJoker(RenderSystem* renderer, vec2 position, int wave_num)
 	return entity;
 }
 
+Entity createGenie(RenderSystem* renderer, vec2 position, int wave_num)
+{
+	auto entity = Entity();
+
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 0.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+	motion.scale = vec2({ 1.75 * 37, 1.75 * 80 });
+
+	registry.genies.emplace(entity);
+
+	auto& deadly = registry.deadlys.emplace(entity);
+	if (wave_num >= 1 && wave_num <= 9) {
+		deadly.health = 60 + 40 * (wave_num - 1);
+	}
+	else {
+		deadly.health = 60 + 40 * (8);
+		for (int r = 10; r <= wave_num; r++) {
+			deadly.health *= 1.1f;
+		}
+	}
+	deadly.health *= 10.f;
+	deadly.armour = 0.f;
+
+	deadly.enemy_type = ENEMIES::BOSS_GENIE;
+	registry.renderRequests.insert(
+		entity,
+		{
+			TEXTURE_ASSET_ID::BOSS_GENIE,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE
+		});
+
+	return entity;
+}
+
 Entity createHeartProjectile(RenderSystem* renderer, vec2 position, vec2 velocity, Entity* target_entity, int wave_num) {
 	auto entity = Entity();
 

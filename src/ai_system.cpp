@@ -413,6 +413,51 @@ void AISystem::step(float elapsed_ms)
                 motion.scale.x *= -1;
             }
         }
+        else if (deadly.enemy_type == ENEMIES::BOSS_GENIE) {
+            vec2 separation_force = { 0.f, 0.f };
+            int separation_count = 0;
+
+            for (Entity other : registry.deadlys.entities) {
+                Deadly& deadly_other = registry.deadlys.get(entity);
+
+                if (deadly_other.enemy_type != ENEMIES::BOSS_GENIE) {
+                    continue;
+                }
+                if (other == entity) {
+                    continue;
+                }
+
+                Motion& other_motion = registry.motions.get(other);
+                vec2 other_position = { other_motion.position.x, other_motion.position.y };
+
+                float dist = length(other_position - motion.position);
+
+                if (dist < SEPARATION_DIST && dist > 0) {
+                    vec2 diff = normalize(motion.position - other_position) / dist;
+                    separation_force += diff;
+                    separation_count++;
+                }
+            }
+
+            if (separation_count > 0) {
+                separation_force /= (float)separation_count;
+                separation_force *= 69420.f;
+                separation_force = cap_velocity(separation_force, 0.5 * MAX_PUSH * (1 + 0.05 * separation_count));
+            }
+
+
+            int startRow = static_cast<int>(motion.position.y) / 12;
+            int startCol = static_cast<int>(motion.position.x) / 12;
+            motion.velocity = move(startRow, startCol);
+            motion.velocity *= 120;
+            motion.velocity = cap_velocity(motion.velocity + separation_force, 120);
+
+
+            if ((motion.position.x > player_motion->position.x && motion.scale.x < 0) ||
+                (motion.position.x < player_motion->position.x && motion.scale.x > 0)) {
+                motion.scale.x *= -1;
+            }
+            }
 	}
     for (Entity joker : jokers_to_clone) {
         Joker& original_joker = registry.jokers.get(joker);

@@ -584,6 +584,48 @@ bool WorldSystem::step(float elapsed_ms_since_last_update) {
 				createJoker(renderer, vec2(spawnX, spawnY), wave.wave_num);
 			}
 		}
+
+		if (wave.num_genie_boss > 0) {
+			wave.progress_genie_boss += elapsed_time;
+			if (wave.progress_genie_boss > wave.delay_for_all_entities) {
+				wave.progress_genie_boss = 0;
+				wave.num_genie_boss -= 1;
+
+				vec2 player_position = p_motion.position;
+				float min_distance_from_player = 300.0f;
+
+				float spawnX, spawnY;
+				bool valid_spawn;
+				do {
+					spawnX = uniform_dist(rng) * (right_bound - left_bound) + left_bound;
+					spawnY = uniform_dist(rng) * (bottom_bound - top_bound) + top_bound;
+					valid_spawn = true;
+
+					// Check distance from player
+					if (sqrt(pow(spawnX - player_position.x, 2) + pow(spawnY - player_position.y, 2)) < min_distance_from_player) {
+						valid_spawn = false;
+					}
+
+					// Check distance from walls
+
+					int grid_x = static_cast<int>(spawnX / 12);
+					int grid_y = static_cast<int>(spawnY / 12);
+					for (int dy = -3; dy <= 3 && valid_spawn; ++dy) {
+						for (int dx = -2; dx <= 2 && valid_spawn; ++dx) {
+
+							int check_x = grid_x + dx;
+							int check_y = grid_y + dy;
+							if (check_x >= 0 && check_x < GRID_WIDTH && check_y >= 0 && check_y < GRID_HEIGHT) {
+								if (grid[check_y][check_x] == 1) {
+									valid_spawn = false;
+								}
+							}
+						}
+					}
+				} while (!valid_spawn);
+				createGenie(renderer, vec2(spawnX, spawnY), wave.wave_num);
+			}
+		}
 	}
 	
 
@@ -593,6 +635,7 @@ bool WorldSystem::step(float elapsed_ms_since_last_update) {
 		(wave.num_bird_boss == 0) &&
 		(wave.num_bird_clubs == 0) &&
 		(wave.num_jokers == 0) &&
+		(wave.num_genie_boss == 0) &&
 		(wave.wave_num != 1)
 		) {
 		wave.state = "spawn doors";
@@ -1899,7 +1942,9 @@ bool WorldSystem::load() {
 					createBossBirdClubs(renderer, vec2(value["position"][0], value["position"][1]), wave.wave_num);
 				} else if (value["enemy_type"] == ENEMIES::QUEEN_HEARTS) {
 					createQueenHearts(renderer, vec2(value["position"][0], value["position"][1]), wave.wave_num);
-				}  else if (value["enemy_type"] == ENEMIES::JOKER) {
+				} else if (value["enemy_type"] == ENEMIES::JOKER) {
+					createJoker(renderer, vec2(value["position"][0], value["position"][1]), wave.wave_num);
+				} else if (value["enemy_type"] == ENEMIES::BOSS_GENIE) {
 					createJoker(renderer, vec2(value["position"][0], value["position"][1]), wave.wave_num);
 				}
 			}

@@ -72,6 +72,8 @@ struct Wave {
 	float progress_bird_boss = 0;
 	int num_jokers = 0;
 	float progress_joker = 0;
+	int num_genie_boss = 1;
+	float progress_genie_boss = 0;
 	std::string state = "game on"; // "game on", "spawn doors", "limbo"
 };
 
@@ -81,7 +83,8 @@ enum class ENEMIES {
 	QUEEN_HEARTS = BIRD_CLUBS + 1,
 	BOSS_BIRD_CLUBS = QUEEN_HEARTS + 1,
 	JOKER = BOSS_BIRD_CLUBS + 1,
-	ENEMY_COUNT = JOKER + 1
+	BOSS_GENIE = JOKER + 1,
+	ENEMY_COUNT = BOSS_GENIE + 1
 };
 
 // anything that is deadly to the player
@@ -120,6 +123,11 @@ struct Joker
 	int num_splits;
 	float teleport_timer;
 	float clone_timer;
+};
+
+struct Genie
+{
+	
 };
 
 enum class HomeAndTutType {
@@ -339,7 +347,8 @@ enum class TEXTURE_ASSET_ID {
 	ARROW_UP = ARROW_RIGHT + 1,
 	DASH_RIGHT = ARROW_UP + 1,
 	DASH_LEFT = DASH_RIGHT + 1,
-	TEXTURE_COUNT = DASH_LEFT + 1
+	BOSS_GENIE = DASH_LEFT + 1,
+	TEXTURE_COUNT = BOSS_GENIE + 1
 };
 const int texture_count = (int)TEXTURE_ASSET_ID::TEXTURE_COUNT;
 

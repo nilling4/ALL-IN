@@ -91,7 +91,8 @@ class RenderSystem {
 			textures_path("arrow_right.png"),
 			textures_path("arrow_up.png"),
 			textures_path("dashRight.png"),
-			textures_path("dashLeft.png")
+			textures_path("dashLeft.png"),
+			textures_path("genie.png")
 	};
 
 	std::array<GLuint, effect_count> effects;
