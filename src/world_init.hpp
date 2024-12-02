@@ -94,4 +94,4 @@ Entity createShopScreen(RenderSystem* renderer, vec2 position);
 Entity createUpgradeLine(vec2 position, vec2 size);
 
 Entity createWave();
-Entity loadWave(int wave_num, int num_king_clubs, int num_bird_clubs, int num_jokers);
+Entity loadWave(int wave_num, int num_king_clubs, int num_bird_clubs, int num_jokers, int num_queen_hearts, int num_bird_boss);

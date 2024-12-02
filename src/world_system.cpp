@@ -1616,7 +1616,7 @@ bool WorldSystem::load() {
 
 
 		if (j.contains("wave")) {
-			global_wave = loadWave(j["wave"]["wave_num"], j["wave"]["num_king_clubs"], j["wave"]["num_bird_clubs"], j["wave"]["num_jokers"]);
+			global_wave = loadWave(j["wave"]["wave_num"], j["wave"]["num_king_clubs"], j["wave"]["num_bird_clubs"], j["wave"]["num_jokers"], j["wave"]["num_queen_hearts"], j["wave"]["num_bird_boss"]);
 		}
 		Wave& wave = registry.waves.get(global_wave);
 
@@ -1935,6 +1935,8 @@ void WorldSystem::save() {
 		{"num_king_clubs", wave.num_king_clubs},
 		{"num_bird_clubs", wave.num_bird_clubs},
 		{"num_jokers", wave.num_jokers},
+		{"num_queen_hearts", wave.num_queen_hearts},
+		{"num_bird_boss", wave.num_bird_boss}
 	};
 
 	j["solids"] = json::object();

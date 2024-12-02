@@ -969,12 +969,14 @@ Entity createWave() {
 	return entity;
 }
 
-Entity loadWave(int wave_num, int num_king_clubs, int num_bird_clubs, int num_jokers) {
+Entity loadWave(int wave_num, int num_king_clubs, int num_bird_clubs, int num_jokers, int num_queen_hearts, int num_bird_boss) {
 	auto entity = Entity();
 	Wave& wave = registry.waves.emplace(entity);
 	wave.wave_num = wave_num;
 	wave.num_king_clubs = num_king_clubs;
 	wave.num_bird_clubs = num_bird_clubs;
 	wave.num_jokers = num_jokers;
+	wave.num_bird_boss = num_bird_boss;
+	wave.num_queen_hearts = num_queen_hearts;
 	return entity;
 }
