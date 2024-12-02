@@ -214,7 +214,7 @@ bool WorldSystem::step(float elapsed_ms_since_last_update) {
 	if (wave.wave_num == 1) {
 		tutorial_timer += elapsed_ms_since_last_update / 1000.0f;
 		p_you.roulette_reload_time = 0.f;
-		p_you.luck = 1.f; // set luck to max for tutorial
+		p_you.luck = 100; // set luck to max for tutorial
 		renderer->skipMessage = "Press t to skip tutorial";
 
 		switch (tutorialState) {
@@ -302,7 +302,7 @@ bool WorldSystem::step(float elapsed_ms_since_last_update) {
 
 		case TutorialState::COMPLETE:
 			p_you.roulette_reload_time = 900.f;
-			p_you.luck = 0.5f; // reset luck to default
+			p_you.luck = 50; // reset luck to default
 			renderer->tutorialMessage = "Head to Top left to start";
 			while (registry.tutorials.entities.size() > 0)
 				registry.remove_all_components_of(registry.tutorials.entities.back());
