@@ -62,12 +62,12 @@ int main()
 		return EXIT_FAILURE;
 	}
 
+	std::string game_state = "home";
+
 	// initialize the main systems
 	renderer.init(window);
-	world.init(&renderer);
-	ai.init(&renderer);
-
-	std::string game_state = "home";
+	world.init(&renderer, &game_state);
+	ai.init(&renderer);	
 
 	// variable timestep loop
 	auto t = Clock::now();
@@ -98,7 +98,7 @@ int main()
 			// auto now = Clock::now();
 			
 			t = now;
-			world.step(elapsed_ms, &game_state);
+			world.step(elapsed_ms);
 			world.handle_movement();
 			ai.step(elapsed_ms);
 			physics.step(elapsed_ms);

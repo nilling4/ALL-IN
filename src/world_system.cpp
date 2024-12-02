@@ -176,13 +176,13 @@ GLFWwindow* WorldSystem::create_window() {
 	return window;
 }
 
-void WorldSystem::init(RenderSystem* renderer_arg) {
+void WorldSystem::init(RenderSystem* renderer_arg, std::string* state) {
 	this->renderer = renderer_arg;
 	// Playing background music indefinitely
 	// Mix_PlayMusic(background_music, -1);
 	Mix_PlayChannel(1, m3_mus_w1, 0);
 	fprintf(stderr, "Loaded music\n");
-
+	game_state = state;
 	if (!load()) {
     	restart_game();
 	}
@@ -190,7 +190,7 @@ void WorldSystem::init(RenderSystem* renderer_arg) {
 }
 
 // Update our game world
-bool WorldSystem::step(float elapsed_ms_since_last_update, std::string* game_state) {
+bool WorldSystem::step(float elapsed_ms_since_last_update) {
 	
 	// Updating window title with coin count
 	Motion& p_motion = registry.motions.get(player_protagonist);
@@ -727,8 +727,8 @@ bool WorldSystem::step(float elapsed_ms_since_last_update, std::string* game_sta
 		if (counter.counter_ms < 0) {
 			registry.deathTimers.remove(entity);
 			screen.darken_screen_factor = 0;
-            // restart_game();
 			go_to_home(game_state);
+			restart_game();
 			return true;
 		}
 	}
@@ -750,7 +750,6 @@ void WorldSystem::update_title(int fps) {
 
 void WorldSystem::go_to_home(std::string* game_state) {
 	*game_state = "home";
-	restart_game();
 }
 
 // Reset the world state to its initial state
@@ -2015,7 +2014,11 @@ void WorldSystem::on_key(int key, int, int action, int mod) {
 			std::cout << std::endl;
 		}
 		save();
-		glfwSetWindowShouldClose(window, GL_TRUE);
+		if (*game_state == "home") {
+			glfwSetWindowShouldClose(window, GL_TRUE);
+		} else {
+			go_to_home(game_state);
+		}
 	}
 
 	

@@ -24,19 +24,20 @@ public:
 	GLFWwindow* create_window();
 
 	// starts the game
-	void init(RenderSystem* renderer);
+	void init(RenderSystem* renderer, std::string* state);
 
 	// Releases all associated resources
 	~WorldSystem();
 
 	// Steps the game ahead by ms milliseconds
-	bool step(float elapsed_ms, std::string* game_state);
+	bool step(float elapsed_ms);
 	void update_title(int fps);
 	void save();
 	bool load();
 	// Check for collisions
 	void handle_collisions();
 	void go_to_home(std::string* game_state);
+	std::string* game_state;
 	
 	// Handle movement
     void handle_movement();
