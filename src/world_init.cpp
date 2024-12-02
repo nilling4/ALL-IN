@@ -426,6 +426,7 @@ Entity createJoker(RenderSystem* renderer, vec2 position, int wave_num)
 			deadly.health *= 1.1f;
 		}
 	}
+	deadly.health *= 3.f;
 	deadly.armour = 0;
 	deadly.enemy_type = ENEMIES::JOKER;
 	registry.renderRequests.insert(

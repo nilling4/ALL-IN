@@ -232,7 +232,7 @@ void PhysicsSystem::step(float elapsed_ms)
 			Motion& motion = registry.motions.get(entity);
 			float dist = length(player_motion.position - motion.position);
 			if (dist < your.collect_dist && dist > 0.f) {
-				motion.velocity = 100.f*(your.collect_dist / (dist + your.collect_dist)) * normalize(player_motion.position - motion.position);
+				motion.velocity = 300.f*(your.collect_dist / (dist + your.collect_dist)) * normalize(player_motion.position - motion.position);
 			} else {
 				motion.velocity = {0, 0};
 			}

@@ -28,7 +28,7 @@ struct Player
 
 	float dart_reload_counter = 0;
 	float dart_reload_time = 0;
-	float dart_dmg = 750.f;
+	float dart_dmg = 300.f;
 	float dart_pierce = 0;
 	float dart_speed = 380.f;
 
@@ -38,7 +38,7 @@ struct Player
 	float ninja_pierce = 0;
 	float ninja_speed = 250.f;
 
-	float luck = 0.5f;
+	int luck = 50;
 	float collect_dist = 100.f; // if you want to add here, make sure to add in json load and write to json
 };
 

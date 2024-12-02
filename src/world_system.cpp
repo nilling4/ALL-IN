@@ -622,12 +622,24 @@ bool WorldSystem::step(float elapsed_ms_since_last_update) {
 					your.max_health *= bn.amt;
 				} else if (bn.affect == "roulette_reload_time") {
 					your.roulette_reload_time *= bn.amt;
+					if (your.roulette_reload_time < 47) {
+						your.roulette_reload_time = 47;
+					}
 				} else if (bn.affect == "card_reload_time") {
 					your.card_reload_time *= bn.amt;
+					if (your.card_reload_time < 45) {
+						your.card_reload_time = 45;
+					}
 				} else if (bn.affect == "dart_reload_time") {
 					your.dart_reload_time *= bn.amt;
+					if (your.dart_reload_time < 210) {
+						your.dart_reload_time = 210;
+					}
 				} else if (bn.affect == "ninja_reload_time") {
 					your.ninja_reload_time *= bn.amt;
+					if (your.ninja_reload_time < 60) {
+						your.ninja_reload_time = 60;
+					}
 				} else if (bn.affect == "get ball" || bn.affect == "lose ball") {
 					your.roulette_reload_time = bn.amt;
 				} else if (bn.affect == "get card" || bn.affect == "lose card") {
@@ -638,12 +650,24 @@ bool WorldSystem::step(float elapsed_ms_since_last_update) {
 					your.ninja_reload_time = bn.amt;
 				} else if (bn.affect == "increase ball" || bn.affect == "slow ball") {
 					your.roulette_speed *= bn.amt;
+					if (your.roulette_speed > 600) {
+						your.roulette_speed = 600;
+					}
 				} else if (bn.affect == "increase card" || bn.affect == "slow card") {
 					your.card_speed *= bn.amt;
+					if (your.card_speed > 800) {
+						your.card_speed = 800;
+					}
 				} else if (bn.affect == "increase dart" || bn.affect == "slow dart") {
 					your.dart_speed *= bn.amt;
+					if (your.dart_speed > 760) {
+						your.dart_speed = 760;
+					}
 				} else if (bn.affect == "increase ninja" || bn.affect == "slow ninja") {
 					your.ninja_speed *= bn.amt;
+					if (your.ninja_speed > 500) {
+						your.ninja_speed = 500;
+					}
 				} else if (bn.affect == "collect") {
 					your.collect_dist *= bn.amt;
 				} else if (bn.affect == "roulette dmg") {
@@ -667,11 +691,11 @@ bool WorldSystem::step(float elapsed_ms_since_last_update) {
 			bn.selected = 0;
 		}
 		if (wave.state == "applied buffs and nerfs1") {
-			your.luck -= 0.2;
+			your.luck -= 20;
 		} else if (wave.state == "applied buffs and nerfs2") {
-			your.luck -= 0.05;
+			your.luck -= 5;
 		} else if (wave.state == "applied buffs and nerfs3") {
-			your.luck += 0.5;
+			your.luck += 50;
 		}
 		wave.state = "game on";
 		your.health = your.max_health;
@@ -953,77 +977,76 @@ void WorldSystem::next_wave() {
 		createBuffNerf(1.3, "collect", 1, "Coin magnet x1.3");
 		createBuffNerf(1.5, "collect", 1, "Coin magnet x1.5");
 		createBuffNerf(2.0, "collect", 1, "Coin magnet x2.0");
-		createBuffNerf(0.8, "collect", 0, "Coin magnet x0.8");
+		createBuffNerf(0.8, "collect", 0, "Coin magnet x0.9");
 		createBuffNerf(1.2, "health", 1, "Health x1.2");
 		createBuffNerf(1.5, "health", 1, "Health x1.5");
-		createBuffNerf(2.0, "health", 1, "Health x2");
+		createBuffNerf(1.3, "health", 1, "Health x1.3");
 		createBuffNerf(0.8, "health", 0, "Health x0.8");
-		createBuffNerf(0.6, "health", 0, "Health x0.6");
+		createBuffNerf(0.9, "health", 0, "Health x0.9");
 		createBuffNerf(1.2, "card_reload_time", 0, "Reload (card) x1.2");
 		createBuffNerf(0.8, "card_reload_time", 1, "Reload (card) x0.8");
 		createBuffNerf(0.5, "card_reload_time", 1, "Reload (card) x0.5");
-		createBuffNerf(0.2, "card_reload_time", 1, "Reload (card) x0.2");
+		createBuffNerf(0.75, "card_reload_time", 1, "Reload (card) x0.75");
 		createBuffNerf(0.6, "card_reload_time", 1, "Reload (card) x0.6");
 		createBuffNerf(0.7, "card_reload_time", 1, "Reload (card) x0.7");
 		createBuffNerf(0.9, "card_reload_time", 1, "Reload (card) x0.9");
 		createBuffNerf(0.95, "card_reload_time", 1, "Reload (card) x0.95");
-		createBuffNerf(1.5, "card_reload_time", 0, "Reload (card) x1.5");
-		createBuffNerf(2.0, "card_reload_time", 0, "Reload (card) x2.0");
-		createBuffNerf(3.0, "card_reload_time", 0, "Reload (card) x3.0");
+		createBuffNerf(1.1, "card_reload_time", 0, "Reload (card) x1.1");
+		createBuffNerf(1.3, "card_reload_time", 0, "Reload (card) x1.3");
+		createBuffNerf(1.4, "card_reload_time", 0, "Reload (card) x1.4");
 		createBuffNerf(1.2, "card dmg", 1, "Damage (card) x1.2");
-		createBuffNerf(1.5, "card dmg", 1, "Damage (card) x1.5");
+		createBuffNerf(1.1, "card dmg", 1, "Damage (card) x1.1");
 		createBuffNerf(0.9, "card dmg", 0, "Damage (card) x0.9");
-		createBuffNerf(0.7, "card dmg", 0, "Damage (card) x0.7");
+		createBuffNerf(0.8, "card dmg", 0, "Damage (card) x0.8");
 		createBuffNerf(1, "card pierce", 1, "Pierce (card) +1");
 		createBuffNerf(2, "card pierce", 1, "Pierce (card) +2");
-		createBuffNerf(0.5, "roulette_reload_time", 1, "Reload (ball) x0.5");
+		createBuffNerf(0.7, "roulette_reload_time", 1, "Reload (ball) x0.7");
 		createBuffNerf(1.2, "roulette_reload_time", 0, "Reload (ball) x1.2");
 		createBuffNerf(0.6, "roulette_reload_time", 1, "Reload (ball) x0.6");
 		createBuffNerf(0.8, "roulette_reload_time", 1, "Reload (ball) x0.8");
 		createBuffNerf(0.9, "roulette_reload_time", 1, "Reload (ball) x0.9");
-		createBuffNerf(1.5, "roulette_reload_time", 0, "Reload (ball) x1.5");
-		createBuffNerf(2.0, "roulette_reload_time", 0, "Reload (ball) x2.0");
+		createBuffNerf(1.1, "roulette_reload_time", 0, "Reload (ball) x1.1");
+		createBuffNerf(1.3, "roulette_reload_time", 0, "Reload (ball) x1.3");
 		createBuffNerf(1.2, "roulette dmg", 1, "Damage (ball) x1.2");
-		createBuffNerf(1.5, "roulette dmg", 1, "Damage (ball) x1.5");
+		createBuffNerf(1.1, "roulette dmg", 1, "Damage (ball) x1.1");
 		createBuffNerf(0.9, "roulette dmg", 0, "Damage (ball) x0.9");
-		createBuffNerf(0.7, "roulette dmg", 0, "Damage (ball) x0.7");
+		createBuffNerf(0.8, "roulette dmg", 0, "Damage (ball) x0.8");
 		createBuffNerf(1, "roulette bounce", 1, "Bounce (ball) +1");
-		createBuffNerf(0.5, "dart_reload_time", 1, "Reload (dart) x0.5");
+		createBuffNerf(0.65, "dart_reload_time", 1, "Reload (dart) x0.65");
 		createBuffNerf(0.8, "dart_reload_time", 1, "Reload (dart) x0.8");
 		createBuffNerf(1.2, "dart_reload_time", 0, "Reload (dart) x1.2");
-		createBuffNerf(0.2, "dart_reload_time", 1, "Reload (dart) x0.2");
-		createBuffNerf(0.6, "dart_reload_time", 1, "Reload (dart) x0.6");
+		createBuffNerf(0.75, "dart_reload_time", 1, "Reload (dart) x0.75");
+		createBuffNerf(0.85, "dart_reload_time", 1, "Reload (dart) x0.85");
 		createBuffNerf(0.7, "dart_reload_time", 1, "Reload (dart) x0.7");
 		createBuffNerf(0.9, "dart_reload_time", 1, "Reload (dart) x0.9");
 		createBuffNerf(0.95, "dart_reload_time", 1, "Reload (dart) x0.95");
-		createBuffNerf(1.5, "dart_reload_time", 0, "Reload (dart) x1.5");
-		createBuffNerf(2.0, "dart_reload_time", 0, "Reload (dart) x2.0");
-		createBuffNerf(3.0, "dart_reload_time", 0, "Reload (dart) x3.0");
-		createBuffNerf(2.0, "dart dmg", 1, "Damage (dart) x2.0");
-		createBuffNerf(3.0, "dart dmg", 1, "Damage (dart) x3.0");
+		createBuffNerf(1.1, "dart_reload_time", 0, "Reload (dart) x1.1");
+		createBuffNerf(1.3, "dart_reload_time", 0, "Reload (dart) x1.3");
+		createBuffNerf(1.4, "dart_reload_time", 0, "Reload (dart) x1.4");
+		createBuffNerf(1.1, "dart dmg", 1, "Damage (dart) x1.1");
 		createBuffNerf(1.3, "dart dmg", 1, "Damage (dart) x1.3");
-		createBuffNerf(1.6, "dart dmg", 1, "Damage (dart) x1.6");
+		createBuffNerf(1.2, "dart dmg", 1, "Damage (dart) x1.2");
 		createBuffNerf(0.9, "dart dmg", 0, "Damage (dart) x0.9");
 		createBuffNerf(0.75, "dart dmg", 0, "Damage (dart) x0.75");
 		createBuffNerf(0.8, "ninja_reload_time", 1, "Reload (ninja) x0.8");
-		createBuffNerf(0.5, "ninja_reload_time", 1, "Reload (ninja) x0.5");
+		createBuffNerf(0.85, "ninja_reload_time", 1, "Reload (ninja) x0.85");
 		createBuffNerf(1.2, "ninja_reload_time", 0, "Reload (ninja) x1.2");
-		createBuffNerf(0.2, "ninja_reload_time", 1, "Reload (ninja) x0.2");
+		createBuffNerf(0.75, "ninja_reload_time", 1, "Reload (ninja) x0.75");
 		createBuffNerf(0.6, "ninja_reload_time", 1, "Reload (ninja) x0.6");
 		createBuffNerf(0.7, "ninja_reload_time", 1, "Reload (ninja) x0.7");
 		createBuffNerf(0.9, "ninja_reload_time", 1, "Reload (ninja) x0.9");
 		createBuffNerf(0.95, "ninja_reload_time", 1, "Reload (ninja) x0.95");
-		createBuffNerf(1.5, "ninja_reload_time", 0, "Reload (ninja) x1.5");
-		createBuffNerf(2.0, "ninja_reload_time", 0, "Reload (ninja) x2.0");
-		createBuffNerf(3.0, "ninja_reload_time", 0, "Reload (ninja) x3.0");
+		createBuffNerf(1.1, "ninja_reload_time", 0, "Reload (ninja) x1.1");
+		createBuffNerf(1.3, "ninja_reload_time", 0, "Reload (ninja) x1.3");
+		createBuffNerf(1.4, "ninja_reload_time", 0, "Reload (ninja) x1.4");
 		createBuffNerf(1.2, "ninja dmg", 1, "Damage (ninja) x1.2");
-		createBuffNerf(1.5, "ninja dmg", 1, "Damage (ninja) x1.5");
+		createBuffNerf(1.1, "ninja dmg", 1, "Damage (ninja) x1.1");
 		createBuffNerf(0.9, "ninja dmg", 0, "Damage (ninja) x0.9");
-		createBuffNerf(0.7, "ninja dmg", 0, "Damage (ninja) x0.7");
-		createBuffNerf(900.f, "get ball", 1, "unlock ball");
-		createBuffNerf(1100.f, "get card", 1, "unlock card");
-		createBuffNerf(1500.f, "get dart", 1, "unlock dart");
-		createBuffNerf(2500.f, "get ninja", 1, "unlock ninja");
+		createBuffNerf(0.8, "ninja dmg", 0, "Damage (ninja) x0.8");
+		createBuffNerf(450.f, "get ball", 1, "unlock ball");
+		createBuffNerf(770.f, "get card", 1, "unlock card");
+		createBuffNerf(1100.f, "get dart", 1, "unlock dart");
+		createBuffNerf(800.f, "get ninja", 1, "unlock ninja");
 		createBuffNerf(0.f, "lose ball", 0, "lose ball");
 		createBuffNerf(0.f, "lose card", 0, "lose card");
 		createBuffNerf(0.f, "lose dart", 0, "lose dart");
@@ -1032,14 +1055,14 @@ void WorldSystem::next_wave() {
 		createBuffNerf(1.3, "increase dart", 1, "speed (dart) x1.3");
 		createBuffNerf(1.3, "increase ninja", 1, "speed (ninja) x1.3");
 		createBuffNerf(1.3, "increase card", 1, "speed (card) x1.3");
-		createBuffNerf(1.7, "increase ball", 1, "speed (ball) x1.7");
-		createBuffNerf(1.7, "increase dart", 1, "speed (dart) x1.7");
-		createBuffNerf(1.7, "increase ninja", 1, "speed (ninja) x1.7");
-		createBuffNerf(1.7, "increase card", 1, "speed (card) x1.7");
-		createBuffNerf(0.7, "slow ball", 0, "speed (ball) x0.7");
-		createBuffNerf(0.7, "slow dart", 0, "speed (dart) x0.7");
-		createBuffNerf(0.7, "slow ninja", 0, "speed (ninja) x0.7");
-		createBuffNerf(0.7, "slow card", 0, "speed (card) x0.7");
+		createBuffNerf(1.2, "increase ball", 1, "speed (ball) x1.2");
+		createBuffNerf(1.2, "increase dart", 1, "speed (dart) x1.2");
+		createBuffNerf(1.2, "increase ninja", 1, "speed (ninja) x1.2");
+		createBuffNerf(1.2, "increase card", 1, "speed (card) x1.2");
+		createBuffNerf(0.9, "slow ball", 0, "speed (ball) x0.9");
+		createBuffNerf(0.9, "slow dart", 0, "speed (dart) x0.9");
+		createBuffNerf(0.9, "slow ninja", 0, "speed (ninja) x0.9");
+		createBuffNerf(0.9, "slow card", 0, "speed (card) x0.9");
 	}
 
 	std::vector<BuffNerf*> buffs = {};
@@ -1145,6 +1168,55 @@ void WorldSystem::next_wave() {
 				continue;
 			}
 			if (buffs[buff_idx]->affect == "ninja dmg") {
+				buff_idx += 1;
+				continue;
+			}
+		}
+		if (buffs[buff_idx]->affect == "roulette_reload_time") {
+			if (your.roulette_reload_time <= 47) {
+				buff_idx += 1;
+				continue;
+			}
+		}
+		if (buffs[buff_idx]->affect == "card_reload_time") {
+			if (your.card_reload_time <= 45) {
+				buff_idx += 1;
+				continue;
+			}
+		}
+		if (buffs[buff_idx]->affect == "dart_reload_time") {
+			if (your.dart_reload_time <= 210) {
+				buff_idx += 1;
+				continue;
+			}
+		}
+		if (buffs[buff_idx]->affect == "ninja_reload_time") {
+			if (your.ninja_reload_time <= 60) {
+				buff_idx += 1;
+				continue;
+			}
+		}
+
+		if (buffs[buff_idx]->affect == "increase ball") {
+			if (your.roulette_speed <= 600) {
+				buff_idx += 1;
+				continue;
+			}
+		}
+		if (buffs[buff_idx]->affect == "increase card") {
+			if (your.card_speed <= 800) {
+				buff_idx += 1;
+				continue;
+			}
+		}
+		if (buffs[buff_idx]->affect == "increase dart") {
+			if (your.dart_speed <= 760) {
+				buff_idx += 1;
+				continue;
+			}
+		}
+		if (buffs[buff_idx]->affect == "increase ninja") {
+			if (your.ninja_speed <= 500) {
 				buff_idx += 1;
 				continue;
 			}
@@ -1270,8 +1342,7 @@ void WorldSystem::next_wave() {
 		if (!Mix_Playing(1)) {
 			Mix_PlayChannel(1, m3_mus_w1, 0);
 		}		
-		wave.num_jokers = 3;
-		//wave.num_king_clubs = num_of_enemies[wave.wave_num];
+		wave.num_king_clubs = num_of_enemies[wave.wave_num];
 
 	} else if (wave.wave_num >=3 && wave.wave_num <7) {
 		if ((wave.wave_num == 3) || !Mix_Playing(1)) {
@@ -1293,7 +1364,7 @@ void WorldSystem::next_wave() {
 			wave.num_bird_clubs = 0;			
 			wave.num_bird_boss = 1;
 		} else {
-			int total_num_enemies = num_of_enemies[wave.wave_num]*2;
+			int total_num_enemies = num_of_enemies[wave.wave_num]*3;
 			int num_birds = ceil(total_num_enemies * 0.70);
 			int num_healers = ceil(total_num_enemies * 0.05);
 			int num_kings = total_num_enemies - num_birds - num_healers;
@@ -1306,30 +1377,61 @@ void WorldSystem::next_wave() {
 			Mix_PlayChannel(1, m3_mus_w4, 0);
 		}
 		Mix_PlayChannel(2, m3_sfx_door_c, 0);		
-		int total_num_enemies = num_of_enemies[wave.wave_num]*2;
-		int num_birds = ceil(total_num_enemies * 0.40);
-		int num_healers = ceil(total_num_enemies * 0.05);
-		int num_boss_clubs = ceil(total_num_enemies * 0.02);
-		int num_kings = total_num_enemies - num_birds - num_healers;
-		wave.num_king_clubs = num_kings;
-		wave.num_bird_clubs = num_birds;
-		wave.num_queen_hearts = num_healers;
-		wave.num_bird_boss = num_boss_clubs;
+		if (wave.wave_num == 12) {
+			wave.num_jokers = 3;
+			wave.num_king_clubs = 5;
+		} else if (wave.wave_num < 15) {
+			int total_num_enemies = num_of_enemies[wave.wave_num]*3;
+			int num_birds = ceil(total_num_enemies * 0.40);
+			int num_healers = ceil(total_num_enemies * 0.05);
+			int num_boss_clubs = ceil(total_num_enemies * 0.02);
+			int num_kings = total_num_enemies - num_birds - num_healers;
+			wave.num_king_clubs = num_kings;
+			wave.num_bird_clubs = num_birds;
+			wave.num_queen_hearts = num_healers;
+			wave.num_bird_boss = num_boss_clubs;
+		} else if (wave.wave_num < 17) {
+			int total_num_enemies = num_of_enemies[wave.wave_num]*2;
+			int num_birds = ceil(total_num_enemies * 0.40);
+			int num_healers = ceil(total_num_enemies * 0.05);
+			int num_boss_clubs = ceil(total_num_enemies * 0.02);
+			int num_jokers = ceil(total_num_enemies * 0.03);
+			int num_kings = total_num_enemies - num_birds - num_healers - num_jokers;
+			wave.num_king_clubs = num_kings;
+			wave.num_bird_clubs = num_birds;
+			wave.num_queen_hearts = num_healers;
+			wave.num_bird_boss = num_boss_clubs;
+			wave.num_jokers = num_jokers;
+		} else {
+			int total_num_enemies = num_of_enemies[wave.wave_num]*2;
+			int num_birds = ceil(total_num_enemies * 0.30);
+			int num_healers = ceil(total_num_enemies * 0.10);
+			int num_boss_clubs = ceil(total_num_enemies * 0.07);
+			int num_jokers = ceil(total_num_enemies * 0.15);
+			int num_kings = total_num_enemies - num_birds - num_healers - num_jokers;
+			wave.num_king_clubs = num_kings;
+			wave.num_bird_clubs = num_birds;
+			wave.num_queen_hearts = num_healers;
+			wave.num_bird_boss = num_boss_clubs;
+			wave.num_jokers = num_jokers;
+		}
 	} else {
 		// wave 20 and above, use formula
 		if ((wave.wave_num == 20) || !Mix_Playing(1)) {
 			Mix_PlayChannel(1, m3_mus_w5, 0);
 		}
 		Mix_PlayChannel(2, m3_sfx_door_l2, 0);	
-		int total_num_enemies = ceil(0.09f * wave.wave_num * wave.wave_num - 0.0029f * wave.wave_num + 23.9580f)*5;
-		int num_birds = ceil(total_num_enemies * 0.40);
-		int num_healers = ceil(total_num_enemies * 0.05);
-		int num_boss_clubs = ceil(total_num_enemies * 0.02);
-		int num_kings = total_num_enemies - num_birds - num_healers;
+		int total_num_enemies = ceil(0.09f * wave.wave_num * wave.wave_num - 0.0029f * wave.wave_num + 23.9580f)*2;
+		int num_birds = ceil(total_num_enemies * 0.20);
+		int num_healers = ceil(total_num_enemies * 0.15);
+		int num_boss_clubs = ceil(total_num_enemies * 0.10);
+		int num_jokers = ceil(total_num_enemies * 0.22);
+		int num_kings = total_num_enemies - num_birds - num_healers - num_jokers;
 		wave.num_king_clubs = num_kings;
 		wave.num_bird_clubs = num_birds;
 		wave.num_queen_hearts = num_healers;
 		wave.num_bird_boss = num_boss_clubs;
+		wave.num_jokers = num_jokers;
 	}
 
 	// wave.state = "game on"
@@ -1644,7 +1746,7 @@ void WorldSystem::handle_collisions() {
 					}
 					
 					if (deadly.health < 0.f) {
-						float luck = your.luck;
+						float luck = your.luck * 1.f / 100.f;
 						while (luck > 0.f) {
 							float random_angle = (rand() % 360) * M_PI / 180.0f; 
 							float dice_roll = uniform_dist(rng);

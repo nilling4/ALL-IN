@@ -607,10 +607,20 @@ void RenderSystem::draw(std::string what)
 				}
 				for (Entity entity : registry.players.entities) {
 					Player& your = registry.players.get(entity);
-					renderText("luck-0.2 -> " + std::to_string(your.luck - 0.2).substr(0, 5), d1x, d1y, 0.4f, black_font_color, font_trans);
-					renderText("luck-0.05 -> " + std::to_string(your.luck - 0.05).substr(0, 5), d2x, d2y, 0.4f, black_font_color, font_trans);
-					renderText("luck+0.5 -> " + std::to_string(your.luck + 0.5).substr(0, 5), d3x, d3y, 0.4f, black_font_color, font_trans);
+					// renderText("luck-0.2 -> " + std::to_string(your.luck - 0.2).substr(0, 5), d1x, d1y, 0.4f, black_font_color, font_trans);
+					// renderText("luck-0.05 -> " + std::to_string(your.luck - 0.05).substr(0, 5), d2x, d2y, 0.4f, black_font_color, font_trans);
+					// renderText("luck+0.5 -> " + std::to_string(your.luck + 0.5).substr(0, 5), d3x, d3y, 0.4f, black_font_color, font_trans);
+					renderText(std::to_string(your.luck), 1120.f, window_height_px - 85.f, 0.8f, black_font_color, font_trans);
+
 				}
+				// Player& your = registry.players.get(entity);
+
+				// std::cout << "luck " << std::endl;
+				// std::cout << "luck " << std::to_string(your.luck) << std::endl;
+				// Player& your = registry.players.get(entity);
+				// // renderText(std::to_string(your.luck), 1120.f, 250.f, 0.4f, black_font_color, font_trans);
+				// renderText("asdf" + std::to_string(your.luck).substr(0, 5), d3x, d3y, 0.4f, black_font_color, font_trans);
+
 			}
 		}
 	}
@@ -632,17 +642,17 @@ int RenderSystem::calculateUpgradeCost(RenderSystem::UPGRADE_TYPE type) {
 	default: baseCost = 0; break;
 	}*/
 	switch (type) {
-	case RenderSystem::UPGRADE_TYPE::DAMAGE: baseCost = 1; break;
-	case RenderSystem::UPGRADE_TYPE::SPEED: baseCost = 2; break;
-	case RenderSystem::UPGRADE_TYPE::HEALTH: baseCost = 3; break;
+	case RenderSystem::UPGRADE_TYPE::DAMAGE: baseCost = 50; break;
+	case RenderSystem::UPGRADE_TYPE::SPEED: baseCost = 100; break;
+	case RenderSystem::UPGRADE_TYPE::HEALTH: baseCost = 75; break;
 	default: baseCost = 0; break;
 	}
 
 	RenderSystem::UPGRADE_LEVEL currentLevel = upgradeLevels[type];
 	int upgradeCount = static_cast<int>(currentLevel);
 
-	int increment = baseCost / 2;
-	return baseCost + (increment * upgradeCount);
+	// int increment = baseCost * 3;
+	return static_cast<int> (baseCost * (1.5 * upgradeCount))+1;
 }
 
 void RenderSystem::updateCoinNum(std::string coins) {

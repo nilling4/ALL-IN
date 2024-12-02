@@ -141,11 +141,13 @@ int main()
 			int doors_state = 0;
 			for (Entity entity : registry.players.entities) {
 				Player& player = registry.players.get(entity);
-				if (player.luck < 0.05) {
+				std::cout << "try get luck" << std::endl;
+				if (player.luck < 5) {
 					doors_state = 2;
-				} else if (player.luck < 0.2) {
+				} else if (player.luck < 20) {
 					doors_state = 1;
 				}
+				std::cout << "can get luck" << std::endl;
 			}
 			if (doors_state == 0) {
 				renderer.draw("the doors");
