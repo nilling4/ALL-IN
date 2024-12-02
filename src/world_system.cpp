@@ -192,12 +192,127 @@ void WorldSystem::init(RenderSystem* renderer_arg, std::string* state) {
 // Update our game world
 bool WorldSystem::step(float elapsed_ms_since_last_update) {
 	
-	// Updating window title with coin count
 	Motion& p_motion = registry.motions.get(player_protagonist);
 	Player& p_you = registry.players.get(player_protagonist);
 	Wave& wave = registry.waves.get(global_wave);
 
 	float elapsed_time = elapsed_ms_since_last_update * current_speed;
+
+	if (*game_state == "tutorial" && !isRestarted) {
+		restart_game();
+		isRestarted = true;
+		tutorialState = TutorialState::WELCOME;
+		tutorial_timer = 0.0f;
+		tutorial_aim_timer = 0.0f;
+		upArrowPressed = false;
+		leftArrowPressed = false;
+		downArrowPressed = false;
+		rightArrowPressed = false;
+		dashPressed = false;
+	}
+
+	if (wave.wave_num == 1) {
+		tutorial_timer += elapsed_ms_since_last_update / 1000.0f;
+		p_you.roulette_reload_time = 0.f;
+		p_you.luck = 1.f; // set luck to max for tutorial
+		renderer->skipMessage = "Press t to skip tutorial";
+
+		switch (tutorialState) {
+		case TutorialState::WELCOME:
+			isCreated = false;
+			renderer->tutorialMessage = "Welcome to the tutorial!";
+			if (tutorial_timer >= 3.0f) {
+				tutorialState = TutorialState::MOVE_INSTRUCTIONS;
+			}
+			break;
+		case TutorialState::MOVE_INSTRUCTIONS: {
+			renderer->tutorialMessage = "Use WASD to move around";
+			if (!isCreated) {
+				Entity arrow_left = createArrowLeft(renderer, { window_width_px / 2 - 70, window_height_px / 2 }, { 33, 33 });
+				registry.colors.insert(arrow_left, { 0, 0.8f, 0.8f });
+				Entity arrow_right = createArrowRight(renderer, { window_width_px / 2 + 70, window_height_px / 2 }, { 33, 33 });
+				registry.colors.insert(arrow_right, { 0, 0.8f, 0.8f });
+				Entity arrow_up = createArrowUp(renderer, { window_width_px / 2, window_height_px / 2 - 70 }, { 33, 33 });
+				registry.colors.insert(arrow_up, { 0, 0.8f, 0.8f });
+				Entity arrow_down = createArrowDown(renderer, { window_width_px / 2, window_height_px / 2 + 70 }, { 33, 33 });
+				registry.colors.insert(arrow_down, { 0, 0.8f, 0.8f });
+				isCreated = true;
+			}
+			
+
+			if (leftArrowPressed && rightArrowPressed && upArrowPressed && downArrowPressed) {
+				while (registry.tutorials.entities.size() > 0)
+					registry.remove_all_components_of(registry.tutorials.entities.back());
+				tutorialState = TutorialState::DASH_INSTRUCTIONS;
+				isCreated = false;
+			}
+			break;
+		}
+		case TutorialState::DASH_INSTRUCTIONS: {
+			renderer->tutorialMessage = "Press space to dash";
+			if (!isCreated) {
+				Entity dash_left1 = createDashLeft(renderer, { window_width_px / 2 - 70, window_height_px / 2 }, { 33, 33 });
+				Entity dash_left2 = createDashLeft(renderer, { window_width_px / 2 - 50, window_height_px / 2 }, { 33, 33 });
+				registry.colors.insert(dash_left1, { 0, 0.8f, 0.8f });
+				registry.colors.insert(dash_left2, { 0, 0.8f, 0.8f });
+				Entity dash_right1 = createDashRight(renderer, { window_width_px / 2 + 70, window_height_px / 2 }, { 33, 33 });
+				Entity dash_right2 = createDashRight(renderer, { window_width_px / 2 + 50, window_height_px / 2 }, { 33, 33 });
+				registry.colors.insert(dash_right1, { 0, 0.8f, 0.8f });
+				registry.colors.insert(dash_right2, { 0, 0.8f, 0.8f });
+				isCreated = true;
+			}
+			if (dashPressed) {
+				while (registry.tutorials.entities.size() > 0)
+					registry.remove_all_components_of(registry.tutorials.entities.back());
+				tutorialState = TutorialState::AIM_INSTRUCTIONS;
+				isCreated = false;
+			}
+			break;
+		}
+		case TutorialState::AIM_INSTRUCTIONS:
+			p_you.roulette_reload_time = 900.f;
+			renderer->tutorialMessage = "Move mouse to aim your weapon";
+			tutorial_aim_timer += elapsed_ms_since_last_update / 1000.0f;
+			if (tutorial_aim_timer >= 5.0f) {
+				tutorialState = TutorialState::DEFEAT_ENEMIES;
+			}
+			break;
+
+		case TutorialState::DEFEAT_ENEMIES:
+			p_you.roulette_reload_time = 900.f;
+			renderer->tutorialMessage = "Defeat enemies to progress to the next wave!";
+			if (!isCreated) {
+				createKingClubs(renderer, { window_width_px / 2 + 300, window_height_px / 2 + 70 }, wave.wave_num);
+				isCreated = true;
+			}
+			if (registry.deadlys.entities.size() == 0) {
+				tutorialState = TutorialState::PICKUP_COINS;
+				isCreated = false;
+			}
+			break;
+
+		case TutorialState::PICKUP_COINS:
+			renderer->tutorialMessage = "Pickup coins to spend in the shop!";
+	
+			if (registry.eatables.entities.size() == 0) {
+				tutorialState = TutorialState::COMPLETE;
+				wave.state = "spawn doors";
+			}
+			break;
+
+		case TutorialState::COMPLETE:
+			p_you.roulette_reload_time = 900.f;
+			p_you.luck = 0.5f; // reset luck to default
+			renderer->tutorialMessage = "Head to Top left to start";
+			while (registry.tutorials.entities.size() > 0)
+				registry.remove_all_components_of(registry.tutorials.entities.back());
+			break;
+		}
+	}
+	else {
+		renderer->tutorialMessage = "";
+		renderer->skipMessage = "";
+	}
 
 	// Remove debug info from the last step
 	while (registry.debugComponents.entities.size() > 0)
@@ -477,7 +592,8 @@ bool WorldSystem::step(float elapsed_ms_since_last_update) {
 		(wave.num_king_clubs == 0) &&
 		(wave.num_bird_boss == 0) &&
 		(wave.num_bird_clubs == 0) &&
-		(wave.num_jokers == 0)
+		(wave.num_jokers == 0) &&
+		(wave.wave_num != 1)
 		) {
 		wave.state = "spawn doors";
 		Mix_PlayChannel(8, wave_over, 0);
@@ -729,6 +845,8 @@ bool WorldSystem::step(float elapsed_ms_since_last_update) {
 			screen.darken_screen_factor = 0;
 			go_to_home(game_state);
 			restart_game();
+			tutorialState = TutorialState::COMPLETE;
+			wave.state = "spawn doors";
 			return true;
 		}
 	}
@@ -1137,8 +1255,17 @@ void WorldSystem::next_wave() {
 			nerf_idx = 0;
 		}
 	}
-
-	if (wave.wave_num < 3) {
+	if (wave.wave_num == 1) {
+		Mix_PlayChannel(2, m3_sfx_door_b, 0);
+		if (!Mix_Playing(1)) {
+			Mix_PlayChannel(1, m3_mus_w1, 0);
+		}
+		upArrowPressed = false;
+		leftArrowPressed = false;
+		downArrowPressed = false;
+		rightArrowPressed = false;
+		dashPressed = false;
+	} else if (wave.wave_num == 2) {
 		Mix_PlayChannel(2, m3_sfx_door_b, 0);
 		if (!Mix_Playing(1)) {
 			Mix_PlayChannel(1, m3_mus_w1, 0);
@@ -1984,6 +2111,15 @@ void WorldSystem::on_key(int key, int, int action, int mod) {
 			std::cerr << "Unable to open save.json for erasing." << std::endl;
 		}
         restart_game();
+		isRestarted = true;
+		tutorialState = TutorialState::WELCOME;
+		tutorial_timer = 0.0f;
+		tutorial_aim_timer = 0.0f;
+		upArrowPressed = false;
+		leftArrowPressed = false;
+		downArrowPressed = false;
+		rightArrowPressed = false;
+		dashPressed = false;
 	}
 
 	// Debugging
@@ -2015,7 +2151,10 @@ void WorldSystem::on_key(int key, int, int action, int mod) {
 			}
 			std::cout << std::endl;
 		}
-		save();
+		Wave& wave = registry.waves.get(global_wave);
+		if (wave.wave_num != 1) {
+			save();
+		}
 		if (*game_state == "home") {
 			glfwSetWindowShouldClose(window, GL_TRUE);
 		} else {
@@ -2033,6 +2172,14 @@ void WorldSystem::on_key(int key, int, int action, int mod) {
 		}
 	}
 
+	// skip tutorial
+	if (key == GLFW_KEY_T && action == GLFW_PRESS) {
+		Wave& wave = registry.waves.get(global_wave);
+		if (wave.wave_num == 1) {
+			tutorialState = TutorialState::COMPLETE;
+			wave.state = "spawn doors";
+		}
+	}
 
 	// Control the current speed with `<` `>`
 	if (action == GLFW_RELEASE && (mod & GLFW_MOD_SHIFT) && key == GLFW_KEY_COMMA) {
@@ -2044,6 +2191,25 @@ void WorldSystem::on_key(int key, int, int action, int mod) {
 		printf("Current speed = %f\n", current_speed);
 	}
 	current_speed = fmax(0.f, current_speed);
+
+	Wave& wave = registry.waves.get(global_wave);
+	if (wave.wave_num == 1) {
+		if (action == GLFW_PRESS && key == GLFW_KEY_W && tutorialState == TutorialState::MOVE_INSTRUCTIONS) {
+			upArrowPressed = true;
+		}
+		else if (action == GLFW_PRESS && key == GLFW_KEY_S && tutorialState == TutorialState::MOVE_INSTRUCTIONS) {
+			downArrowPressed = true;
+		}
+		else if (action == GLFW_PRESS && key == GLFW_KEY_A && tutorialState == TutorialState::MOVE_INSTRUCTIONS) {
+			leftArrowPressed = true;
+		}
+		else if (action == GLFW_PRESS && key == GLFW_KEY_D && tutorialState == TutorialState::MOVE_INSTRUCTIONS) {
+			rightArrowPressed = true;
+		}
+		else if (action == GLFW_PRESS && key == GLFW_KEY_SPACE && tutorialState == TutorialState::DASH_INSTRUCTIONS) {
+			dashPressed = true;
+		}
+	}
 
 	if (action == GLFW_PRESS || action == GLFW_REPEAT) {
     	pressed_keys.insert(key);
@@ -2064,6 +2230,7 @@ void WorldSystem::on_key(int key, int, int action, int mod) {
 void WorldSystem::handle_movement() {
 	Wave& wave = registry.waves.get(global_wave);
 	auto& component = registry.motions.get(player_protagonist);
+
 	if (wave.state != "game on" && wave.state != "limbo") {
 		component.velocity.x = 0.f;
 		component.velocity.y = 0.f;

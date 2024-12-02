@@ -83,7 +83,6 @@ int main()
 
 		if (registry.homeAndTuts.entities.size() < 6) {
 			createHomeScreen(&renderer, {window_width_px / 2, window_height_px / 2});
-			createTutScreen(&renderer, {window_width_px / 2, window_height_px / 2});
 			createShopScreen(&renderer, { window_width_px / 2, window_height_px / 2 });
 			createDoorScreen(&renderer, { window_width_px / 2, window_height_px / 2 }, 0);
 			createDoorScreen(&renderer, { window_width_px / 2, window_height_px / 2 }, 1);
@@ -93,7 +92,7 @@ int main()
 		auto now = Clock::now();
 		float elapsed_ms =
 			(float)(std::chrono::duration_cast<std::chrono::microseconds>(now - t)).count() / 1000;
-		if (game_state == "playing") {
+		if (game_state == "playing" || game_state == "tutorial") {
 			// Calculating elapsed times in milliseconds from the previous iteration
 			// auto now = Clock::now();
 			
@@ -132,19 +131,10 @@ int main()
                     game_state = "shop";
                 } else if (is_button_clicked(790, 1000, 490, 620, mouse_x, mouse_y)) {
                     game_state = "tutorial";
+					world.isRestarted = false;
                 }
             }
 			renderer.transactionSuccessful = RenderSystem::PurchaseResult::SUCCESS;
-		} else if (game_state == "tutorial") {
-			while (registry.shopItems.entities.size() > 0)
-				registry.remove_all_components_of(registry.shopItems.entities.back());
-			renderer.draw("the tuts");
-			
-            if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-                if (is_button_clicked(0, 180, 0, 80, mouse_x, mouse_y)) {
-                    game_state = "home";
-                } 
-            }
 		} else if (game_state == "select doors") {
 			while (registry.shopItems.entities.size() > 0)
 				registry.remove_all_components_of(registry.shopItems.entities.back());

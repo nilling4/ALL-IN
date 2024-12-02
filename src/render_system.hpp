@@ -85,7 +85,13 @@ class RenderSystem {
 			textures_path("door_screen.png"),
 			textures_path("door_screen1.png"),
 			textures_path("door_screen2.png"),
-			textures_path("joker.png")
+			textures_path("joker.png"),
+			textures_path("arrow_down.png"),
+			textures_path("arrow_left.png"),
+			textures_path("arrow_right.png"),
+			textures_path("arrow_up.png"),
+			textures_path("dashRight.png"),
+			textures_path("dashLeft.png")
 	};
 
 	std::array<GLuint, effect_count> effects;
@@ -146,6 +152,9 @@ public:
 	void updateCoinNum(std::string coins);
 	void updateRenderWaveNum(int wave_num);
 	void updateWaveOverText(bool isWaveOver);
+
+	std::string tutorialMessage = "";
+	std::string skipMessage = "";
 
 	// shop screen
 	enum class UPGRADE_LEVEL {

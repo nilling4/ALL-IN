@@ -800,6 +800,180 @@ Entity createBlackRectangle(vec2 position, vec2 scale)
 	return entity;
 }
 
+Entity createArrowLeft(RenderSystem* renderer, vec2 position, vec2 scale)
+{
+	auto entity = Entity();
+
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 0.f;
+	motion.velocity = { 0.f, 0.f };
+	motion.position = position;
+
+	motion.scale = scale;
+
+	registry.tutorials.emplace(entity);
+
+	registry.hud.emplace(entity);
+
+	registry.renderRequests.insert(
+		entity,
+		{
+			TEXTURE_ASSET_ID::ARROW_LEFT,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE
+		});
+
+	return entity;
+}
+
+Entity createArrowRight(RenderSystem* renderer, vec2 position, vec2 scale)
+{
+	auto entity = Entity();
+
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 0.f;
+	motion.velocity = { 0.f, 0.f };
+	motion.position = position;
+
+	motion.scale = scale;
+
+	registry.tutorials.emplace(entity);
+
+	registry.hud.emplace(entity);
+
+	registry.renderRequests.insert(
+		entity,
+		{
+			TEXTURE_ASSET_ID::ARROW_RIGHT,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE
+		});
+
+	return entity;
+}
+
+Entity createArrowUp(RenderSystem* renderer, vec2 position, vec2 scale)
+{
+	auto entity = Entity();
+
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 0.f;
+	motion.velocity = { 0.f, 0.f };
+	motion.position = position;
+
+	motion.scale = scale;
+
+	registry.tutorials.emplace(entity);
+
+	registry.hud.emplace(entity);
+
+	registry.renderRequests.insert(
+		entity,
+		{
+			TEXTURE_ASSET_ID::ARROW_UP,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE
+		});
+
+	return entity;
+}
+
+Entity createArrowDown(RenderSystem* renderer, vec2 position, vec2 scale)
+{
+	auto entity = Entity();
+
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 0.f;
+	motion.velocity = { 0.f, 0.f };
+	motion.position = position;
+
+	motion.scale = scale;
+
+	registry.tutorials.emplace(entity);
+
+	registry.hud.emplace(entity);
+
+	registry.renderRequests.insert(
+		entity,
+		{
+			TEXTURE_ASSET_ID::ARROW_DOWN,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE
+		});
+
+	return entity;
+}
+
+Entity createDashLeft(RenderSystem* renderer, vec2 position, vec2 scale)
+{
+	auto entity = Entity();
+
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 0.f;
+	motion.velocity = { 0.f, 0.f };
+	motion.position = position;
+
+	motion.scale = scale;
+
+	registry.tutorials.emplace(entity);
+
+	registry.hud.emplace(entity);
+
+	registry.renderRequests.insert(
+		entity,
+		{
+			TEXTURE_ASSET_ID::DASH_LEFT,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE
+		});
+
+	return entity;
+}
+
+Entity createDashRight(RenderSystem* renderer, vec2 position, vec2 scale)
+{
+	auto entity = Entity();
+
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 0.f;
+	motion.velocity = { 0.f, 0.f };
+	motion.position = position;
+
+	motion.scale = scale;
+
+	registry.tutorials.emplace(entity);
+
+	registry.hud.emplace(entity);
+
+	registry.renderRequests.insert(
+		entity,
+		{
+			TEXTURE_ASSET_ID::DASH_RIGHT,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE
+		});
+
+	return entity;
+}
+
 Entity createHomeScreen(RenderSystem* renderer, vec2 position)
 {
 	auto entity = Entity();
@@ -820,34 +994,6 @@ Entity createHomeScreen(RenderSystem* renderer, vec2 position)
 		entity,
 		{
 			TEXTURE_ASSET_ID::HOME_SCREEN,
-			EFFECT_ASSET_ID::TEXTURED,
-			GEOMETRY_BUFFER_ID::SPRITE
-		});
-
-	return entity;
-}
-
-Entity createTutScreen(RenderSystem* renderer, vec2 position)
-{
-	auto entity = Entity();
-
-	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
-	registry.meshPtrs.emplace(entity, &mesh);
-
-	auto& motion = registry.motions.emplace(entity);
-	motion.angle = 0.f;
-	motion.velocity = { 0, 0 };
-	motion.position = position;
-
-	motion.scale = vec2({ window_width_px, window_height_px });
-	auto& screen = registry.homeAndTuts.emplace(entity);
-	screen.type = HomeAndTutType::TUT;
-
-
-	registry.renderRequests.insert(
-		entity,
-		{
-			TEXTURE_ASSET_ID::TUT_SCREEN,
 			EFFECT_ASSET_ID::TEXTURED,
 			GEOMETRY_BUFFER_ID::SPRITE
 		});

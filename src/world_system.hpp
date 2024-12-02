@@ -54,6 +54,7 @@ public:
 		{RenderSystem::UPGRADE_TYPE::SPEED, RenderSystem::UPGRADE_LEVEL::NO_UPGRADES},
 		{RenderSystem::UPGRADE_TYPE::HEALTH, RenderSystem::UPGRADE_LEVEL::NO_UPGRADES}
 	};
+	bool isRestarted = false;
 
 private:
 	// Input callback functions
@@ -114,4 +115,28 @@ private:
 	float calculateSpeedMultiplier();
 	float calculateDamageMultiplier();
 	float calculateHealthMultiplier();
+
+	// tutorial
+	bool leftArrowPressed = false;
+	bool rightArrowPressed = false;
+	bool upArrowPressed = false;
+	bool downArrowPressed = false;
+	bool dashPressed = false;
+
+	float tutorial_timer = 0.0f;
+	float tutorial_aim_timer = 0.0f;
+
+	bool isCreated = false;
+
+	enum class TutorialState {
+		WELCOME,
+		MOVE_INSTRUCTIONS,
+		AIM_INSTRUCTIONS,
+		DASH_INSTRUCTIONS,
+		DEFEAT_ENEMIES,
+		PICKUP_COINS,
+		COMPLETE
+	};
+
+	TutorialState tutorialState = TutorialState::WELCOME;
 };

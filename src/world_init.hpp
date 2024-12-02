@@ -79,6 +79,14 @@ Entity createHealthBarFrame(RenderSystem* renderer, vec2 pos);
 
 Entity createBlackRectangle(vec2 position, vec2 scale);
 
+Entity createArrowLeft(RenderSystem* renderer, vec2 position, vec2 scale);
+Entity createArrowRight(RenderSystem* renderer, vec2 position, vec2 scale);
+Entity createArrowUp(RenderSystem* renderer, vec2 position, vec2 scale);
+Entity createArrowDown(RenderSystem* renderer, vec2 position, vec2 scale);
+
+Entity createDashRight(RenderSystem* renderer, vec2 position, vec2 scale);
+Entity createDashLeft(RenderSystem* renderer, vec2 position, vec2 scale);
+
 // a red line for debugging purposes
 Entity createLine(vec2 position, vec2 size);
 
@@ -87,7 +95,6 @@ Entity createEgg(vec2 pos, vec2 size);
 
 Entity createHomeScreen(RenderSystem* renderer, vec2 position);
 
-Entity createTutScreen(RenderSystem* renderer, vec2 position);
 Entity createDoorScreen(RenderSystem* renderer, vec2 position, int door_type);
 
 Entity createShopScreen(RenderSystem* renderer, vec2 position);
