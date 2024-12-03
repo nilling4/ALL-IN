@@ -2363,7 +2363,7 @@ void WorldSystem::on_key(int key, int, int action, int mod) {
 			std::cout << std::endl;
 		}
 		Wave& wave = registry.waves.get(global_wave);
-		if (wave.wave_num != 1) {
+		if (wave.wave_num != 1 || *game_state == "home") {
 			save();
 		}
 		if (*game_state == "home") {
