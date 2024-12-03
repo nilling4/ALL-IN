@@ -1408,11 +1408,16 @@ void WorldSystem::next_wave() {
 			Mix_PlayChannel(1, m3_mus_w2, 0);
 		}
 		Mix_PlayChannel(2, m3_sfx_door_s, 0);		
-		// int total_num_enemies = num_of_enemies[wave.wave_num];
-		int num_birds = num_of_enemies[wave.wave_num];
-		// int num_kings = total_num_enemies - num_birds;
-		wave.num_king_clubs = 0;
-		wave.num_bird_clubs = num_birds;
+		if (wave.wave_num == 5) {
+			wave.num_genie_boss = 1;
+		}
+		else {
+			// int total_num_enemies = num_of_enemies[wave.wave_num];
+			int num_birds = num_of_enemies[wave.wave_num];
+			// int num_kings = total_num_enemies - num_birds;
+			wave.num_king_clubs = 0;
+			wave.num_bird_clubs = num_birds;
+		}
 	} else if (wave.wave_num >= 7 && wave.wave_num < 12) {
 		if ((wave.wave_num == 7) || !Mix_Playing(1)) {
 			Mix_PlayChannel(1, m3_mus_w3, 0);

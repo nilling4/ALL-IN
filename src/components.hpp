@@ -72,7 +72,7 @@ struct Wave {
 	float progress_bird_boss = 0;
 	int num_jokers = 0;
 	float progress_joker = 0;
-	int num_genie_boss = 1;
+	int num_genie_boss = 0;
 	float progress_genie_boss = 0;
 	std::string state = "game on"; // "game on", "spawn doors", "limbo"
 };

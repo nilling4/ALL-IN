@@ -457,9 +457,10 @@ void AISystem::step(float elapsed_ms)
 
             vec2 genie_force = { 0.f, 0.f };
 
-            if (player_dist < MIN_PLAYER_DISTANCE) {
-                genie_force = -normalize(to_player) * MAX_SPEED;
-            }
+            //if (player_dist < MIN_PLAYER_DISTANCE) {
+            //    genie_force = -normalize(to_player) * MAX_SPEED;
+            //}
+            genie_force = -normalize(to_player) * MAX_SPEED;
                         
             vec2 flow_force = move(startRow, startCol) * 50.f;
 
@@ -484,6 +485,12 @@ void AISystem::step(float elapsed_ms)
             }
 
             if (genie.teleport_timer < 0 && player->health > 0) {
+                genie.teleport_timer = 2000.f;
+                motion.position = findTeleportPosition(player_motion->position, motion.position, 400.f, 150.f);
+
+                genie_teleport = Mix_LoadWAV(audio_path("genie_teleport.wav").c_str());
+                Mix_PlayChannel(10, genie_teleport, 0);
+            } else if (player_dist > 600.f) {
                 genie.teleport_timer = 2000.f;
                 motion.position = findTeleportPosition(player_motion->position, motion.position, 400.f, 150.f);
 
