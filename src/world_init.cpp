@@ -451,9 +451,11 @@ Entity createGenie(RenderSystem* renderer, vec2 position, int wave_num)
 	motion.angle = 0.f;
 	motion.velocity = { 0, 0 };
 	motion.position = position;
-	motion.scale = vec2({ 1.75 * 37, 1.75 * 80 });
+	motion.scale = vec2({ 60, 132 });
 
-	registry.genies.emplace(entity);
+	Genie& genie = registry.genies.emplace(entity);
+	genie.projectile_timer = 1500.f;
+	genie.teleport_timer = 4000.f;
 
 	auto& deadly = registry.deadlys.emplace(entity);
 	if (wave_num >= 1 && wave_num <= 9) {
@@ -508,6 +510,36 @@ Entity createHeartProjectile(RenderSystem* renderer, vec2 position, vec2 velocit
 		entity,
 		{
 			TEXTURE_ASSET_ID::HEART,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE
+		}
+	);
+
+	return entity;
+}
+
+Entity createBoltProjectile(RenderSystem* renderer, vec2 position, vec2 targetPosition, int wave_num) {
+	auto entity = Entity();
+
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = atan2(targetPosition.y - position.y, targetPosition.x - position.x) - M_PI / 2;
+	vec2 direction = normalize(targetPosition - position);
+
+	motion.velocity = direction * 300.f;
+
+	motion.position = position;
+	motion.scale = vec2({ 18, 29 });
+
+	Bolt& bolt = registry.bolts.emplace(entity);
+	bolt.damage = 0;
+
+	registry.renderRequests.insert(
+		entity,
+		{
+			TEXTURE_ASSET_ID::BOLT,
 			EFFECT_ASSET_ID::TEXTURED,
 			GEOMETRY_BUFFER_ID::SPRITE
 		}

@@ -113,6 +113,11 @@ struct HealsEnemy
 	Entity* target_entity;
 };
 
+struct Bolt {
+	float damage = 0;
+	void* last_touched = nullptr;
+};
+
 struct Healer
 {
 
@@ -127,7 +132,8 @@ struct Joker
 
 struct Genie
 {
-	
+	float projectile_timer;
+	float teleport_timer;
 };
 
 enum class HomeAndTutType {
@@ -348,7 +354,8 @@ enum class TEXTURE_ASSET_ID {
 	DASH_RIGHT = ARROW_UP + 1,
 	DASH_LEFT = DASH_RIGHT + 1,
 	BOSS_GENIE = DASH_LEFT + 1,
-	TEXTURE_COUNT = BOSS_GENIE + 1
+	BOLT = BOSS_GENIE + 1,
+	TEXTURE_COUNT = BOLT + 1
 };
 const int texture_count = (int)TEXTURE_ASSET_ID::TEXTURE_COUNT;
 

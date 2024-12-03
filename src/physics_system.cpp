@@ -337,6 +337,7 @@ void PhysicsSystem::step(float elapsed_ms)
 
 
         Motion& motion = motion_registry.get(entity);
+		Deadly& deadly = registry.deadlys.get(entity);
         vec2 new_position = motion.position + motion.velocity * step_seconds;
 
         float width = motion.velocity.x > 0 ? std::abs(motion.scale.x / 2) : -std::abs(motion.scale.x / 2);
@@ -351,6 +352,10 @@ void PhysicsSystem::step(float elapsed_ms)
             continue;
         }
 
+		Motion* player_motion;
+		for (Entity entity : registry.players.entities) {
+			player_motion = &registry.motions.get(entity);
+		}
 
       if (grid[grid_y][grid_x] == 1) {
         if (registry.boids.has(entity) || registry.otherDeadlys.has(entity)) {
@@ -361,7 +366,15 @@ void PhysicsSystem::step(float elapsed_ms)
             motion.velocity.y = -motion.velocity.y;
           }
           motion.position += motion.velocity * step_seconds;
-        }
+		}
+		else if (deadly.enemy_type == ENEMIES::BOSS_GENIE) {
+			Genie& genie = registry.genies.get(entity);
+			motion.position = findGenieTeleportPosition(player_motion->position, motion.position);
+			genie.teleport_timer = 2000.f;
+
+			genie_teleport = Mix_LoadWAV(audio_path("genie_teleport.wav").c_str());
+			Mix_PlayChannel(10, genie_teleport, 0);
+		}
       } else {
         motion.position += motion.velocity * step_seconds;
       }
@@ -457,4 +470,24 @@ void PhysicsSystem::step(float elapsed_ms)
 			}
 		}
 	}
+}
+
+vec2 PhysicsSystem::findGenieTeleportPosition(vec2 playerPosition, vec2 enemyPosition) {
+	const float teleportRadius = 400.0f;  // Maximum distance around the player for teleport
+	const float bufferDistance = 150.0f; // Minimum distance from the player
+	const int maxAttempts = 10;
+
+	for (int attempt = 0; attempt < maxAttempts; ++attempt) {
+		float angle = static_cast<float>(rand()) / RAND_MAX * 2.0f * M_PI;
+		float distance = bufferDistance + (static_cast<float>(rand()) / RAND_MAX * (teleportRadius - bufferDistance));
+		vec2 candidatePosition = playerPosition + vec2(cos(angle), sin(angle)) * distance;
+
+		int row = static_cast<int>(candidatePosition.y) / 12;
+		int col = static_cast<int>(candidatePosition.x) / 12;
+		if (row >= 0 && col >= 0 && row < 80 && col < 160 && grid[row][col] == 0) {
+			return candidatePosition;
+		}
+	}
+
+	return enemyPosition;
 }

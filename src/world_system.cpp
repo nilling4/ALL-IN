@@ -130,8 +130,8 @@ GLFWwindow* WorldSystem::create_window() {
 	- 7: Joker Teleport
 	- 8: Wave Complete
 	- 9: roulette ball sounds
-	- 10: other projectile sounds  (nothing for now)
-	- 11: other projectile sounds  (nothing for now)
+	- 10: genie teleport
+	- 11: genie lightning bolt
 	- 12: other projectile sounds  (nothing for now)
 	- 13: other projectile sounds  (nothing for now)
 	- 14: nothing for now
@@ -158,7 +158,8 @@ GLFWwindow* WorldSystem::create_window() {
 	joker_teleport = Mix_LoadWAV(audio_path("joker_teleport.wav").c_str());
 	joker_clone = Mix_LoadWAV(audio_path("joker_split.wav").c_str());
 	wave_over = Mix_LoadWAV(audio_path("wave_over.wav").c_str());
-
+	genie_teleport = Mix_LoadWAV(audio_path("genie_teleport.wav").c_str());
+	genie_lightning_bolt = Mix_LoadWAV(audio_path("genie_lightning_bolt.wav").c_str());
 
 	if (background_music == nullptr || salmon_dead_sound == nullptr || roulette_hit_sound == nullptr) {
 		if (!roulette_hit_sound) {
@@ -838,6 +839,21 @@ bool WorldSystem::step(float elapsed_ms_since_last_update) {
 
 					createDiamondProjectile(renderer, vec2(p_motion.position.x, p_motion.position.y), vec2(velocity_x, velocity_y), angle, p_you.ninja_dmg);
 				}
+			}
+		}
+		for (Entity entity : registry.bolts.entities) {
+			Motion& motion = registry.motions.get(entity);
+
+			vec2 new_position = motion.position + motion.velocity * elapsed_time / 200.f;
+
+			int grid_x = static_cast<int>(new_position.x) / 12;
+			int grid_y = static_cast<int>(new_position.y) / 12;
+
+			if (grid[grid_y][grid_x] == 1) {
+				registry.remove_all_components_of(entity);
+			}
+			else {
+				motion.position = new_position;
 			}
 		}
 	}
@@ -1689,6 +1705,42 @@ void WorldSystem::handle_collisions() {
 							ofs.close();
 							std::cout << "save.json contents erased." << std::endl;
 						} else {
+							std::cerr << "Unable to open save.json for erasing." << std::endl;
+						}
+					}
+				} else {
+					if (!Mix_Playing(4)) {
+						Mix_PlayChannel(4, m3_sfx_knife, 0);
+					}
+				}
+			}
+			else if (registry.bolts.has(entity_other)) {
+				Motion& bolt_motion = registry.motions.get(entity_other);
+				Bolt& bolt = registry.bolts.get(entity_other);
+				if (!registry.deathTimers.has(player_protagonist)) {
+					your.health -= bolt.damage;
+					// add the damage indicator
+					if (!registry.lightUp.has(entity)) {
+						registry.lightUp.emplace(entity);
+					}
+					LightUp& lightUp = registry.lightUp.get(entity);
+					lightUp.duration_ms = 1000.f;
+				}
+				registry.remove_all_components_of(entity_other);
+
+				if (your.health <= 0) {
+					if (!registry.deathTimers.has(entity)) {
+						// Scream, reset timer, and make the salmon sink
+						registry.deathTimers.emplace(entity);
+						your_motion.velocity.x = 0.f;
+						your_motion.velocity.y = 0.f;
+						Mix_PlayChannel(15, salmon_dead_sound, 0);
+						std::ofstream ofs("save.json", std::ios::trunc);
+						if (ofs.is_open()) {
+							ofs.close();
+							std::cout << "save.json contents erased." << std::endl;
+						}
+						else {
 							std::cerr << "Unable to open save.json for erasing." << std::endl;
 						}
 					}

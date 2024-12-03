@@ -53,6 +53,7 @@ Entity createJoker(RenderSystem* renderer, vec2 position, int wave_num);
 Entity createGenie(RenderSystem* renderer, vec2 position, int wave_num);
 
 Entity createHeartProjectile(RenderSystem* renderer, vec2 position, vec2 velocity, Entity* target_entity, int wave_num);
+Entity createBoltProjectile(RenderSystem* renderer, vec2 position, vec2 targetPosition, int wave_num);
 
 Entity createRouletteBall(RenderSystem* renderer, vec2 position, vec2 velocity, float dmg, int bounce);
 
