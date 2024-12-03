@@ -18,7 +18,6 @@
 using json = nlohmann::json;
 
 // Game configuration
-const size_t DIAMOND_SPAWN_DELAY = 1000*3;
 // TODO: to control the max number of certain entities alive at once, need to keep track of current number of alive enemies
 // for each type
 // const int MAX_NUM_KINGS = 15;
@@ -31,8 +30,7 @@ const int num_blocks = 40;
 
 // create the casino
 WorldSystem::WorldSystem()
-	: coins(0)
-	, next_diamond_spawn(DIAMOND_SPAWN_DELAY) {
+	: coins(0) {
 	// Seeding rng with random device
 	texture_num = 0.5f;
 	rng = std::default_random_engine(std::random_device()());
