@@ -109,6 +109,7 @@ private:
 	Mix_Chunk* wave_over;
 	Mix_Chunk* genie_teleport;
 	Mix_Chunk* genie_lightning_bolt;
+	Mix_Chunk* dash;
 
 	// C++ random number generator
 	std::default_random_engine rng;

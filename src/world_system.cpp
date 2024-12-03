@@ -132,7 +132,7 @@ GLFWwindow* WorldSystem::create_window() {
 	- 9: roulette ball sounds
 	- 10: genie teleport
 	- 11: genie lightning bolt
-	- 12: other projectile sounds  (nothing for now)
+	- 12: dash
 	- 13: other projectile sounds  (nothing for now)
 	- 14: nothing for now
 	- 15: rare stuff (death sound for now)
@@ -160,6 +160,7 @@ GLFWwindow* WorldSystem::create_window() {
 	wave_over = Mix_LoadWAV(audio_path("wave_over.wav").c_str());
 	genie_teleport = Mix_LoadWAV(audio_path("genie_teleport.wav").c_str());
 	genie_lightning_bolt = Mix_LoadWAV(audio_path("genie_lightning_bolt.wav").c_str());
+	dash = Mix_LoadWAV(audio_path("dash.wav").c_str());
 
 	if (background_music == nullptr || salmon_dead_sound == nullptr || roulette_hit_sound == nullptr) {
 		if (!roulette_hit_sound) {
@@ -2516,6 +2517,7 @@ void WorldSystem::on_key(int key, int, int action, int mod) {
 	if (action == GLFW_PRESS && key == GLFW_KEY_SPACE) {
 		if (length(your.push) < 0.00001f) {
 			your.push += motion.velocity*10.f;
+			Mix_PlayChannel(12, dash, 0);
 		}
 	}
 
