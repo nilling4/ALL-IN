@@ -857,6 +857,13 @@ bool WorldSystem::step(float elapsed_ms_since_last_update) {
 			}
 		}
 	}
+
+	if (!(wave.state == "game on")) {
+		for (Entity entity : registry.bolts.entities) {
+			registry.remove_all_components_of(entity);
+		}
+	}
+
 	// 	next_lerp_spawn -= elapsed_ms_since_last_update * current_speed;
 	// 	if (next_lerp_spawn < 0.f) {
 	// 		next_lerp_spawn = LERP_SPAWN_DELAY;
@@ -1906,7 +1913,12 @@ void WorldSystem::handle_collisions() {
 		// collision with black floor cover
 		if (registry.blackRectangles.has(entity)) {
 			if (registry.deadlys.has(entity_other)) {
-				registry.remove_all_components_of(entity_other);
+				if (registry.deadlys.get(entity_other).enemy_type == ENEMIES::BOSS_GENIE) {
+					continue; // probably not the best thing to do but prevents genies from randomly dying if pushed into an inside corner wall
+				}
+				else {
+					registry.remove_all_components_of(entity_other);
+				}
 			}
 		}
 	}

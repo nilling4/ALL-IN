@@ -475,7 +475,7 @@ void PhysicsSystem::step(float elapsed_ms)
 vec2 PhysicsSystem::findGenieTeleportPosition(vec2 playerPosition, vec2 enemyPosition) {
 	const float teleportRadius = 400.0f;  // Maximum distance around the player for teleport
 	const float bufferDistance = 150.0f; // Minimum distance from the player
-	const int maxAttempts = 10;
+	const int maxAttempts = 20;
 
 	for (int attempt = 0; attempt < maxAttempts; ++attempt) {
 		float angle = static_cast<float>(rand()) / RAND_MAX * 2.0f * M_PI;
