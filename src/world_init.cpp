@@ -82,7 +82,8 @@ Entity createWallBlock(RenderSystem* renderer, vec2 pos) {
 			}
 		}
 	}
-	registry.solids.emplace(entity);
+	auto& solid = registry.solids.emplace(entity);
+	solid.type = SOLIDS::WALL;
 	registry.renderRequests.insert(
 		entity,
 		{ TEXTURE_ASSET_ID::WALL_BLOCK,
@@ -133,7 +134,8 @@ Entity createSlotMachine(RenderSystem* renderer, vec2 pos) {
 		}
 	}
 
-	registry.solids.emplace(entity);
+	auto& solid = registry.solids.emplace(entity);
+	solid.type = SOLIDS::SLOT_MACHINE;
 	registry.renderRequests.insert(
 		entity,
 		{ TEXTURE_ASSET_ID::SLOT_MACHINE,
@@ -178,7 +180,8 @@ Entity createRouletteTable(RenderSystem* renderer, vec2 pos) {
 		}
 	}
 
-	registry.solids.emplace(entity);
+	auto& solid = registry.solids.emplace(entity);
+	solid.type = SOLIDS::ROULETTE_TABLE;
 	registry.renderRequests.insert(
 		entity,
 		{ TEXTURE_ASSET_ID::ROULETTE_TABLE,

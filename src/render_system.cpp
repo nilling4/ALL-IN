@@ -481,33 +481,35 @@ void RenderSystem::draw(std::string what)
 		}
 
 		
-		glm::vec3 tutorial_font_color = glm::vec3(0.0, 1.0, 1.0);
-		if (tutorialMessage == "Welcome to the tutorial!") {
-			renderText(tutorialMessage, window_width_px * 0.28, window_height_px * 0.75, 0.8f, tutorial_font_color, font_trans);
+		glm::vec3 tutorial_font_color = glm::vec3(1.0, 1.0, 1.0);
+		if (tutorialMessage != "") {
+			if (tutorialMessage == "Welcome to the tutorial!") {
+				renderText(tutorialMessage, window_width_px * 0.28, window_height_px * 0.75, 0.8f, tutorial_font_color, font_trans);
+			}
+			else if (tutorialMessage == "Use WASD to move around") {
+				renderText(tutorialMessage, window_width_px * 0.30, window_height_px * 0.75, 0.8f, tutorial_font_color, font_trans);
+			}
+			else if (tutorialMessage == "Press space while moving to dash") {
+				renderText(tutorialMessage, window_width_px * 0.21, window_height_px * 0.75, 0.8f, tutorial_font_color, font_trans);
+			}
+			else if (tutorialMessage == "Move mouse to aim your weapon") {
+				renderText(tutorialMessage, window_width_px * 0.23, window_height_px * 0.75, 0.8f, tutorial_font_color, font_trans);
+			}
+			else if (tutorialMessage == "Defeat enemies to progress to the next wave!") {
+				renderText(tutorialMessage, window_width_px * 0.10, window_height_px * 0.75, 0.8f, tutorial_font_color, font_trans);
+			}
+			else if (tutorialMessage == "Pickup coins to spend in the shop!") {
+				renderText(tutorialMessage, window_width_px * 0.21, window_height_px * 0.75, 0.8f, tutorial_font_color, font_trans);
+			}
+			else if (tutorialMessage == "Head to Top left to start") {
+				renderText(tutorialMessage, window_width_px * 0.28, window_height_px * 0.75, 0.8f, tutorial_font_color, font_trans);
+			}
+			else {
+				renderText(tutorialMessage, window_width_px * 0.33, window_height_px * 0.75, 0.8f, tutorial_font_color, font_trans);
+			}
+			renderText(skipMessage, window_width_px * 0.39, window_height_px * 0.10, 0.4f, tutorial_font_color, font_trans);
 		}
-		else if (tutorialMessage == "Use WASD to move around") {
-			renderText(tutorialMessage, window_width_px * 0.30, window_height_px * 0.75, 0.8f, tutorial_font_color, font_trans);
-		}
-		else if (tutorialMessage == "Press space to dash") {
-			renderText(tutorialMessage, window_width_px * 0.33, window_height_px * 0.75, 0.8f, tutorial_font_color, font_trans);
-		}
-		else if (tutorialMessage == "Move mouse to aim your weapon") {
-			renderText(tutorialMessage, window_width_px * 0.23, window_height_px * 0.75, 0.8f, tutorial_font_color, font_trans);
-		}
-		else if (tutorialMessage == "Defeat enemies to progress to the next wave!") {
-			renderText(tutorialMessage, window_width_px * 0.10, window_height_px * 0.75, 0.8f, tutorial_font_color, font_trans);
-		}
-		else if (tutorialMessage == "Pickup coins to spend in the shop!") {
-			renderText(tutorialMessage, window_width_px * 0.21, window_height_px * 0.75, 0.8f, tutorial_font_color, font_trans);
-		}
-		else if (tutorialMessage == "Head to Top left to start") {
-			renderText(tutorialMessage, window_width_px * 0.28, window_height_px * 0.75, 0.8f, tutorial_font_color, font_trans);
-		}
-		else {
-			renderText(tutorialMessage, window_width_px * 0.33, window_height_px * 0.75, 0.8f, tutorial_font_color, font_trans);
-		}
-		renderText(skipMessage, window_width_px * 0.39, window_height_px * 0.10, 0.4f, tutorial_font_color, font_trans);
-
+	
 		//// draw the hud at the end so it stays on top and use a separate projection matrix to lock it to screen
 		mat3 hud_projection = createHUDProjectionMatrix();
 		for (Entity hud_entity : registry.hud.entities) {

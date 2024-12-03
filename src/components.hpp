@@ -266,9 +266,16 @@ struct Coin {
 	
 };
 
+enum class SOLIDS {
+	ROULETTE_TABLE = 0,
+	SLOT_MACHINE = ROULETTE_TABLE + 1,
+	WALL = SLOT_MACHINE + 1,
+	SOLIDCOUNT = WALL + 1
+};
+
 struct Solid
 {
-
+	SOLIDS type;
 };
 
 
