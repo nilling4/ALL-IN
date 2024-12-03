@@ -1727,7 +1727,6 @@ void WorldSystem::handle_collisions() {
 				}
 			}
 			else if (registry.bolts.has(entity_other)) {
-				Motion& bolt_motion = registry.motions.get(entity_other);
 				Bolt& bolt = registry.bolts.get(entity_other);
 				if (!registry.deathTimers.has(player_protagonist)) {
 					your.health -= bolt.damage;

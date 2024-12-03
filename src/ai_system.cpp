@@ -450,16 +450,11 @@ void AISystem::step(float elapsed_ms)
             int startRow = static_cast<int>(motion.position.y) / 12;
             int startCol = static_cast<int>(motion.position.x) / 12;
 
-            const float MIN_PLAYER_DISTANCE = 400.0f;
-
             vec2 to_player = player_motion->position - motion.position;
             float player_dist = length(to_player);
 
             vec2 genie_force = { 0.f, 0.f };
 
-            //if (player_dist < MIN_PLAYER_DISTANCE) {
-            //    genie_force = -normalize(to_player) * MAX_SPEED;
-            //}
             genie_force = -normalize(to_player) * MAX_SPEED;
                         
             vec2 flow_force = move(startRow, startCol) * 50.f;
