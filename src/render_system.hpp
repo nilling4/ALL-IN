@@ -92,7 +92,7 @@ class RenderSystem {
 			textures_path("arrow_up.png"),
 			textures_path("dashRight.png"),
 			textures_path("dashLeft.png"),
-			textures_path("genie.png")
+			textures_path("genie.png"),
 			textures_path("bolt.png")
 	};
 
