@@ -1415,16 +1415,11 @@ void WorldSystem::next_wave() {
 			Mix_PlayChannel(1, m3_mus_w2, 0);
 		}
 		Mix_PlayChannel(2, m3_sfx_door_s, 0);		
-		if (wave.wave_num == 5) {
-			wave.num_genie_boss = 1;
-		}
-		else {
-			// int total_num_enemies = num_of_enemies[wave.wave_num];
-			int num_birds = num_of_enemies[wave.wave_num];
-			// int num_kings = total_num_enemies - num_birds;
-			wave.num_king_clubs = 0;
-			wave.num_bird_clubs = num_birds;
-		}
+		// int total_num_enemies = num_of_enemies[wave.wave_num];
+		int num_birds = num_of_enemies[wave.wave_num];
+		// int num_kings = total_num_enemies - num_birds;
+		wave.num_king_clubs = 0;
+		wave.num_bird_clubs = num_birds;
 	} else if (wave.wave_num >= 7 && wave.wave_num < 12) {
 		if ((wave.wave_num == 7) || !Mix_Playing(1)) {
 			Mix_PlayChannel(1, m3_mus_w3, 0);
@@ -1448,12 +1443,16 @@ void WorldSystem::next_wave() {
 		if ((wave.wave_num == 12) || !Mix_Playing(1)) {
 			Mix_PlayChannel(1, m3_mus_w4, 0);
 		}
-		Mix_PlayChannel(2, m3_sfx_door_c, 0);		
+
 		if (wave.wave_num == 12) {
+			wave.num_genie_boss = 1;
+		} 
+		else if (wave.wave_num == 13) {
 			wave.num_jokers = 3;
 			wave.num_king_clubs = 5;
-		} else if (wave.wave_num < 15) {
-			int total_num_enemies = num_of_enemies[wave.wave_num]*3;
+		}
+		else if (wave.wave_num < 15) {
+			int total_num_enemies = num_of_enemies[wave.wave_num] * 3;
 			int num_birds = ceil(total_num_enemies * 0.40);
 			int num_healers = ceil(total_num_enemies * 0.05);
 			int num_boss_clubs = ceil(total_num_enemies * 0.02);
@@ -1462,31 +1461,39 @@ void WorldSystem::next_wave() {
 			wave.num_bird_clubs = num_birds;
 			wave.num_queen_hearts = num_healers;
 			wave.num_bird_boss = num_boss_clubs;
-		} else if (wave.wave_num < 17) {
-			int total_num_enemies = num_of_enemies[wave.wave_num]*2;
+		}
+		else if (wave.wave_num < 17) {
+			int total_num_enemies = num_of_enemies[wave.wave_num] * 2;
 			int num_birds = ceil(total_num_enemies * 0.40);
 			int num_healers = ceil(total_num_enemies * 0.05);
 			int num_boss_clubs = ceil(total_num_enemies * 0.02);
 			int num_jokers = ceil(total_num_enemies * 0.03);
-			int num_kings = total_num_enemies - num_birds - num_healers - num_jokers;
+			int num_genies = ceil(total_num_enemies * 0.02);
+			int num_kings = total_num_enemies - num_birds - num_healers - num_jokers - num_genies;
 			wave.num_king_clubs = num_kings;
 			wave.num_bird_clubs = num_birds;
 			wave.num_queen_hearts = num_healers;
 			wave.num_bird_boss = num_boss_clubs;
 			wave.num_jokers = num_jokers;
-		} else {
-			int total_num_enemies = num_of_enemies[wave.wave_num]*2;
+			wave.num_genie_boss = num_genies;
+		}
+		else {
+			int total_num_enemies = num_of_enemies[wave.wave_num] * 2;
 			int num_birds = ceil(total_num_enemies * 0.30);
 			int num_healers = ceil(total_num_enemies * 0.10);
 			int num_boss_clubs = ceil(total_num_enemies * 0.07);
 			int num_jokers = ceil(total_num_enemies * 0.15);
-			int num_kings = total_num_enemies - num_birds - num_healers - num_jokers;
+			int num_genies = ceil(total_num_enemies * 0.05);
+			int num_kings = total_num_enemies - num_birds - num_healers - num_jokers - num_genies;
 			wave.num_king_clubs = num_kings;
 			wave.num_bird_clubs = num_birds;
 			wave.num_queen_hearts = num_healers;
 			wave.num_bird_boss = num_boss_clubs;
 			wave.num_jokers = num_jokers;
+			wave.num_genie_boss = num_genies;
 		}
+		Mix_PlayChannel(2, m3_sfx_door_c, 0);		
+		 
 		wave.delay_for_all_entities = 800;
 	} else {
 		// wave 20 and above, use formula
