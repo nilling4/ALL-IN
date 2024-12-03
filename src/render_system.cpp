@@ -366,7 +366,6 @@ glBlendFunc(GL_ONE, GL_ONE); // Additive blending
             std::vector<ColoredVertex> line_vertices;
 			std::vector<uint16_t> line_indices;
 			ColoredVertex vertex1, vertex2, vertex3;
-			constexpr float depth = 0.5f;
 			constexpr vec3 black = { 1.0,1.0,1.0 };
 			      // Player position in world coordinates
             vertex1.position = vec3(playerPos.x*2/1920-1, playerPos.y*2/960-1, 0.0f);
@@ -456,7 +455,6 @@ gl_has_errors();
 		    std::vector<ColoredVertex> line_vertices;
 			std::vector<uint16_t> line_indices;
 			ColoredVertex vertex1, vertex2, vertex3;
-			constexpr float depth = 0.5f;
 			constexpr vec3 black = { 1.0,0.1,1.0 };
 			      // Player position in world coordinates
             vertex1.position = vec3(playerPos.x*2/1920-1, playerPos.y*2/960-1, 0.0f);

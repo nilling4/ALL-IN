@@ -76,7 +76,6 @@ private:
 	RenderSystem* renderer;
 	float current_speed;
 
-	float next_diamond_spawn;
 	Entity player_protagonist;
 	Entity global_wave;
 

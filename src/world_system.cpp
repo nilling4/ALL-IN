@@ -1626,8 +1626,8 @@ void WorldSystem::next_wave() {
 	}
 
 	// randomly pick room type
-	int max_tables_count;
-	int max_slots_count;
+	int max_tables_count = 1;
+	int max_slots_count = 1;
 	float left_bound;
 	float right_bound;
 	float top_bound;
@@ -2379,7 +2379,6 @@ bool WorldSystem::load() {
 				auto& value = item.value();
 				double velocity_x = value["velocity"][0];
 				double velocity_y = value["velocity"][1];
-				double velocity_magnitude = std::sqrt(velocity_x * velocity_x + velocity_y * velocity_y);
 				std::string name = value["name"];
 				if (name == "ninja") {
 					createDiamondProjectile(renderer, vec2(value["position"][0], value["position"][1]), vec2(velocity_x, velocity_y), value["angle"], value["dmg"]);
