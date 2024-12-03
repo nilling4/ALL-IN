@@ -249,7 +249,7 @@ bool WorldSystem::step(float elapsed_ms_since_last_update) {
 			break;
 		}
 		case TutorialState::DASH_INSTRUCTIONS: {
-			renderer->tutorialMessage = "Press space to dash";
+			renderer->tutorialMessage = "Press space while moving to dash";
 			if (!isCreated) {
 				Entity dash_left1 = createDashLeft(renderer, { window_width_px / 2 - 70, window_height_px / 2 }, { 33, 33 });
 				Entity dash_left2 = createDashLeft(renderer, { window_width_px / 2 - 50, window_height_px / 2 }, { 33, 33 });
