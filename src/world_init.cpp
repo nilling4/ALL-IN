@@ -534,7 +534,7 @@ Entity createBoltProjectile(RenderSystem* renderer, vec2 position, vec2 targetPo
 	motion.scale = vec2({ 18, 29 });
 
 	Bolt& bolt = registry.bolts.emplace(entity);
-	bolt.damage = 0;
+	bolt.damage = 50;
 
 	registry.renderRequests.insert(
 		entity,
