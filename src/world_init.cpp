@@ -59,7 +59,10 @@ Entity createWallBlock(RenderSystem* renderer, vec2 pos) {
 
 	int grid_x = static_cast<int>(pos.x / 12);
 	int grid_y = static_cast<int>(pos.y / 12);
-
+	cells[grid_y*GRID_WIDTH + grid_x].exist = true;
+	cells[(grid_y-1)*GRID_WIDTH + grid_x].exist = true;
+	cells[(grid_y-1)*GRID_WIDTH + grid_x-1].exist = true;
+	cells[grid_y*GRID_WIDTH + grid_x-1].exist = true;
 	// Set the central grid block to 1
 	grid[grid_y][grid_x] = 1;
 	grid[grid_y][grid_x-1] = 1;
@@ -117,6 +120,14 @@ Entity createSlotMachine(RenderSystem* renderer, vec2 pos) {
 	grid[grid_y+1][grid_x-1] = 1;
 	grid[grid_y-2][grid_x] = 1;
 	grid[grid_y-2][grid_x-1] = 1;
+	cells[grid_y*GRID_WIDTH + grid_x].exist = true;
+	cells[(grid_y-1)*GRID_WIDTH + grid_x].exist = true;
+	cells[(grid_y-1)*GRID_WIDTH + grid_x-1].exist = true;
+	cells[grid_y*GRID_WIDTH + grid_x-1].exist = true;
+	cells[(grid_y+1)*GRID_WIDTH + grid_x].exist = true;
+	cells[(grid_y+1)*GRID_WIDTH + grid_x-1].exist = true;
+	cells[(grid_y-2)*GRID_WIDTH + grid_x].exist = true;
+	cells[(grid_y-2)*GRID_WIDTH + grid_x-1].exist = true;
 	// Mark grid cells occupied by slot machine
 	for (int dy = -5; dy <= 4; dy++) {
 		for (int dx = -3; dx <= 2; dx++) {

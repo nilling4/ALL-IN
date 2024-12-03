@@ -20,6 +20,7 @@ struct Character {
 	glm::ivec2   Bearing;    // Offset from baseline to left/top of glyph
 	unsigned int Advance;    // Offset to advance to next glyph
 	char character;
+	
 };
 
 // System responsible for setting up OpenGL and for rendering all the
@@ -42,6 +43,8 @@ class RenderSystem {
 	GLuint m_font_shaderProgram;
 	GLuint m_font_VAO;
 	GLuint m_font_VBO;
+	GLuint shadowVAO;
+	GLuint shadowVBO;
 
 	// Make sure these paths remain in sync with the associated enumerators.
 	// Associated id with .obj path
@@ -110,7 +113,9 @@ class RenderSystem {
 		shader_path("egg"),
 		shader_path("roulette_ball"),
 		shader_path("textured"),
-		shader_path("water") };
+		shader_path("water"),
+		shader_path("black_shader"),
+		shader_path("brighten") };
 
 	std::array<GLuint, geometry_count> vertex_buffers;
 	std::array<GLuint, geometry_count> index_buffers;
@@ -139,7 +144,7 @@ public:
 
 	// Destroy resources associated to one or all entities created by the system
 	~RenderSystem();
-
+vec2 windowToWorld(float x, float y);
 	// Draw all entities
 	void draw(std::string what);
 
@@ -157,7 +162,10 @@ public:
 	bool fontInit(GLFWwindow* window, const std::string& font_filename, unsigned int font_default_size);
 
 	bool loadCharacters(FT_Face face);
-
+	void initShadowOverlay();
+	void renderSquare();
+	void renderTriangles();
+	mat3 getInverseProjectionMatrix();
 	void updateCoinNum(std::string coins);
 	void updateRenderWaveNum(int wave_num);
 	void updateWaveOverText(bool isWaveOver);

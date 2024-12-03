@@ -13,6 +13,7 @@
 #include "nlohmann/json.hpp"
 #include <cmath> 
 #include "components.hpp"
+#include "grid.hpp"
 
 using json = nlohmann::json;
 
@@ -1025,6 +1026,11 @@ void WorldSystem::restart_game() {
 	// random interior Wall
 	// createWallBlock(renderer, {84,108});
 	// Top and bottom Wall
+		for (int i = 0;i<GRID_WIDTH;i++){
+			for (int j =0 ;j<GRID_HEIGHT;j++){
+				cells[j*GRID_WIDTH + i].exist = false;
+			}
+		}
 	for (int i = 0; i < num_blocks * 2; i++) {
 		createWallBlock(renderer, {i * WALL_BLOCK_BB_WIDTH+12,12});
 		createWallBlock(renderer, {12 + i * WALL_BLOCK_BB_WIDTH,948});
@@ -1040,9 +1046,10 @@ void WorldSystem::restart_game() {
 		createWallBlock(renderer, {1044,564 - i * WALL_BLOCK_BB_HEIGHT});
 		createWallBlock(renderer, {1044-i * WALL_BLOCK_BB_HEIGHT,564});
 	}
-
+	
 	createSlotMachine(renderer, {156, 288} );
 	createRouletteTable(renderer, { 204, 444 });
+	resetCorners();
 
 }
 
@@ -1625,6 +1632,11 @@ void WorldSystem::next_wave() {
 
 		std::cout << "donut dimensions. outer w/h, inner w/h: " << outerWidth << '/' << outerHeight << ':' << innerWidth << "/" << innerHeight << std::endl;
 		// walls outer
+		for (int i = 0;i<GRID_WIDTH;i++){
+			for (int j =0 ;j<GRID_HEIGHT;j++){
+				cells[j*GRID_WIDTH + i].exist = false;
+			}
+		}
 		for (int i = 0; i < outerWidth; i++) {
 			createWallBlock(renderer, {12 + i * WALL_BLOCK_BB_WIDTH, 12}); // outer top wall
 			createWallBlock(renderer, {12 + i * WALL_BLOCK_BB_WIDTH, 12 + WALL_BLOCK_BB_HEIGHT * (outerHeight - 1)}); // outer bottom wall
@@ -1642,7 +1654,7 @@ void WorldSystem::next_wave() {
 			createWallBlock(renderer, {12 + WALL_BLOCK_BB_WIDTH * ((outerWidth - innerWidth) / 2), 12 + i * WALL_BLOCK_BB_HEIGHT + WALL_BLOCK_BB_HEIGHT * ((outerHeight - innerHeight) / 2)}); // inner left wall
 			createWallBlock(renderer, {12 + WALL_BLOCK_BB_WIDTH * (((outerWidth - innerWidth) / 2) + (innerWidth - 1)), 12 + i * WALL_BLOCK_BB_HEIGHT + WALL_BLOCK_BB_HEIGHT * ((outerHeight - innerHeight) / 2)}); // inner right wall
 		}
-
+		resetCorners();
 		// floors
 		// // top bar
 		// for (int y = 1; y < (outerHeight - innerHeight)/2; y++) {
@@ -2146,6 +2158,11 @@ bool WorldSystem::load() {
 
 		// Load solids (walls)
 		if (j.contains("solids")) {
+					for (int i = 0;i<GRID_WIDTH;i++){
+			for (int j =0 ;j<GRID_HEIGHT;j++){
+				cells[j*GRID_WIDTH + i].exist = false;
+			}
+		}
 			for (auto& item : j["solids"].items()) {
 				auto& value = item.value();
 				if (value["type"] == SOLIDS::WALL) {
@@ -2156,6 +2173,7 @@ bool WorldSystem::load() {
 					createSlotMachine(renderer, {value["position"][0], value["position"][1]});
 				}
 			}
+			resetCorners();
 		}
 
 		// Load floor covers

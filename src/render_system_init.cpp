@@ -85,6 +85,32 @@ bool RenderSystem::init(GLFWwindow* window_arg)
 
 	return true;
 }
+// Initialize VAO and VBO once, e.g., in RenderSystem::init()
+void RenderSystem::initShadowOverlay() {
+    // Generate and bind VAO
+    glGenVertexArrays(1, &shadowVAO);
+    glBindVertexArray(shadowVAO);
+
+    // Generate and bind VBO
+    glGenBuffers(1, &shadowVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, shadowVBO);
+
+    // Define vertex attributes (position and color)
+    GLint program = effects[(GLuint)EFFECT_ASSET_ID::EGG];
+    GLint in_position_loc = glGetAttribLocation(program, "in_position");
+    GLint in_color_loc = glGetAttribLocation(program, "in_color");
+
+    glEnableVertexAttribArray(in_position_loc);
+    glVertexAttribPointer(in_position_loc, 3, GL_FLOAT, GL_FALSE,
+                          sizeof(ColoredVertex), (void *)0);
+
+    glEnableVertexAttribArray(in_color_loc);
+    glVertexAttribPointer(in_color_loc, 3, GL_FLOAT, GL_FALSE,
+                          sizeof(ColoredVertex), (void *)sizeof(vec3));
+
+    // Unbind VAO for now
+    glBindVertexArray(0);
+}
 void RenderSystem::initializeBackgroundQuad()
 {
     std::vector<TexturedVertex> vertices(4);

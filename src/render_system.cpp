@@ -180,8 +180,7 @@ void RenderSystem::drawTexturedMesh(Entity entity,
 	glDrawElements(GL_TRIANGLES, num_indices, GL_UNSIGNED_SHORT, nullptr);
 	gl_has_errors();
 }
-
-
+ 
 void RenderSystem::drawFloorTexturedMesh(Entity entity,
 									const mat3 &projection)
 {
@@ -347,6 +346,271 @@ void RenderSystem::drawToScreen()
 				  // no offset from the bound index buffer
 	gl_has_errors();
 }
+vec2 calculateMidpoint(const vec2& p1, const vec2& p2) {
+    return vec2((p1.x + p2.x) / 2.0f, (p1.y + p2.y) / 2.0f);
+}
+void RenderSystem::renderTriangles(){
+glEnable(GL_BLEND);
+glBlendFunc(GL_ONE, GL_ONE); // Additive blending
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    if (triangleCorners.size() > 0) {
+        Entity player;
+        for (Entity entity : registry.players.entities) {
+            player = entity;
+        }
+        vec2 playerPos = registry.motions.get(player).position;
+
+        // Prepare visibility triangles
+        std::vector<ColoredVertex> visibilityVertices;
+        for (size_t i = 0; i < triangleCorners.size() - 1; ++i) {
+            std::vector<ColoredVertex> line_vertices;
+			std::vector<uint16_t> line_indices;
+			ColoredVertex vertex1, vertex2, vertex3;
+			constexpr float depth = 0.5f;
+			constexpr vec3 black = { 1.0,1.0,1.0 };
+			      // Player position in world coordinates
+            vertex1.position = vec3(playerPos.x*2/1920-1, playerPos.y*2/960-1, 0.0f);
+            vertex1.color = vec3(1.0f, 1.0f, 1.0f);
+
+            // Convert the first corner from window to world coordinates
+            float winX2 = std::get<1>(triangleCorners[i]);
+            float winY2 = std::get<2>(triangleCorners[i]);
+            vertex2.position = vec3(winX2*2/1920-1, winY2*2/960-1, 0.0f);
+            vertex2.color = vec3(1.0f, 1.0f, 1.0f);
+
+            // Convert the second corner from window to world coordinates
+            float winX3 = std::get<1>(triangleCorners[i + 1]);
+            float winY3 = std::get<2>(triangleCorners[i + 1]);
+
+            vertex3.position =vec3(winX3*2/1920-1, winY3*2/960-1, 0.0f);
+            vertex3.color = vec3(1.0f, 1.0f, 1.0f);
+
+			// Corner points
+			line_vertices = {
+				{{vertex1.position}, black},
+				{{vertex2.position}, black},
+				{{vertex3.position}, black},
+			};
+
+			// Two triangles
+			line_indices = {0, 1, 2};
+			
+			int	geom_index = (int)GEOMETRY_BUFFER_ID::TRIANGLE;
+			meshes[geom_index].vertices = line_vertices;
+			meshes[geom_index].vertex_indices = line_indices;
+			bindVBOandIBO(GEOMETRY_BUFFER_ID::TRIANGLE, line_vertices, line_indices);
+			    // Set up transformation and projection matrices
+			Transform transform;
+			transform.translate(vec2(960, 480));
+			transform.scale(vec2(960,480));
+			mat3 projection = createProjectionMatrix();
+			glBindVertexArray(vao);
+
+			const GLuint used_effect_enum = (GLuint)EFFECT_ASSET_ID::BRIGHTEN;
+			const GLuint program = (GLuint)effects[used_effect_enum];
+
+			// Setting shaders
+			glUseProgram(program);
+			gl_has_errors();
+
+			const GLuint vbo = vertex_buffers[(GLuint)GEOMETRY_BUFFER_ID::TRIANGLE];
+			const GLuint ibo = index_buffers[(GLuint)GEOMETRY_BUFFER_ID::TRIANGLE];
+
+			// Setting vertex and index buffers
+			glBindBuffer(GL_ARRAY_BUFFER, vbo);
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+			gl_has_errors();
+
+			GLint in_position_loc = glGetAttribLocation(program, "in_position");
+			GLint in_color_loc = glGetAttribLocation(program, "in_color");
+			gl_has_errors();
+
+			glEnableVertexAttribArray(in_position_loc);
+			glVertexAttribPointer(in_position_loc, 3, GL_FLOAT, GL_FALSE,
+								sizeof(ColoredVertex), (void *)0);
+			gl_has_errors();
+
+			glEnableVertexAttribArray(in_color_loc);
+			glVertexAttribPointer(in_color_loc, 3, GL_FLOAT, GL_FALSE,
+								sizeof(ColoredVertex), (void *)sizeof(vec3));
+			gl_has_errors();
+
+    // Getting uniform locations for glUniform* calls
+// Getting uniform locations for glUniform* calls
+GLint color_uloc = glGetUniformLocation(program, "fcolor");
+const vec4 color = vec4(54.0f/255.0f, 86.0f/255.0f, 137.0f/255.0f, 0.25f);
+glUniform4fv(color_uloc, 1, (float *)&color);
+gl_has_errors();
+
+			// Set uniform matrices
+			GLint transform_loc = glGetUniformLocation(program, "transform");
+			glUniformMatrix3fv(transform_loc, 1, GL_FALSE, (float *)&transform.mat);
+			GLint projection_loc = glGetUniformLocation(program, "projection");
+			glUniformMatrix3fv(projection_loc, 1, GL_FALSE, (float *)&projection);
+			gl_has_errors();
+
+			// Draw the black overlay square
+			glDrawArrays(GL_TRIANGLES, 0,3);
+			gl_has_errors();
+        }
+		    std::vector<ColoredVertex> line_vertices;
+			std::vector<uint16_t> line_indices;
+			ColoredVertex vertex1, vertex2, vertex3;
+			constexpr float depth = 0.5f;
+			constexpr vec3 black = { 1.0,0.1,1.0 };
+			      // Player position in world coordinates
+            vertex1.position = vec3(playerPos.x*2/1920-1, playerPos.y*2/960-1, 0.0f);
+            vertex1.color = vec3(1.0f, 1.0f, 1.0f);
+
+            // Convert the first corner from window to world coordinates
+            float winX2 = std::get<1>(triangleCorners[triangleCorners.size()-1]);
+            float winY2 = std::get<2>(triangleCorners[triangleCorners.size()-1]);
+            vertex2.position = vec3(winX2*2/1920-1, winY2*2/960-1, 0.0f);
+            vertex2.color = vec3(1.0f, 1.0f, 1.0f);
+
+            // Convert the second corner from window to world coordinates
+            float winX3 = std::get<1>(triangleCorners[0]);
+            float winY3 = std::get<2>(triangleCorners[0]);
+
+            vertex3.position =vec3(winX3*2/1920-1, winY3*2/960-1, 0.0f);
+            vertex3.color = vec3(1.0f, 0.0f, 0.0f);
+
+			// Corner points
+			line_vertices = {
+				{{vertex1.position}, black},
+				{{vertex2.position}, black},
+				{{vertex3.position}, black},
+			};
+
+			// Two triangles
+			line_indices = {0, 1, 2};
+			
+			int	geom_index = (int)GEOMETRY_BUFFER_ID::TRIANGLE;
+			meshes[geom_index].vertices = line_vertices;
+			meshes[geom_index].vertex_indices = line_indices;
+			bindVBOandIBO(GEOMETRY_BUFFER_ID::TRIANGLE, line_vertices, line_indices);
+			    // Set up transformation and projection matrices
+			Transform transform;
+			transform.translate(vec2(960,480));
+			transform.scale(vec2(960, 480));
+			mat3 projection = createProjectionMatrix();
+			glBindVertexArray(vao);
+
+			const GLuint used_effect_enum = (GLuint)EFFECT_ASSET_ID::BRIGHTEN;
+			const GLuint program = (GLuint)effects[used_effect_enum];
+
+			// Setting shaders
+			glUseProgram(program);
+			gl_has_errors();
+
+			const GLuint vbo = vertex_buffers[(GLuint)GEOMETRY_BUFFER_ID::TRIANGLE];
+			const GLuint ibo = index_buffers[(GLuint)GEOMETRY_BUFFER_ID::TRIANGLE];
+
+			// Setting vertex and index buffers
+			glBindBuffer(GL_ARRAY_BUFFER, vbo);
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+			gl_has_errors();
+
+			GLint in_position_loc = glGetAttribLocation(program, "in_position");
+			GLint in_color_loc = glGetAttribLocation(program, "in_color");
+			gl_has_errors();
+
+			glEnableVertexAttribArray(in_position_loc);
+			glVertexAttribPointer(in_position_loc, 3, GL_FLOAT, GL_FALSE,
+								sizeof(ColoredVertex), (void *)0);
+			gl_has_errors();
+
+			glEnableVertexAttribArray(in_color_loc);
+			glVertexAttribPointer(in_color_loc, 3, GL_FLOAT, GL_FALSE,
+								sizeof(ColoredVertex), (void *)sizeof(vec3));
+			gl_has_errors();
+
+    // Getting uniform locations for glUniform* calls
+// Getting uniform locations for glUniform* calls
+GLint color_uloc = glGetUniformLocation(program, "fcolor");
+const vec4 color = vec4(54.0f/255.0f, 86.0f/255.0f, 137.0f/255.0f, 0.25f); // White with 5% opacity
+glUniform4fv(color_uloc, 1, (float *)&color);
+gl_has_errors();
+
+			// Set uniform matrices
+			GLint transform_loc = glGetUniformLocation(program, "transform");
+			glUniformMatrix3fv(transform_loc, 1, GL_FALSE, (float *)&transform.mat);
+			GLint projection_loc = glGetUniformLocation(program, "projection");
+			glUniformMatrix3fv(projection_loc, 1, GL_FALSE, (float *)&projection);
+			gl_has_errors();
+
+			// Draw the black overlay square
+			glDrawArrays(GL_TRIANGLES, 0,3);
+			gl_has_errors();
+
+
+    }
+	glDisable(GL_BLEND);
+}
+void RenderSystem::renderSquare(){
+    // Enable blending
+    glEnable(GL_BLEND);
+    // Set blending function
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    
+    // Set up transformation and projection matrices
+    Transform transform;
+    transform.translate(vec2(960, 480));
+    transform.scale(vec2(1920, 960));
+    mat3 projection = createProjectionMatrix();
+    glBindVertexArray(vao);
+    
+    const GLuint used_effect_enum = (GLuint)EFFECT_ASSET_ID::SHADOW;
+    const GLuint program = (GLuint)effects[used_effect_enum];
+    
+    // Setting shaders
+    glUseProgram(program);
+    gl_has_errors();
+    
+    const GLuint vbo = vertex_buffers[(GLuint)GEOMETRY_BUFFER_ID::DEBUG_LINE];
+    const GLuint ibo = index_buffers[(GLuint)GEOMETRY_BUFFER_ID::DEBUG_LINE];
+    
+    // Setting vertex and index buffers
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+    gl_has_errors();
+    
+    GLint in_position_loc = glGetAttribLocation(program, "in_position");
+    GLint in_color_loc = glGetAttribLocation(program, "in_color");
+    gl_has_errors();
+    
+    glEnableVertexAttribArray(in_position_loc);
+    glVertexAttribPointer(in_position_loc, 3, GL_FLOAT, GL_FALSE,
+                          sizeof(ColoredVertex), (void *)0);
+    gl_has_errors();
+    
+    glEnableVertexAttribArray(in_color_loc);
+    glVertexAttribPointer(in_color_loc, 3, GL_FLOAT, GL_FALSE,
+                          sizeof(ColoredVertex), (void *)sizeof(vec3));
+    gl_has_errors();
+    
+    // Getting uniform locations for glUniform* calls
+// Getting uniform locations for glUniform* calls
+GLint color_uloc = glGetUniformLocation(program, "fcolor");
+const vec4 color = vec4(0.0f, 0.0f, 0.0f, 0.8f); // Black with 50% transparency
+glUniform4fv(color_uloc, 1, (float *)&color);
+gl_has_errors();
+    
+    // Set uniform matrices
+    GLint transform_loc = glGetUniformLocation(program, "transform");
+    glUniformMatrix3fv(transform_loc, 1, GL_FALSE, (float *)&transform.mat);
+    GLint projection_loc = glGetUniformLocation(program, "projection");
+    glUniformMatrix3fv(projection_loc, 1, GL_FALSE, (float *)&projection);
+    gl_has_errors();
+    
+    // Draw the semi-transparent square
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, nullptr);
+    gl_has_errors();
+    
+    // Retrieve player position
+    // ... (rest of your code)
+}
+
 void RenderSystem::drawBackground() {
     // Set up transformation and projection matrices
 	Transform transform;
@@ -445,6 +709,8 @@ void RenderSystem::draw(std::string what)
 		mat3 projection_2D = createProjectionMatrix();
 		drawBackground();
 
+				renderSquare();
+		renderTriangles();
 		// // draw floors entities first
 		// for (Entity entity: registry.floorRenderRequests.entities) {
 		// 	// Note, its not very efficient to access elements indirectly via the entity
@@ -785,4 +1051,24 @@ mat3 RenderSystem::createHUDProjectionMatrix()
 	float sx = 2.f / (float)window_width_px;
 	float sy = 2.f / (float)window_height_px;
 	return { {sx, 0.f, 0.f}, {0.f, -sy, 0.f}, {-1.f, 1.f, 1.f} };
+}
+mat3 RenderSystem::getInverseProjectionMatrix() {
+    mat3 projection = createProjectionMatrix();
+    return glm::inverse(projection);
+}
+vec2 RenderSystem::windowToWorld(float x, float y) {
+    // Define your window dimensions
+    float windowWidth = static_cast<float>(window_width_px);
+    float windowHeight = static_cast<float>(window_height_px);
+
+    // Normalize window coordinates to range [-1, 1]
+    float normalizedX = (2.0f * x) / windowWidth - 1.0f;
+    float normalizedY = 1.0f - (2.0f * y) / windowHeight;
+
+    // Apply inverse projection if necessary
+    // Assuming createProjectionMatrix() creates an orthographic matrix
+    mat3 invProjection = getInverseProjectionMatrix();
+    vec3 worldPos = invProjection * vec3(normalizedX, normalizedY, 1.0f);
+
+    return vec2(worldPos.x, worldPos.y);
 }

@@ -211,8 +211,12 @@ void PhysicsSystem::step(float elapsed_ms)
         }
 		if (canMoveX || canMoveY) {
 			// Update the flow field
-		generateFlowField(static_cast<int>(player_motion.position.y / 12), static_cast<int>(player_motion.position.x / 12));
+			CalculateVisibleTriangles(2000.0f);
+			
+			generateFlowField(static_cast<int>(player_motion.position.y / 12), static_cast<int>(player_motion.position.x / 12));
+
 		}
+
         // Update the previous position
         player_motion.previous_position = player_motion.position;
         // Handle eatable entities
