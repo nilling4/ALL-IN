@@ -462,10 +462,10 @@ Entity createGenie(RenderSystem* renderer, vec2 position, int wave_num)
 
 	auto& deadly = registry.deadlys.emplace(entity);
 	if (wave_num >= 1 && wave_num <= 9) {
-		deadly.health = 60 + 40 * (wave_num - 1);
+		deadly.health = 60 + 30 * (wave_num - 1);
 	}
 	else {
-		deadly.health = 60 + 40 * (8);
+		deadly.health = 60 + 30 * (8);
 		for (int r = 10; r <= wave_num; r++) {
 			deadly.health *= 1.1f;
 		}
@@ -537,7 +537,7 @@ Entity createBoltProjectile(RenderSystem* renderer, vec2 position, vec2 targetPo
 	motion.scale = vec2({ 18, 29 });
 
 	Bolt& bolt = registry.bolts.emplace(entity);
-	bolt.damage = 50;
+	bolt.damage = 20;
 
 	registry.renderRequests.insert(
 		entity,
