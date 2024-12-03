@@ -107,6 +107,8 @@ private:
 	Mix_Chunk* joker_teleport;
 	Mix_Chunk* joker_clone;
 	Mix_Chunk* wave_over;
+	Mix_Chunk* genie_teleport;
+	Mix_Chunk* genie_lightning_bolt;
 
 	// C++ random number generator
 	std::default_random_engine rng;

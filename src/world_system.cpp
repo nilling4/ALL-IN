@@ -130,8 +130,8 @@ GLFWwindow* WorldSystem::create_window() {
 	- 7: Joker Teleport
 	- 8: Wave Complete
 	- 9: roulette ball sounds
-	- 10: other projectile sounds  (nothing for now)
-	- 11: other projectile sounds  (nothing for now)
+	- 10: genie teleport
+	- 11: genie lightning bolt
 	- 12: other projectile sounds  (nothing for now)
 	- 13: other projectile sounds  (nothing for now)
 	- 14: nothing for now
@@ -158,7 +158,8 @@ GLFWwindow* WorldSystem::create_window() {
 	joker_teleport = Mix_LoadWAV(audio_path("joker_teleport.wav").c_str());
 	joker_clone = Mix_LoadWAV(audio_path("joker_split.wav").c_str());
 	wave_over = Mix_LoadWAV(audio_path("wave_over.wav").c_str());
-
+	genie_teleport = Mix_LoadWAV(audio_path("genie_teleport.wav").c_str());
+	genie_lightning_bolt = Mix_LoadWAV(audio_path("genie_lightning_bolt.wav").c_str());
 
 	if (background_music == nullptr || salmon_dead_sound == nullptr || roulette_hit_sound == nullptr) {
 		if (!roulette_hit_sound) {
@@ -584,6 +585,48 @@ bool WorldSystem::step(float elapsed_ms_since_last_update) {
 				createJoker(renderer, vec2(spawnX, spawnY), wave.wave_num);
 			}
 		}
+
+		if (wave.num_genie_boss > 0) {
+			wave.progress_genie_boss += elapsed_time;
+			if (wave.progress_genie_boss > wave.delay_for_all_entities) {
+				wave.progress_genie_boss = 0;
+				wave.num_genie_boss -= 1;
+
+				vec2 player_position = p_motion.position;
+				float min_distance_from_player = 300.0f;
+
+				float spawnX, spawnY;
+				bool valid_spawn;
+				do {
+					spawnX = uniform_dist(rng) * (right_bound - left_bound) + left_bound;
+					spawnY = uniform_dist(rng) * (bottom_bound - top_bound) + top_bound;
+					valid_spawn = true;
+
+					// Check distance from player
+					if (sqrt(pow(spawnX - player_position.x, 2) + pow(spawnY - player_position.y, 2)) < min_distance_from_player) {
+						valid_spawn = false;
+					}
+
+					// Check distance from walls
+
+					int grid_x = static_cast<int>(spawnX / 12);
+					int grid_y = static_cast<int>(spawnY / 12);
+					for (int dy = -3; dy <= 3 && valid_spawn; ++dy) {
+						for (int dx = -2; dx <= 2 && valid_spawn; ++dx) {
+
+							int check_x = grid_x + dx;
+							int check_y = grid_y + dy;
+							if (check_x >= 0 && check_x < GRID_WIDTH && check_y >= 0 && check_y < GRID_HEIGHT) {
+								if (grid[check_y][check_x] == 1) {
+									valid_spawn = false;
+								}
+							}
+						}
+					}
+				} while (!valid_spawn);
+				createGenie(renderer, vec2(spawnX, spawnY), wave.wave_num);
+			}
+		}
 	}
 	
 
@@ -593,6 +636,7 @@ bool WorldSystem::step(float elapsed_ms_since_last_update) {
 		(wave.num_bird_boss == 0) &&
 		(wave.num_bird_clubs == 0) &&
 		(wave.num_jokers == 0) &&
+		(wave.num_genie_boss == 0) &&
 		(wave.wave_num != 1)
 		) {
 		wave.state = "spawn doors";
@@ -813,7 +857,29 @@ bool WorldSystem::step(float elapsed_ms_since_last_update) {
 				}
 			}
 		}
+		for (Entity entity : registry.bolts.entities) {
+			Motion& motion = registry.motions.get(entity);
+
+			vec2 new_position = motion.position + motion.velocity * elapsed_time / 200.f;
+
+			int grid_x = static_cast<int>(new_position.x) / 12;
+			int grid_y = static_cast<int>(new_position.y) / 12;
+
+			if (grid[grid_y][grid_x] == 1) {
+				registry.remove_all_components_of(entity);
+			}
+			else {
+				motion.position = new_position;
+			}
+		}
 	}
+
+	if (!(wave.state == "game on")) {
+		for (Entity entity : registry.bolts.entities) {
+			registry.remove_all_components_of(entity);
+		}
+	}
+
 	// 	next_lerp_spawn -= elapsed_ms_since_last_update * current_speed;
 	// 	if (next_lerp_spawn < 0.f) {
 	// 		next_lerp_spawn = LERP_SPAWN_DELAY;
@@ -1393,12 +1459,16 @@ void WorldSystem::next_wave() {
 		if ((wave.wave_num == 12) || !Mix_Playing(1)) {
 			Mix_PlayChannel(1, m3_mus_w4, 0);
 		}
-		Mix_PlayChannel(2, m3_sfx_door_c, 0);		
+
 		if (wave.wave_num == 12) {
+			wave.num_genie_boss = 1;
+		} 
+		else if (wave.wave_num == 13) {
 			wave.num_jokers = 3;
 			wave.num_king_clubs = 5;
-		} else if (wave.wave_num < 15) {
-			int total_num_enemies = num_of_enemies[wave.wave_num]*3;
+		}
+		else if (wave.wave_num < 15) {
+			int total_num_enemies = num_of_enemies[wave.wave_num] * 3;
 			int num_birds = ceil(total_num_enemies * 0.40);
 			int num_healers = ceil(total_num_enemies * 0.05);
 			int num_boss_clubs = ceil(total_num_enemies * 0.02);
@@ -1407,31 +1477,39 @@ void WorldSystem::next_wave() {
 			wave.num_bird_clubs = num_birds;
 			wave.num_queen_hearts = num_healers;
 			wave.num_bird_boss = num_boss_clubs;
-		} else if (wave.wave_num < 17) {
-			int total_num_enemies = num_of_enemies[wave.wave_num]*2;
+		}
+		else if (wave.wave_num < 17) {
+			int total_num_enemies = num_of_enemies[wave.wave_num] * 2;
 			int num_birds = ceil(total_num_enemies * 0.40);
 			int num_healers = ceil(total_num_enemies * 0.05);
 			int num_boss_clubs = ceil(total_num_enemies * 0.02);
 			int num_jokers = ceil(total_num_enemies * 0.03);
-			int num_kings = total_num_enemies - num_birds - num_healers - num_jokers;
+			int num_genies = ceil(total_num_enemies * 0.02);
+			int num_kings = total_num_enemies - num_birds - num_healers - num_jokers - num_genies;
 			wave.num_king_clubs = num_kings;
 			wave.num_bird_clubs = num_birds;
 			wave.num_queen_hearts = num_healers;
 			wave.num_bird_boss = num_boss_clubs;
 			wave.num_jokers = num_jokers;
-		} else {
-			int total_num_enemies = num_of_enemies[wave.wave_num]*2;
+			wave.num_genie_boss = num_genies;
+		}
+		else {
+			int total_num_enemies = num_of_enemies[wave.wave_num] * 2;
 			int num_birds = ceil(total_num_enemies * 0.30);
 			int num_healers = ceil(total_num_enemies * 0.10);
 			int num_boss_clubs = ceil(total_num_enemies * 0.07);
 			int num_jokers = ceil(total_num_enemies * 0.15);
-			int num_kings = total_num_enemies - num_birds - num_healers - num_jokers;
+			int num_genies = ceil(total_num_enemies * 0.05);
+			int num_kings = total_num_enemies - num_birds - num_healers - num_jokers - num_genies;
 			wave.num_king_clubs = num_kings;
 			wave.num_bird_clubs = num_birds;
 			wave.num_queen_hearts = num_healers;
 			wave.num_bird_boss = num_boss_clubs;
 			wave.num_jokers = num_jokers;
+			wave.num_genie_boss = num_genies;
 		}
+		Mix_PlayChannel(2, m3_sfx_door_c, 0);		
+		 
 		wave.delay_for_all_entities = 800;
 	} else {
 		// wave 20 and above, use formula
@@ -1773,6 +1851,41 @@ void WorldSystem::handle_collisions() {
 					}
 				}
 			}
+			else if (registry.bolts.has(entity_other)) {
+				Bolt& bolt = registry.bolts.get(entity_other);
+				if (!registry.deathTimers.has(player_protagonist)) {
+					your.health -= bolt.damage;
+					// add the damage indicator
+					if (!registry.lightUp.has(entity)) {
+						registry.lightUp.emplace(entity);
+					}
+					LightUp& lightUp = registry.lightUp.get(entity);
+					lightUp.duration_ms = 1000.f;
+				}
+				registry.remove_all_components_of(entity_other);
+
+				if (your.health <= 0) {
+					if (!registry.deathTimers.has(entity)) {
+						// Scream, reset timer, and make the salmon sink
+						registry.deathTimers.emplace(entity);
+						your_motion.velocity.x = 0.f;
+						your_motion.velocity.y = 0.f;
+						Mix_PlayChannel(15, salmon_dead_sound, 0);
+						std::ofstream ofs("save.json", std::ios::trunc);
+						if (ofs.is_open()) {
+							ofs.close();
+							std::cout << "save.json contents erased." << std::endl;
+						}
+						else {
+							std::cerr << "Unable to open save.json for erasing." << std::endl;
+						}
+					}
+				} else {
+					if (!Mix_Playing(4)) {
+						Mix_PlayChannel(4, m3_sfx_knife, 0);
+					}
+				}
+			}
 			// Checking Player - Eatable collisions
 			else if (registry.eatables.has(entity_other)) {
 				if (!registry.deathTimers.has(entity)) {
@@ -1924,7 +2037,12 @@ void WorldSystem::handle_collisions() {
 		// collision with black floor cover
 		if (registry.blackRectangles.has(entity)) {
 			if (registry.deadlys.has(entity_other)) {
-				registry.remove_all_components_of(entity_other);
+				if (registry.deadlys.get(entity_other).enemy_type == ENEMIES::BOSS_GENIE) {
+					continue; // probably not the best thing to do but prevents genies from randomly dying if pushed into an inside corner wall
+				}
+				else {
+					registry.remove_all_components_of(entity_other);
+				}
 			}
 		}
 	}
@@ -2017,7 +2135,9 @@ bool WorldSystem::load() {
 					createBossBirdClubs(renderer, vec2(value["position"][0], value["position"][1]), wave.wave_num);
 				} else if (value["enemy_type"] == ENEMIES::QUEEN_HEARTS) {
 					createQueenHearts(renderer, vec2(value["position"][0], value["position"][1]), wave.wave_num);
-				}  else if (value["enemy_type"] == ENEMIES::JOKER) {
+				} else if (value["enemy_type"] == ENEMIES::JOKER) {
+					createJoker(renderer, vec2(value["position"][0], value["position"][1]), wave.wave_num);
+				} else if (value["enemy_type"] == ENEMIES::BOSS_GENIE) {
 					createJoker(renderer, vec2(value["position"][0], value["position"][1]), wave.wave_num);
 				}
 			}

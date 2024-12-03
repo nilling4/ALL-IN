@@ -114,12 +114,14 @@ void AISystem::step(float elapsed_ms)
 {
 
 	Motion* player_motion;
+    Player* player;
     Wave* wave;
     for (Entity entity : registry.waves.entities) {
         wave = &registry.waves.get(entity);
     }
 	for (Entity entity : registry.players.entities) {
 		player_motion = &registry.motions.get(entity);	
+        player = &registry.players.get(entity);
 	}
 
 	for (Entity entity : registry.boids.entities) {
@@ -389,7 +391,7 @@ void AISystem::step(float elapsed_ms)
 
             if (joker.teleport_timer <= 0 && distanceToPlayer < 300.0f) {
                 joker.teleport_timer = 3000.0f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / 3000.0f)); // Random timer between 3-6 seconds
-                vec2 teleportPosition = findTeleportPosition(player_motion->position, motion.position);
+                vec2 teleportPosition = findTeleportPosition(player_motion->position, motion.position, 300.f, 100.f);
                 motion.position = teleportPosition;
 
                 joker_teleport = Mix_LoadWAV(audio_path("joker_teleport.wav").c_str());
@@ -408,6 +410,89 @@ void AISystem::step(float elapsed_ms)
             }
 
 
+            if ((motion.position.x > player_motion->position.x && motion.scale.x < 0) ||
+                (motion.position.x < player_motion->position.x && motion.scale.x > 0)) {
+                motion.scale.x *= -1;
+            }
+        }
+        else if (deadly.enemy_type == ENEMIES::BOSS_GENIE) {
+            vec2 separation_force = { 0.f, 0.f };
+            int separation_count = 0;
+
+            for (Entity other : registry.deadlys.entities) {
+                Deadly& deadly_other = registry.deadlys.get(entity);
+
+                if (deadly_other.enemy_type != ENEMIES::BOSS_GENIE) {
+                    continue;
+                }
+                if (other == entity) {
+                    continue;
+                }
+
+                Motion& other_motion = registry.motions.get(other);                
+                vec2 other_position = { other_motion.position.x, other_motion.position.y };
+
+                float dist = length(other_position - motion.position);
+
+                if (dist < SEPARATION_DIST && dist > 0) {
+                    vec2 diff = normalize(motion.position - other_position) / dist;
+                    separation_force += diff;
+                    separation_count++;
+                }
+            }
+
+            if (separation_count > 0) {
+                separation_force /= (float)separation_count;
+                separation_force *= 69420.f;
+                separation_force = cap_velocity(separation_force, 0.5 * MAX_PUSH * (1 + 0.05 * separation_count));
+            }
+
+            int startRow = static_cast<int>(motion.position.y) / 12;
+            int startCol = static_cast<int>(motion.position.x) / 12;
+
+            vec2 to_player = player_motion->position - motion.position;
+            float player_dist = length(to_player);
+
+            vec2 genie_force = { 0.f, 0.f };
+
+            genie_force = -normalize(to_player) * MAX_SPEED;
+                        
+            vec2 flow_force = move(startRow, startCol) * 50.f;
+
+            motion.velocity = genie_force + flow_force + separation_force;
+            motion.velocity *= 120;
+            motion.velocity = cap_velocity(motion.velocity, 120);
+                        
+            Wave* wave;
+            for (Entity entity : registry.waves.entities) {
+                wave = &registry.waves.get(entity);
+            }
+
+            Genie& genie = registry.genies.get(entity);
+            genie.projectile_timer -= elapsed_ms;
+            genie.teleport_timer -= elapsed_ms;
+            if (genie.projectile_timer < 0 && player->health > 0) {
+                genie.projectile_timer = 1500.f;
+                createBoltProjectile(renderer, motion.position, player_motion->position, wave->wave_num);
+
+                genie_lightning_bolt = Mix_LoadWAV(audio_path("genie_lightning_bolt.wav").c_str());
+                Mix_PlayChannel(11, genie_lightning_bolt, 0);
+            }
+
+            if (genie.teleport_timer < 0 && player->health > 0) {
+                genie.teleport_timer = 2000.f;
+                motion.position = findTeleportPosition(player_motion->position, motion.position, 400.f, 150.f);
+
+                genie_teleport = Mix_LoadWAV(audio_path("genie_teleport.wav").c_str());
+                Mix_PlayChannel(10, genie_teleport, 0);
+            } else if (player_dist > 600.f) {
+                genie.teleport_timer = 2000.f;
+                motion.position = findTeleportPosition(player_motion->position, motion.position, 400.f, 150.f);
+
+                genie_teleport = Mix_LoadWAV(audio_path("genie_teleport.wav").c_str());
+                Mix_PlayChannel(10, genie_teleport, 0);
+            }
+                                              
             if ((motion.position.x > player_motion->position.x && motion.scale.x < 0) ||
                 (motion.position.x < player_motion->position.x && motion.scale.x > 0)) {
                 motion.scale.x *= -1;
@@ -432,10 +517,8 @@ void AISystem::step(float elapsed_ms)
     }
 }
 
-vec2 AISystem::findTeleportPosition(vec2 playerPosition, vec2 enemyPosition) {
-    const float teleportRadius = 300.0f;  // Maximum distance around the player for teleport
-    const float bufferDistance = 100.0f; // Minimum distance from the player
-    const int maxAttempts = 10;
+vec2 AISystem::findTeleportPosition(vec2 playerPosition, vec2 enemyPosition, float teleportRadius, float bufferDistance) {
+    const int maxAttempts = 20;
 
     for (int attempt = 0; attempt < maxAttempts; ++attempt) {
         float angle = static_cast<float>(rand()) / RAND_MAX * 2.0f * M_PI;
