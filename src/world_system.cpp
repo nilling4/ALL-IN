@@ -1619,22 +1619,87 @@ void WorldSystem::next_wave() {
 	player_motion.velocity *= 0.f;
 	your.push *= 0;
 
+	for (int i = 0;i<GRID_WIDTH;i++){
+		for (int j =0 ;j<GRID_HEIGHT;j++){
+			cells[j*GRID_WIDTH + i].exist = false;
+		}
+	}
+
 	// randomly pick room type
+	int max_tables_count;
+	int max_slots_count;
+	float left_bound;
+	float right_bound;
+	float top_bound;
+	float bottom_bound;
 	float roomType = uniform_dist(rng);
-	if (roomType <= 1) {
+	if (roomType < 0.25) { // to test, set value
+		// regular rectangle
+		int outerWidth = (20 + ceil(uniform_dist(rng) * 20)) * 2; // min is 40, max 80
+		int outerHeight = (16 + ceil(uniform_dist(rng) * 4)) * 2; // min is 32, max 40
+
+		left_bound = 24;
+		right_bound = outerWidth * WALL_BLOCK_BB_WIDTH - 24;
+		top_bound = 24;
+		bottom_bound = outerHeight * WALL_BLOCK_BB_HEIGHT - 24;
+
+		max_tables_count = floor(outerWidth/17);
+		max_slots_count = floor(outerWidth/11);
+
+		std::cout << "rectangle dimensions. outer w/h: " << outerWidth << '/' << outerHeight << std::endl;
+		// walls outer
+		for (int i = 0; i < outerWidth; i++) {
+			createWallBlock(renderer, {12 + i * WALL_BLOCK_BB_WIDTH, 12}); // outer top wall
+			createWallBlock(renderer, {12 + i * WALL_BLOCK_BB_WIDTH, 12 + WALL_BLOCK_BB_HEIGHT * (outerHeight - 1)}); // outer bottom wall
+		}
+		for (int i = 1; i < outerHeight - 1; i++) {
+			createWallBlock(renderer, {12, 12 + i * WALL_BLOCK_BB_HEIGHT}); // outer left wall
+			createWallBlock(renderer, {12 + WALL_BLOCK_BB_WIDTH * (outerWidth - 1), 12 + i * WALL_BLOCK_BB_HEIGHT}); // outer right wall
+		}
+
+		// cover floor background in non playable area
+		// outside outer to the right
+		if (outerWidth < 80) {
+			createBlackRectangle({1920 - ((80 - outerWidth)/2) * WALL_BLOCK_BB_WIDTH, 480}, {(80 - outerWidth) * WALL_BLOCK_BB_WIDTH, 960});
+		}
+		// outside outer below
+		if (outerHeight < 40) {
+			createBlackRectangle({WALL_BLOCK_BB_WIDTH * outerWidth/2, 960 - ((40 - outerHeight)/2) * WALL_BLOCK_BB_HEIGHT}, {WALL_BLOCK_BB_WIDTH * outerWidth, WALL_BLOCK_BB_HEIGHT * (40 - outerHeight)});
+		}
+
+		// make right bar outside of rectangle unspawnable
+		if (outerWidth < 80) {
+			for (int j = 0; j < 80; j++) {
+				for (int i = outerWidth * 2; i < 160; i++) {
+					grid[j][i] = 1;
+				}
+			}
+		}
+		// make below rectangle unspawnable
+		if (outerHeight < 40) {
+			for (int j = outerHeight * 2; j < 80; j++) {
+				for (int i = 0; i < outerWidth * 2; i++) {
+					grid[j][i] = 1;
+				}
+			}
+		}
+
+		// move player to starting location
+		player_motion.position = vec2(WALL_BLOCK_BB_WIDTH * outerWidth / 2, 84);
+	} else if (roomType < 0.5) {
 		// donut shaped?
 		int innerWidth = (3 + ceil(uniform_dist(rng) * 17)) * 2; // min 6 wall blocks wide, max 40 wide
 		int innerHeight = (3 + ceil(uniform_dist(rng) * 2)) * 2; // min 6, max 10
 		int outerWidth = (innerWidth/2 + 13 + ceil(uniform_dist(rng) * 7)) * 2; // min is inner + 26, max inner + 40
 		int outerHeight = (innerHeight/2 + 13 + ceil(uniform_dist(rng) * 2)) * 2; // min is inner + 26, max inner + 30
 
-		float left_bound = 24;
-		float right_bound = outerWidth * WALL_BLOCK_BB_WIDTH - 24;
-		float top_bound = 24;
-		float bottom_bound = outerHeight * WALL_BLOCK_BB_HEIGHT - 24;
+		left_bound = 24;
+		right_bound = outerWidth * WALL_BLOCK_BB_WIDTH - 24;
+		top_bound = 24;
+		bottom_bound = outerHeight * WALL_BLOCK_BB_HEIGHT - 24;
 
-		int max_tables_count = floor(outerWidth/17);
-		int max_slots_count = floor(outerWidth/11);
+		max_tables_count = floor(outerWidth/17);
+		max_slots_count = floor(outerWidth/11);
 
 		std::cout << "donut dimensions. outer w/h, inner w/h: " << outerWidth << '/' << outerHeight << ':' << innerWidth << "/" << innerHeight << std::endl;
 		// walls outer
@@ -1660,32 +1725,6 @@ void WorldSystem::next_wave() {
 			createWallBlock(renderer, {12 + WALL_BLOCK_BB_WIDTH * ((outerWidth - innerWidth) / 2), 12 + i * WALL_BLOCK_BB_HEIGHT + WALL_BLOCK_BB_HEIGHT * ((outerHeight - innerHeight) / 2)}); // inner left wall
 			createWallBlock(renderer, {12 + WALL_BLOCK_BB_WIDTH * (((outerWidth - innerWidth) / 2) + (innerWidth - 1)), 12 + i * WALL_BLOCK_BB_HEIGHT + WALL_BLOCK_BB_HEIGHT * ((outerHeight - innerHeight) / 2)}); // inner right wall
 		}
-		resetCorners();
-		// floors
-		// // top bar
-		// for (int y = 1; y < (outerHeight - innerHeight)/2; y++) {
-		// 	for (int x = 1; x < outerWidth - 1; x++) {
-		// 		createFloorBlock(renderer, {12 + WALL_BLOCK_BB_WIDTH * x, 12 + WALL_BLOCK_BB_HEIGHT * y});
-		// 	}
-		// }
-		// // left section
-		// for (int y = (outerHeight - innerHeight)/2; y < outerHeight - (outerHeight - innerHeight)/2; y++) {
-		// 	for (int x = 1; x < (outerWidth - innerWidth)/2; x++) {
-		// 		createFloorBlock(renderer, {12 + WALL_BLOCK_BB_WIDTH * x, 12 + WALL_BLOCK_BB_HEIGHT * y});
-		// 	}
-		// }
-		// // right section
-		// for (int y = (outerHeight - innerHeight)/2; y < outerHeight - (outerHeight - innerHeight)/2; y++) {
-		// 	for (int x = outerWidth - (outerWidth - innerWidth)/2; x < outerWidth - 1; x++) {
-		// 		createFloorBlock(renderer, {12 + WALL_BLOCK_BB_WIDTH * x, 12 + WALL_BLOCK_BB_HEIGHT * y});
-		// 	}
-		// }
-		// // bottom bar
-		// for (int y = outerHeight - (outerHeight - innerHeight)/2; y < outerHeight - 1; y++) {
-		// 	for (int x = 1; x < outerWidth - 1; x++) {
-		// 		createFloorBlock(renderer, {12 + WALL_BLOCK_BB_WIDTH * x, 12 + WALL_BLOCK_BB_HEIGHT * y});
-		// 	}
-		// }
 
 		// cover floor background in non playable area
 		// inner area
@@ -1724,94 +1763,238 @@ void WorldSystem::next_wave() {
 
 		// move player to starting location
 		player_motion.position = vec2(WALL_BLOCK_BB_WIDTH * outerWidth / 2, 84);
+	} else if (roomType < 0.75) {
+		// U shaped
+		int innerWidth = (3 + ceil(uniform_dist(rng) * 17)) * 2; // min 6 wall blocks wide, max 40 wide
+		int outerWidth = (innerWidth/2 + 13 + ceil(uniform_dist(rng) * 7)) * 2; // min is inner + 26, max inner + 40
+		int innerHeight = (5 + ceil(uniform_dist(rng) * 5)) * 2; // min 10, max 20
+		int outerHeight = (innerHeight/2 + 5 + ceil(uniform_dist(rng) * 5)) * 2; // min is inner + 10, max inner + 20
 
+		left_bound = 24;
+		right_bound = outerWidth * WALL_BLOCK_BB_WIDTH - 24;
+		top_bound = 24;
+		bottom_bound = outerHeight * WALL_BLOCK_BB_HEIGHT - 24;
 
-		// spawn slot machines
-		for (int num_slots = 0; num_slots < max_slots_count; num_slots++) {
-			float spawnX, spawnY;
-			bool valid_spawn;
-			do {
-				spawnX = uniform_dist(rng) * (right_bound - left_bound) + left_bound;
-				spawnY = uniform_dist(rng) * (bottom_bound - top_bound) + top_bound;
-				valid_spawn = true;
+		max_tables_count = floor(outerHeight/20);
+		max_slots_count = floor(outerHeight/15);
 
-				// Check distance from player
-				if (sqrt(pow(spawnX - player_motion.position.x, 2) + pow(spawnY - player_motion.position.y, 2)) < 120) {
-					valid_spawn = false;
-				}
-
-				// check distance from door location
-				if (sqrt(pow(spawnX - 72, 2) + pow(spawnY - 96, 2)) < 120) {
-					valid_spawn = false;
-				}
-
-				// ensure slot machine space is not occupied
-				int grid_x = static_cast<int>(spawnX / 12);
-				int grid_y = static_cast<int>(spawnY / 12);
-
-				std::cout<< "grid gen: " << grid_x << ", " << grid_y << std::endl;
-				for (int dy = -11; dy <= 10 && valid_spawn; dy++) {
-					for (int dx = -8; dx <= 7 && valid_spawn; dx++) {
-
-						int check_x = grid_x + dx;
-						int check_y = grid_y + dy;
-						if (check_x >= 0 && check_x < GRID_WIDTH && check_y >= 0 && check_y < GRID_HEIGHT) {
-							if (grid[check_y][check_x] == 1) {
-								valid_spawn = false;
-							}
-						} else {
-							valid_spawn = false;
-						}
-					}
-				}
-			} while (!valid_spawn);
-			// need to make sure the position is aligned with grid to avoid weird collision...
-			createSlotMachine(renderer, vec2(static_cast<int>(spawnX / 12) * 12, static_cast<int>(spawnY / 12) * 12));
+		std::cout << "U dimensions. outer w/h, inner w/h: " << outerWidth << '/' << outerHeight << ':' << innerWidth << "/" << innerHeight << std::endl;
+		// walls outer
+		for (int i = 0; i < outerWidth; i++) {
+			if (i < outerWidth/2 - innerWidth/2 || i >= outerWidth - (outerWidth/2 - innerWidth/2)) {
+				createWallBlock(renderer, {12 + i * WALL_BLOCK_BB_WIDTH, 12}); // outer top wall
+			}
+			createWallBlock(renderer, {12 + i * WALL_BLOCK_BB_WIDTH, 12 + WALL_BLOCK_BB_HEIGHT * (outerHeight - 1)}); // outer bottom wall
+		}
+		for (int i = 1; i < outerHeight - 1; i++) {
+			createWallBlock(renderer, {12, 12 + i * WALL_BLOCK_BB_HEIGHT}); // outer left wall
+			createWallBlock(renderer, {12 + WALL_BLOCK_BB_WIDTH * (outerWidth - 1), 12 + i * WALL_BLOCK_BB_HEIGHT}); // outer right wall
+		}
+		// walls inner
+		for (int i = 0; i < innerWidth; i++) {
+			createWallBlock(renderer, {12 + i * WALL_BLOCK_BB_WIDTH + WALL_BLOCK_BB_WIDTH * ((outerWidth - innerWidth) / 2), 12 + WALL_BLOCK_BB_HEIGHT * innerHeight}); // inner bottom wall
+		}
+		for (int i = 0; i < innerHeight; i++) {
+			createWallBlock(renderer, {12 + WALL_BLOCK_BB_WIDTH * ((outerWidth - innerWidth) / 2), 12 + i * WALL_BLOCK_BB_HEIGHT}); // inner left wall
+			createWallBlock(renderer, {12 + WALL_BLOCK_BB_WIDTH * (((outerWidth - innerWidth) / 2) + (innerWidth - 1)), 12 + i * WALL_BLOCK_BB_HEIGHT}); // inner right wall
 		}
 
-		// spawn tables
-		for (int num_tables = 0; num_tables < max_tables_count; num_tables++) {
-			float spawnX, spawnY;
-			bool valid_spawn;
-			do {
-				spawnX = uniform_dist(rng) * (right_bound - left_bound) + left_bound;
-				spawnY = uniform_dist(rng) * (bottom_bound - top_bound) + top_bound;
-				valid_spawn = true;
-
-				// Check distance from player
-				if (sqrt(pow(spawnX - player_motion.position.x, 2) + pow(spawnY - player_motion.position.y, 2)) < 200) {
-					valid_spawn = false;
-				}
-
-				// check distance from door location
-				if (sqrt(pow(spawnX - 72, 2) + pow(spawnY - 96, 2)) < 200) {
-					valid_spawn = false;
-				}
-
-				// ensure table space is not occupied
-				int grid_x = static_cast<int>(spawnX / 12);
-				int grid_y = static_cast<int>(spawnY / 12);
-				for (int dy = -12; dy <= 11 && valid_spawn; dy++) {
-					for (int dx = -12; dx <= 11 && valid_spawn; dx++) {
-
-						int check_x = grid_x + dx;
-						int check_y = grid_y + dy;
-						if (check_x >= 0 && check_x < GRID_WIDTH && check_y >= 0 && check_y < GRID_HEIGHT) {
-							if (grid[check_y][check_x] == 1) {
-								valid_spawn = false;
-							}
-						} else {
-							valid_spawn = false;
-						}
-					}
-				}
-			} while (!valid_spawn);
-			// need to make sure the position is aligned with grid to avoid weird collision...
-			createRouletteTable(renderer, vec2(static_cast<int>(spawnX / 12) * 12, static_cast<int>(spawnY / 12) * 12));
+		// cover floor background in non playable area
+		// inner area
+		createBlackRectangle({WALL_BLOCK_BB_WIDTH * (outerWidth/2), WALL_BLOCK_BB_HEIGHT * (innerHeight/2)}, {WALL_BLOCK_BB_WIDTH * (innerWidth - 2), WALL_BLOCK_BB_HEIGHT * (innerHeight)});
+		// outside outer to the right
+		if (outerWidth < 80) {
+			createBlackRectangle({1920 - ((80 - outerWidth)/2) * WALL_BLOCK_BB_WIDTH, 480}, {(80 - outerWidth) * WALL_BLOCK_BB_WIDTH, 960});
+		}
+		// outside outer below
+		if (outerHeight < 40) {
+			createBlackRectangle({WALL_BLOCK_BB_WIDTH * outerWidth/2, 960 - ((40 - outerHeight)/2) * WALL_BLOCK_BB_HEIGHT}, {WALL_BLOCK_BB_WIDTH * outerWidth, WALL_BLOCK_BB_HEIGHT * (40 - outerHeight)});
 		}
 
-	
+		// make right bar outside of U unspawnable
+		if (outerWidth < 80) {
+			for (int j = 0; j < 80; j++) {
+				for (int i = outerWidth * 2; i < 160; i++) {
+					grid[j][i] = 1;
+				}
+			}
+		}
+		// make below U unspawnable
+		if (outerHeight < 40) {
+			for (int j = outerHeight * 2; j < 80; j++) {
+				for (int i = 0; i < outerWidth * 2; i++) {
+					grid[j][i] = 1;
+				}
+			}
+		}
+		// make inside of inner U unspawnable
+		for (int j = 0; j < innerHeight * 2; j++) {
+			for (int i = (outerWidth - innerWidth) + 2; i < (outerWidth - innerWidth) + 2 + (innerWidth - 2) * 2; i++) {
+				grid[j][i] = 1;
+			}
+		}
+
+		// move player to starting location
+		player_motion.position = vec2(WALL_BLOCK_BB_WIDTH * outerWidth / 2, WALL_BLOCK_BB_HEIGHT * outerHeight - 84);
+	} else if (roomType <= 1) {
+		// backward C shaped
+		int innerWidth = (10 + ceil(uniform_dist(rng) * 10)) * 2; // min 20 wall blocks wide, max 40 wide
+		int outerWidth = (innerWidth/2 + 13 + ceil(uniform_dist(rng) * 7)) * 2; // min is inner + 26, max inner + 40
+		int innerHeight = (3 + ceil(uniform_dist(rng) * 4)) * 2; // min 6, max 14
+		int outerHeight = 40; // 40
+
+		left_bound = 24;
+		right_bound = outerWidth * WALL_BLOCK_BB_WIDTH - 24;
+		top_bound = 24;
+		bottom_bound = outerHeight * WALL_BLOCK_BB_HEIGHT - 24;
+
+		max_tables_count = floor(outerHeight/20);
+		max_slots_count = floor(outerHeight/15);
+
+		std::cout << "backward C dimensions. outer w/h, inner w/h: " << outerWidth << '/' << outerHeight << ':' << innerWidth << "/" << innerHeight << std::endl;
+		// walls outer
+		for (int i = 0; i < outerWidth; i++) {
+			createWallBlock(renderer, {12 + i * WALL_BLOCK_BB_WIDTH, 12}); // outer top wall
+			createWallBlock(renderer, {12 + i * WALL_BLOCK_BB_WIDTH, 12 + WALL_BLOCK_BB_HEIGHT * (outerHeight - 1)}); // outer bottom wall
+		}
+		for (int i = 1; i < outerHeight - 1; i++) {
+			if (i < outerHeight/2 - innerHeight/2 || i >= outerHeight - (outerHeight/2 - innerHeight/2)) {
+				createWallBlock(renderer, {12, 12 + i * WALL_BLOCK_BB_HEIGHT}); // outer left wall
+			}
+			createWallBlock(renderer, {12 + WALL_BLOCK_BB_WIDTH * (outerWidth - 1), 12 + i * WALL_BLOCK_BB_HEIGHT}); // outer right wall
+		}
+		// walls inner
+		for (int i = 0; i < innerWidth; i++) {
+			createWallBlock(renderer, {12 + i * WALL_BLOCK_BB_WIDTH, 12 + WALL_BLOCK_BB_HEIGHT * ((outerHeight - innerHeight) / 2)}); // inner top wall
+			createWallBlock(renderer, {12 + i * WALL_BLOCK_BB_WIDTH, 12 + WALL_BLOCK_BB_HEIGHT * (((outerHeight - innerHeight) / 2) + (innerHeight - 1))}); // inner bottom wall
+		}
+		for (int i = 0; i < innerHeight; i++) {
+			createWallBlock(renderer, {12 + WALL_BLOCK_BB_WIDTH * innerWidth, 12 + i * WALL_BLOCK_BB_HEIGHT + WALL_BLOCK_BB_HEIGHT * ((outerHeight - innerHeight) / 2)}); // inner right wall
+		}
+
+		// cover floor background in non playable area
+		// inner area
+		createBlackRectangle({WALL_BLOCK_BB_WIDTH * (innerWidth/2), WALL_BLOCK_BB_HEIGHT * (outerHeight/2)}, {WALL_BLOCK_BB_WIDTH * (innerWidth), WALL_BLOCK_BB_HEIGHT * (innerHeight - 2)});
+		// outside outer to the right
+		if (outerWidth < 80) {
+			createBlackRectangle({1920 - ((80 - outerWidth)/2) * WALL_BLOCK_BB_WIDTH, 480}, {(80 - outerWidth) * WALL_BLOCK_BB_WIDTH, 960});
+		}
+		// outside outer below
+		if (outerHeight < 40) {
+			createBlackRectangle({WALL_BLOCK_BB_WIDTH * outerWidth/2, 960 - ((40 - outerHeight)/2) * WALL_BLOCK_BB_HEIGHT}, {WALL_BLOCK_BB_WIDTH * outerWidth, WALL_BLOCK_BB_HEIGHT * (40 - outerHeight)});
+		}
+
+		// make right bar outside of backwards C unspawnable
+		if (outerWidth < 80) {
+			for (int j = 0; j < 80; j++) {
+				for (int i = outerWidth * 2; i < 160; i++) {
+					grid[j][i] = 1;
+				}
+			}
+		}
+		// make below backwards C unspawnable
+		if (outerHeight < 40) {
+			for (int j = outerHeight * 2; j < 80; j++) {
+				for (int i = 0; i < outerWidth * 2; i++) {
+					grid[j][i] = 1;
+				}
+			}
+		}
+		// make inside of backwards C unspawnable
+		for (int j = (outerHeight - innerHeight) + 2; j < (outerHeight - innerHeight) + 2 + (innerHeight - 2) * 2; j++) {
+			for (int i = 0; i < innerWidth * 2; i++) {
+				grid[j][i] = 1;
+			}
+		}
+
+		// move player to starting location
+		player_motion.position = vec2(WALL_BLOCK_BB_WIDTH * outerWidth / 2, 84);
 	}
+
+	// spawn slot machines
+	for (int num_slots = 0; num_slots < max_slots_count; num_slots++) {
+		float spawnX, spawnY;
+		bool valid_spawn;
+		do {
+			spawnX = uniform_dist(rng) * (right_bound - left_bound) + left_bound;
+			spawnY = uniform_dist(rng) * (bottom_bound - top_bound) + top_bound;
+			valid_spawn = true;
+
+			// Check distance from player
+			if (sqrt(pow(spawnX - player_motion.position.x, 2) + pow(spawnY - player_motion.position.y, 2)) < 120) {
+				valid_spawn = false;
+			}
+
+			// check distance from door location
+			if (sqrt(pow(spawnX - 72, 2) + pow(spawnY - 96, 2)) < 120) {
+				valid_spawn = false;
+			}
+
+			// ensure slot machine space is not occupied
+			int grid_x = static_cast<int>(spawnX / 12);
+			int grid_y = static_cast<int>(spawnY / 12);
+
+			for (int dy = -11; dy <= 10 && valid_spawn; dy++) {
+				for (int dx = -8; dx <= 7 && valid_spawn; dx++) {
+
+					int check_x = grid_x + dx;
+					int check_y = grid_y + dy;
+					if (check_x >= 0 && check_x < GRID_WIDTH && check_y >= 0 && check_y < GRID_HEIGHT) {
+						if (grid[check_y][check_x] == 1) {
+							valid_spawn = false;
+						}
+					} else {
+						valid_spawn = false;
+					}
+				}
+			}
+		} while (!valid_spawn);
+		// need to make sure the position is aligned with grid to avoid weird collision...
+		createSlotMachine(renderer, vec2(static_cast<int>(spawnX / 12) * 12, static_cast<int>(spawnY / 12) * 12));
+	}
+
+	// spawn tables
+	for (int num_tables = 0; num_tables < max_tables_count; num_tables++) {
+		float spawnX, spawnY;
+		bool valid_spawn;
+		do {
+			spawnX = uniform_dist(rng) * (right_bound - left_bound) + left_bound;
+			spawnY = uniform_dist(rng) * (bottom_bound - top_bound) + top_bound;
+			valid_spawn = true;
+
+			// Check distance from player
+			if (sqrt(pow(spawnX - player_motion.position.x, 2) + pow(spawnY - player_motion.position.y, 2)) < 200) {
+				valid_spawn = false;
+			}
+
+			// check distance from door location
+			if (sqrt(pow(spawnX - 72, 2) + pow(spawnY - 96, 2)) < 200) {
+				valid_spawn = false;
+			}
+
+			// ensure table space is not occupied
+			int grid_x = static_cast<int>(spawnX / 12);
+			int grid_y = static_cast<int>(spawnY / 12);
+			for (int dy = -12; dy <= 11 && valid_spawn; dy++) {
+				for (int dx = -12; dx <= 11 && valid_spawn; dx++) {
+
+					int check_x = grid_x + dx;
+					int check_y = grid_y + dy;
+					if (check_x >= 0 && check_x < GRID_WIDTH && check_y >= 0 && check_y < GRID_HEIGHT) {
+						if (grid[check_y][check_x] == 1) {
+							valid_spawn = false;
+						}
+					} else {
+						valid_spawn = false;
+					}
+				}
+			}
+		} while (!valid_spawn);
+		// need to make sure the position is aligned with grid to avoid weird collision...
+		createRouletteTable(renderer, vec2(static_cast<int>(spawnX / 12) * 12, static_cast<int>(spawnY / 12) * 12));
+	}
+
+	resetCorners();
 
 	registry.list_all_components();
 	// wave.state = "game on";
