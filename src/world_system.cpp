@@ -382,34 +382,34 @@ bool WorldSystem::step(float elapsed_ms_since_last_update) {
 				float min_distance_from_player = 300.0f;
 
 				float spawnX, spawnY;
-            bool valid_spawn;
-            do {
-                spawnX = uniform_dist(rng) * (right_bound - left_bound) + left_bound;
-                spawnY = uniform_dist(rng) * (bottom_bound - top_bound) + top_bound;
-                valid_spawn = true;
+				bool valid_spawn;
+				do {
+					spawnX = uniform_dist(rng) * (right_bound - left_bound) + left_bound;
+					spawnY = uniform_dist(rng) * (bottom_bound - top_bound) + top_bound;
+					valid_spawn = true;
 
-                // Check distance from player
-                if (sqrt(pow(spawnX - player_position.x, 2) + pow(spawnY - player_position.y, 2)) < min_distance_from_player) {
-                    valid_spawn = false;
-                }
+					// Check distance from player
+					if (sqrt(pow(spawnX - player_position.x, 2) + pow(spawnY - player_position.y, 2)) < min_distance_from_player) {
+						valid_spawn = false;
+					}
 
-                // Check distance from walls
+					// Check distance from walls
 
-                int grid_x = static_cast<int>(spawnX / 12);
-                int grid_y = static_cast<int>(spawnY / 12);
-                for (int dy = -3; dy <= 3 && valid_spawn; ++dy) {
-                    for (int dx = -2; dx <= 2 && valid_spawn; ++dx) {
+					int grid_x = static_cast<int>(spawnX / 12);
+					int grid_y = static_cast<int>(spawnY / 12);
+					for (int dy = -3; dy <= 3 && valid_spawn; ++dy) {
+						for (int dx = -2; dx <= 2 && valid_spawn; ++dx) {
 
-                        int check_x = grid_x + dx;
-                        int check_y = grid_y + dy;
-                        if (check_x >= 0 && check_x < GRID_WIDTH && check_y >= 0 && check_y < GRID_HEIGHT) {
-                            if (grid[check_y][check_x] == 1) {
-                                valid_spawn = false;
-                            }
-                        }
-                    }
-                }
-            } while (!valid_spawn);
+							int check_x = grid_x + dx;
+							int check_y = grid_y + dy;
+							if (check_x >= 0 && check_x < GRID_WIDTH && check_y >= 0 && check_y < GRID_HEIGHT) {
+								if (grid[check_y][check_x] == 1) {
+									valid_spawn = false;
+								}
+							}
+						}
+					}
+				} while (!valid_spawn);
 				createKingClubs(renderer, vec2(spawnX, spawnY), wave.wave_num);
 			}
 		}
@@ -1372,6 +1372,7 @@ void WorldSystem::next_wave() {
 			wave.num_bird_clubs = num_birds;
 			wave.num_queen_hearts = num_healers;
 		}
+		wave.delay_for_all_entities = 400;
 	} else if (wave.wave_num < 20) {
 		if ((wave.wave_num == 12) || !Mix_Playing(1)) {
 			Mix_PlayChannel(1, m3_mus_w4, 0);
@@ -1415,6 +1416,7 @@ void WorldSystem::next_wave() {
 			wave.num_bird_boss = num_boss_clubs;
 			wave.num_jokers = num_jokers;
 		}
+		wave.delay_for_all_entities = 800;
 	} else {
 		// wave 20 and above, use formula
 		if ((wave.wave_num == 20) || !Mix_Playing(1)) {
@@ -1432,6 +1434,7 @@ void WorldSystem::next_wave() {
 		wave.num_queen_hearts = num_healers;
 		wave.num_bird_boss = num_boss_clubs;
 		wave.num_jokers = num_jokers;
+		wave.delay_for_all_entities = 1200;
 	}
 
 	// wave.state = "game on"
@@ -1504,14 +1507,26 @@ void WorldSystem::next_wave() {
 	while (registry.eatables.entities.size() > 0)
 		registry.remove_all_components_of(registry.eatables.entities.back());
 
+	// set player velocity to 0
+	player_motion.velocity *= 0.f;
+	your.push *= 0;
+
 	// randomly pick room type
 	float roomType = uniform_dist(rng);
 	if (roomType <= 1) {
 		// donut shaped?
 		int innerWidth = (3 + ceil(uniform_dist(rng) * 17)) * 2; // min 6 wall blocks wide, max 40 wide
-		int innerHeight = (3 + ceil(uniform_dist(rng) * 4)) * 2; // min 6, max 14
-		int outerWidth = (innerWidth/2 + 10 + ceil(10)) * 2; // min is inner + 20, max inner + 40
-		int outerHeight = (innerHeight/2 + 10 + ceil(3)) * 2; // min is inner + 20, max inner + 26
+		int innerHeight = (3 + ceil(uniform_dist(rng) * 2)) * 2; // min 6, max 10
+		int outerWidth = (innerWidth/2 + 13 + ceil(uniform_dist(rng) * 7)) * 2; // min is inner + 26, max inner + 40
+		int outerHeight = (innerHeight/2 + 13 + ceil(uniform_dist(rng) * 2)) * 2; // min is inner + 26, max inner + 30
+
+		float left_bound = 24;
+		float right_bound = outerWidth * WALL_BLOCK_BB_WIDTH - 24;
+		float top_bound = 24;
+		float bottom_bound = outerHeight * WALL_BLOCK_BB_HEIGHT - 24;
+
+		int max_tables_count = floor(outerWidth/17);
+		int max_slots_count = floor(outerWidth/11);
 
 		std::cout << "donut dimensions. outer w/h, inner w/h: " << outerWidth << '/' << outerHeight << ':' << innerWidth << "/" << innerHeight << std::endl;
 		// walls outer
@@ -1593,9 +1608,96 @@ void WorldSystem::next_wave() {
 				grid[j][i] = 1;
 			}
 		}
+
+		// move player to starting location
 		player_motion.position = vec2(WALL_BLOCK_BB_WIDTH * outerWidth / 2, 84);
-		player_motion.velocity *= 0.f;
-		your.push *= 0;
+
+
+		// spawn slot machines
+		for (int num_slots = 0; num_slots < max_slots_count; num_slots++) {
+			float spawnX, spawnY;
+			bool valid_spawn;
+			do {
+				spawnX = uniform_dist(rng) * (right_bound - left_bound) + left_bound;
+				spawnY = uniform_dist(rng) * (bottom_bound - top_bound) + top_bound;
+				valid_spawn = true;
+
+				// Check distance from player
+				if (sqrt(pow(spawnX - player_motion.position.x, 2) + pow(spawnY - player_motion.position.y, 2)) < 120) {
+					valid_spawn = false;
+				}
+
+				// check distance from door location
+				if (sqrt(pow(spawnX - 72, 2) + pow(spawnY - 96, 2)) < 120) {
+					valid_spawn = false;
+				}
+
+				// ensure slot machine space is not occupied
+				int grid_x = static_cast<int>(spawnX / 12);
+				int grid_y = static_cast<int>(spawnY / 12);
+
+				std::cout<< "grid gen: " << grid_x << ", " << grid_y << std::endl;
+				for (int dy = -11; dy <= 10 && valid_spawn; dy++) {
+					for (int dx = -8; dx <= 7 && valid_spawn; dx++) {
+
+						int check_x = grid_x + dx;
+						int check_y = grid_y + dy;
+						if (check_x >= 0 && check_x < GRID_WIDTH && check_y >= 0 && check_y < GRID_HEIGHT) {
+							if (grid[check_y][check_x] == 1) {
+								valid_spawn = false;
+							}
+						} else {
+							valid_spawn = false;
+						}
+					}
+				}
+			} while (!valid_spawn);
+			// need to make sure the position is aligned with grid to avoid weird collision...
+			createSlotMachine(renderer, vec2(static_cast<int>(spawnX / 12) * 12, static_cast<int>(spawnY / 12) * 12));
+		}
+
+		// spawn tables
+		for (int num_tables = 0; num_tables < max_tables_count; num_tables++) {
+			float spawnX, spawnY;
+			bool valid_spawn;
+			do {
+				spawnX = uniform_dist(rng) * (right_bound - left_bound) + left_bound;
+				spawnY = uniform_dist(rng) * (bottom_bound - top_bound) + top_bound;
+				valid_spawn = true;
+
+				// Check distance from player
+				if (sqrt(pow(spawnX - player_motion.position.x, 2) + pow(spawnY - player_motion.position.y, 2)) < 200) {
+					valid_spawn = false;
+				}
+
+				// check distance from door location
+				if (sqrt(pow(spawnX - 72, 2) + pow(spawnY - 96, 2)) < 200) {
+					valid_spawn = false;
+				}
+
+				// ensure table space is not occupied
+				int grid_x = static_cast<int>(spawnX / 12);
+				int grid_y = static_cast<int>(spawnY / 12);
+				for (int dy = -12; dy <= 11 && valid_spawn; dy++) {
+					for (int dx = -12; dx <= 11 && valid_spawn; dx++) {
+
+						int check_x = grid_x + dx;
+						int check_y = grid_y + dy;
+						if (check_x >= 0 && check_x < GRID_WIDTH && check_y >= 0 && check_y < GRID_HEIGHT) {
+							if (grid[check_y][check_x] == 1) {
+								valid_spawn = false;
+							}
+						} else {
+							valid_spawn = false;
+						}
+					}
+				}
+			} while (!valid_spawn);
+			// need to make sure the position is aligned with grid to avoid weird collision...
+			createRouletteTable(renderer, vec2(static_cast<int>(spawnX / 12) * 12, static_cast<int>(spawnY / 12) * 12));
+		}
+
+	
 	}
 
 	registry.list_all_components();
@@ -1909,7 +2011,13 @@ bool WorldSystem::load() {
 		if (j.contains("solids")) {
 			for (auto& item : j["solids"].items()) {
 				auto& value = item.value();
-				createWallBlock(renderer, {value["position"][0], value["position"][1]});
+				if (value["type"] == SOLIDS::WALL) {
+					createWallBlock(renderer, {value["position"][0], value["position"][1]});
+				} else if (value["type"] == SOLIDS::ROULETTE_TABLE) {
+					createRouletteTable(renderer, {value["position"][0], value["position"][1]});
+				} else if (value["type"] == SOLIDS::SLOT_MACHINE) {
+					createSlotMachine(renderer, {value["position"][0], value["position"][1]});
+				}
 			}
 		}
 
@@ -2173,7 +2281,8 @@ void WorldSystem::save() {
         // after adding solid type field, save as appropriate. For now all walls
 		if (registry.motions.has(entity)) {
             j["solids"][std::to_string(entity)] = {
-                {"position", {registry.motions.get(entity).position.x, registry.motions.get(entity).position.y}}
+                {"position", {registry.motions.get(entity).position.x, registry.motions.get(entity).position.y}},
+				{"type", registry.solids.get(entity).type}
             };
         }
 	}
