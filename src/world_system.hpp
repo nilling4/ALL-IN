@@ -139,4 +139,9 @@ private:
 	};
 
 	TutorialState tutorialState = TutorialState::WELCOME;
+	
+	Entity door_entity;
+	float door_animation_timer = 0.f; 
+    int door_frame_index = 0; 
+    static constexpr float DOOR_FRAME_DURATION = 80.f; 
 };

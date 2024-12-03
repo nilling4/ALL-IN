@@ -602,8 +602,24 @@ bool WorldSystem::step(float elapsed_ms_since_last_update) {
 	}
 
 	if (wave.state == "spawn doors") {
-		createDoor(renderer, {72, 96});
+		door_entity = createDoor(renderer, {72, 96});
 		wave.state = "limbo";
+	}
+	if (registry.renderRequests.has(door_entity)) {
+		auto& door_render = registry.renderRequests.get(door_entity);
+		door_animation_timer += elapsed_ms_since_last_update;
+    	if (door_animation_timer >= DOOR_FRAME_DURATION) {
+        	door_animation_timer = 0.f;
+    	    door_frame_index = (door_frame_index + 1) % 8;
+    	}
+		TEXTURE_ASSET_ID door_texture = static_cast<TEXTURE_ASSET_ID>(
+			static_cast<int>(TEXTURE_ASSET_ID::DOOR_FRAME_0) + door_frame_index
+		);
+        door_render = {
+        door_texture,
+        EFFECT_ASSET_ID::TEXTURED,
+        GEOMETRY_BUFFER_ID::SPRITE
+   		};
 	}
 
 	if (wave.state == "create select door popup") {

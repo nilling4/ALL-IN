@@ -223,12 +223,12 @@ Entity createDoor(RenderSystem* renderer, vec2 pos) {
 	motion.position = pos;
 	motion.angle = 0.f;
 	motion.velocity = { 0.f, 0.f };
-	motion.scale = vec2({ 50, 70 });
+	motion.scale = vec2({ 40, 70 });
 
 	registry.doors.emplace(entity);
 	registry.renderRequests.insert(
 		entity,
-		{ TEXTURE_ASSET_ID::DOOR,
+		{ TEXTURE_ASSET_ID::DOOR_FRAME_0,
 			EFFECT_ASSET_ID::TEXTURED,
 			GEOMETRY_BUFFER_ID::SPRITE });
 
